@@ -34,7 +34,9 @@ ManipulatorArm::ManipulatorArm() : frc::Subsystem("ManipulatorArm") {
 }
 
 bool ManipulatorArm::Init(){
-    
+    shoulder->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, 0);
+    elbow->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, 0);
+    wrist->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, 0);
 }
 
 void ManipulatorArm::InitDefaultCommand() {
