@@ -25,15 +25,20 @@ GoToBall::GoToBall(): frc::Command() {
 // Called just before this Command runs the first time
 void GoToBall::Initialize() {
 
+    Robot::lidar->readLidar();
+
 }
 
 // Called repeatedly when this Command is scheduled to run
 void GoToBall::Execute() {
 
-  Robot::lidar->readLidar();
-  if (Robot::lidar->readComplete() == true)  {
-
-  }
+    if (Robot::lidar->readComplete() == true)  {
+        Lidar::filterData( false, 60, 300, 50, 1500);
+        Lidattp centrePt = Lidar::findCargo();
+        printf("centre point angle: %f", centrePt.angle);
+        printf("centre point distance: %f", centrePt.dist);
+        printf("time stamp: %i", centrePt.tstamp);s
+    }
 }
 
 // Make ifthis return true when this Command no longer needs to run execute()
@@ -42,12 +47,8 @@ bool GoToBall::IsFinished() {
 }
 
 // Called once after isFinished returns true
-void GoToBall::End() {
-
-}
+void GoToBall::End() {}
 
 // Called when another command which requires one or more of the same
 // subsystems is scheduled to run
-void GoToBall::Interrupted() {
-
-}
+void GoToBall::Interrupted() {}

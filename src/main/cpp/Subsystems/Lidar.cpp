@@ -12,7 +12,7 @@
 // Constants
 #define RADIUS                         152.4
 #define MAX_ACCEPTED_ERROR             20
-#define MAX_ACCEPTED_DELTA_ANGLE       (1.5 * 64) // this is the desired angle x64
+#define MAX_ACCEPTED_DELTA_ANGLE       (1.5 * 64) // this is the desired angle x64 (because of extra bits on the data)
 #define MAX_ACCEPTED_DELTA_DISTANCE    100
 
 #include <ctime>
@@ -789,7 +789,7 @@ void Lidar::calculatePathToNearestCube()
 // here. Call these from Commands.
 
 // this function is the accessor point for finding cargo
-Lidar::lidattp Lidar::findCargo() {
+lidattp Lidar::findCargo() {
 
 	// this seperates the lidar points into an array of groups
 	groupPoints();
@@ -806,7 +806,7 @@ Lidar::lidattp Lidar::findCargo() {
 	}
 
 	// if no acceptable circle is found the function returns this
-	Lidar::lidattp noCargo;
+	lidattp noCargo;
 	noCargo.angle = 0.0;
 	noCargo.dist = 0.0;
 	noCargo.tstamp = frc::Timer::GetFPGATimestamp();
@@ -911,6 +911,8 @@ double Lidar::scoreCargo( grouptp *testGroup ) {
 
 	cargoEndIndex = i;
 
+	printf("cargo error: %f", (cargoError / pointCount));
+
 	return cargoError / pointCount;
 }
 
@@ -925,7 +927,7 @@ double Lidar::expectedDistance(double deltaAngle, double distance) {
 	return (twoCosTheta - sqrt(discriminant))/2;
 }
 
-Lidar::lidattp Lidar::findCargoCenter(grouptp *cargoGroup) {
+lidattp Lidar::findCargoCenter(grouptp *cargoGroup) {
 	double cargoAngle = 0.0;
 	double cargoDistance = 0.0;
 
