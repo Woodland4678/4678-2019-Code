@@ -86,6 +86,9 @@ int ManipulatorArm::getElbowPot(){
 double ManipulatorArm::getWaistEncoder(){
    return waist->GetEncoder().GetPosition();
 }
+//double ManipulatorArm::getWaistPot(){
+//   return waist->GetEncoder().GetPosition();
+//}
 
 void ManipulatorArm::getShoulderPID(double p, double i, double d){
     shoulder->Config_kP(0, p, 0);
