@@ -24,7 +24,7 @@ GoToBall::GoToBall(): frc::Command() {
 
 // Called just before this Command runs the first time
 void GoToBall::Initialize() {
-    
+
     printf("Here\n");
     Robot::lidar->readLidar();
     printf("Here2\n");
@@ -48,8 +48,9 @@ void GoToBall::Execute() {
 
 // Make ifthis return true when this Command no longer needs to run execute()
 bool GoToBall::IsFinished() {
-
+    printf("Here5\n");
     if (cargoIsFound) {
+        printf("Here6\n");
         return true;
     }
     else {
