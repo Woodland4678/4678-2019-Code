@@ -33,11 +33,11 @@ void GoToBall::Initialize() {
 void GoToBall::Execute() {
 
     if (Robot::lidar->readComplete() == true)  {
-        Lidar::filterData( false, 60, 300, 50, 1500);
-        Lidattp centrePt = Lidar::findCargo();
-        printf("centre point angle: %f", centrePt.angle);
-        printf("centre point distance: %f", centrePt.dist);
-        printf("time stamp: %i", centrePt.tstamp);s
+        Robot::lidar->filterData( false, 60, 300, 50, 1500);
+        lidattp centrePt = Robot::lidar->findCargo();
+        printf("centre point angle: %i", centrePt.angle);
+        printf("centre point distance: %i", centrePt.dist);
+        printf("time stamp: %i", centrePt.tstamp);
     }
 }
 
