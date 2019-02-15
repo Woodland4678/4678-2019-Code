@@ -13,7 +13,7 @@
 #define MANIPULATORARM_H
 #include "frc/commands/Subsystem.h"
 #include "frc/WPILib.h"
-#include "C:/Users/user/wpilib/user/cpp/include/ctre/phoenix.h"
+#include "ctre/phoenix.h"
 #include "rev/CANSparkMax.h"
 
 /**
