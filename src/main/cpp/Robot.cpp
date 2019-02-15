@@ -85,6 +85,9 @@ void Robot::TeleopInit() {
 void Robot::TeleopPeriodic() {
 
 	frc::SmartDashboard::PutNumber("Shoulder Encoder", manipulatorArm->getShoulderEncoder());
+	frc::SmartDashboard::PutNumber("Wrist Encoder", manipulatorArm->getWristEncoder());
+	frc::SmartDashboard::PutNumber("Elbow Encoder", manipulatorArm->getElbowEncoder());
+	frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistEncoder());
 
 	frc::Scheduler::GetInstance()->Run();
 }
