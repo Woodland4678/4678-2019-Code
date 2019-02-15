@@ -30,11 +30,17 @@
 #define CUBERANGEHIEGHT	40
 #define CENTRECUBE      233.5 // sqrt(2*CUBEWIDTH^2)/2
 
+typedef struct {
+	int dist;
+	int angle;
+	int tstamp;
+	} lidattp;
+
 typedef struct Point_t {
 	int x;
 	int y;
 	int tstamp;
-}tpPoint;
+	}tpPoint;
 
 typedef struct Line_T
 	{
@@ -68,11 +74,7 @@ private:
 	// set this to 0 so they can detect when the next valid set of data is available.
 	int glob_lidar_count; // Number of samples in lidat[] available for processing.
 
-	typedef struct {
-		int dist;
-		int angle;
-		int tstamp;
-		} lidattp;
+
 
 	lidattp lidat[1024]; // Allow up to 1024 samples in the final array prepared for processing.
 	tpPoint lidatXY[1024];
@@ -151,14 +153,14 @@ public:
 	int cubeIntakeCase;
 
 	// Cargo finding functions
-	Lidar::lidattp findCargo();
+	lidattp findCargo();
 	void groupPoints();
 	// bool sortCompareGroups(grouptp *group1, grouptp *group2);
 	int pointsOnCargo(double distance);
 	bool isPotentialCargo(grouptp *testGroup);
 	double scoreCargo(grouptp *testGroup);
 	double expectedDistance(double deltaAngle, double distance);
-	Lidar::lidattp findCargoCenter(grouptp *cargoGroup);
+	lidattp findCargoCenter(grouptp *cargoGroup);
 
 
 	bool isSwitchAuto = false;
