@@ -33,6 +33,9 @@ ManipulatorArm::ManipulatorArm() : frc::Subsystem("ManipulatorArm") {
 
 }
 
+bool ManipulatorArm::Init(){
+    
+}
 
 void ManipulatorArm::InitDefaultCommand() {
     // Set the default command for a subsystem here.
