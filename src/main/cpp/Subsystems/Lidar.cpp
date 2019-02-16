@@ -791,8 +791,10 @@ void Lidar::calculatePathToNearestCube()
 // this function is the accessor point for finding cargo
 lidattp Lidar::findCargo() {
 
+	filterData(false, 120, 120, 50, 1500);
+
 	printf("findcargo is running\n");
-	for (int i = 0; i < 1024; i++) {
+	for (int i = 0; i < filteredCount; i++) {
 		printf("%i, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
 	}
 
