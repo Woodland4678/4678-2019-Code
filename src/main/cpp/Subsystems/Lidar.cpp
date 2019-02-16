@@ -12,7 +12,7 @@
 // Constants
 #define RADIUS                         152.4
 #define MAX_ACCEPTED_ERROR             20
-#define MAX_ACCEPTED_DELTA_ANGLE       (1.5 * 64) // this is the desired angle x64 (because of extra bits on the data)
+#define MAX_ACCEPTED_DELTA_ANGLE       1.5
 #define MAX_ACCEPTED_DELTA_DISTANCE    100
 
 #include <ctime>
@@ -522,6 +522,9 @@ void Lidar::filterData(bool convertXY, double leftLimit, double rightLimit, doub
 			continue;
 
 		lidFiltered[n] = lidat[i];
+		lidFiltered[n].angle /= 64;
+
+
 		if(convertXY)
 			{
 			double rad = M_PI * (lidat[i].angle / 64.0) / 180;
@@ -829,6 +832,8 @@ lidattp Lidar::findCargo() {
 
 // the function seperates the lidar points into an array of groups
 void Lidar::groupPoints() {
+
+	groupCount = 0;
 
 	lidGroups[0].startIndex = 0;
 	lidGroups[0].closestPointIndex = 0;
