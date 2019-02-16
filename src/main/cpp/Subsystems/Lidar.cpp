@@ -793,7 +793,7 @@ lidattp Lidar::findCargo() {
 
 	printf("findcargo is running\n");
 	for (int i = 0; i < 1024; i++) {
-		printf("%i, %i", lidFiltered[i].angle, lidFiltered[i].dist)
+		printf("%i, %i\n", lidFiltered[i].angle, lidFiltered[i].dist)
 	}
 
 	// this seperates the lidar points into an array of groups
@@ -801,13 +801,13 @@ lidattp Lidar::findCargo() {
 
 	printf("groupPoint has run\n");
 	for (int i = 0; i < 256; i++) {
-		printf("%i, %i, %i, %i", lidGroups[i].startIndex, lidGroups[i].endIndex, lidGroups[i].closestPointIndex, lidGroups[i].closestPointDistance);
+		printf("%i, %i, %i, %i\n", lidGroups[i].startIndex, lidGroups[i].endIndex, lidGroups[i].closestPointIndex, lidGroups[i].closestPointDistance);
 	}
 
 	// this loop iterates through the array of groups
 	for ( int i = 0; i < groupCount; i++ ) {
 
-		printf("checking group %i", i)
+		printf("checking group %i\n", i)
 
 		// if the group contains enough points and scores low enough
 		if ( isPotentialCargo(&lidGroups[i]) && scoreCargo(&lidGroups[i]) < MAX_ACCEPTED_ERROR ) {
@@ -943,7 +943,7 @@ double Lidar::expectedDistance(double deltaAngle, double distance) {
 
 lidattp Lidar::findCargoCenter(grouptp *cargoGroup) {
 
-	printf("finding centre point");
+	printf("finding centre point\n");
 
 	double cargoAngle = 0.0;
 	double cargoDistance = 0.0;
