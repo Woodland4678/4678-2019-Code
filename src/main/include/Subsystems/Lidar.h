@@ -117,7 +117,7 @@ private:
 
 	// Cargo finding variables
 	grouptp lidGroups[256];
-	int groupCount = 0;
+	int groupCount;
 	int cargoStartIndex;
 	int cargoEndIndex;
 

@@ -60,10 +60,15 @@ public:
 	bool Init();
 
 	//PID set functions
-	void getShoulderPID(double p, double i, double d);
-	void getWristPID(double p, double i, double d);
-	void getElbowPID(double p, double i, double d);
-	void getWaistPID(double p, double i, double d);
+	void setShoulderPID(double p, double i, double d);
+	void setWristPID(double p, double i, double d);
+	void setElbowPID(double p, double i, double d);
+	void setWaistPID(double p, double i, double d);
+
+	//Movment Functions
+	void setShoulderEncoder(int val);
+	void setElbowEncoder(int val);
+	void setWristEncoder(int val);
 
 	//Reading Encoders
 	int getShoulderEncoder();

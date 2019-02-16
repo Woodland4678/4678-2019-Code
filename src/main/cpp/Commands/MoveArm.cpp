@@ -25,17 +25,24 @@ MoveArm::MoveArm(int btn): frc::Command() {
 
 // Called just before this Command runs the first time
 void MoveArm::Initialize() {
-
+    w_encoder = frc::SmartDashboard::GetNumber("Wrist Set Encoder",-1);
+    e_encoder = frc::SmartDashboard::GetNumber("Elbow Set Encoder",-1);
+    s_encoder = frc::SmartDashboard::GetNumber("Shoulder Set Encoder",-1);
 }
 
 // Called repeatedly when this Command is scheduled to run
 void MoveArm::Execute() {
-
+        if((m_btn == 0) && (w_encoder != -1))
+            Robot::manipulatorArm->setWristEncoder(w_encoder);
+        else if((m_btn == 1) && (e_encoder != -1))
+            Robot::manipulatorArm->setElbowEncoder(e_encoder);
+        else if((m_btn == 2) && (s_encoder != -1))
+            Robot::manipulatorArm->setShoulderEncoder(s_encoder);
 }
 
 // Make this return true when this Command no longer needs to run execute()
 bool MoveArm::IsFinished() {
-    return false;
+    return true;
 }
 
 // Called once after isFinished returns true

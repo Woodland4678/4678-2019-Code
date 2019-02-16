@@ -75,6 +75,9 @@ OI::OI() {
 
     // SmartDashboard Buttons
     frc::SmartDashboard::PutData("GoToBall", new GoToBall());
+    frc::SmartDashboard::PutData("Move Wrist", new MoveArm(0));
+    frc::SmartDashboard::PutData("Move Elbow", new MoveArm(1));
+    frc::SmartDashboard::PutData("Move Shoulder", new MoveArm(2));
     frc::SmartDashboard::PutData("SwapGripper", new SwapGripper());
     frc::SmartDashboard::PutData("DriveRobot", new DriveRobot());
     frc::SmartDashboard::PutData("LineUpToBay", new LineUpToBay());

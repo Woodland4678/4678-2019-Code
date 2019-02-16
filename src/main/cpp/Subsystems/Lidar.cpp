@@ -12,7 +12,7 @@
 // Constants
 #define RADIUS                         152.4
 #define MAX_ACCEPTED_ERROR             20
-#define MAX_ACCEPTED_DELTA_ANGLE       (1.5 * 64) // this is the desired angle x64 (because of extra bits on the data)
+#define MAX_ACCEPTED_DELTA_ANGLE       1.5
 #define MAX_ACCEPTED_DELTA_DISTANCE    100
 
 #include <ctime>
@@ -520,6 +520,9 @@ void Lidar::filterData(bool convertXY, double leftLimit, double rightLimit, doub
 			continue;
 
 		lidFiltered[n] = lidat[i];
+		lidFiltered[n].angle /= 64;
+
+
 		if(convertXY)
 			{
 			double rad = M_PI * (lidat[i].angle / 64.0) / 180;
@@ -789,8 +792,10 @@ void Lidar::calculatePathToNearestCube()
 // this function is the accessor point for finding cargo
 lidattp Lidar::findCargo() {
 
+	filterData(false, 120, 120, 50, 1500);
+
 	printf("findcargo is running\n");
-	for (int i = 0; i < 1024; i++) {
+	for (int i = 0; i < filteredCount; i++) {
 		printf("%i, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
 	}
 
@@ -825,6 +830,8 @@ lidattp Lidar::findCargo() {
 
 // the function seperates the lidar points into an array of groups
 void Lidar::groupPoints() {
+
+	groupCount = 0;
 
 	lidGroups[0].startIndex = 0;
 	lidGroups[0].closestPointIndex = 0;
@@ -907,7 +914,7 @@ double Lidar::scoreCargo( grouptp *testGroup ) {
 
 	cargoStartIndex = i + 1;
 
-	for (i = basePtIndex + 1; i < testGroup->startIndex; i++) {
+	for (i = basePtIndex + 1; i < testGroup->endIndex; i++) {
 		double ptDistance = lidFiltered[i].dist;
 		double deltaAngle = basePtAngle - lidFiltered[i].angle;
 		
