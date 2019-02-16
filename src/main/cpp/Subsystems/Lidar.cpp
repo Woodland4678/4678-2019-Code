@@ -791,11 +791,23 @@ void Lidar::calculatePathToNearestCube()
 // this function is the accessor point for finding cargo
 lidattp Lidar::findCargo() {
 
+	printf("findcargo is running\n");
+	for (int i = 0; i < 1024; i++) {
+		printf("%i, %i", lidFiltered[i].angle, lidFiltered[i].dist)
+	}
+
 	// this seperates the lidar points into an array of groups
 	groupPoints();
 
+	printf("groupPoint has run\n");
+	for (int i = 0; i < 256; i++) {
+		printf("%i, %i, %i, %i", lidGroups[i].startIndex, lidGroups[i].endIndex, lidGroups[i].closestPointIndex, lidGroups[i].closestPointDistance);
+	}
+
 	// this loop iterates through the array of groups
 	for ( int i = 0; i < groupCount; i++ ) {
+
+		printf("checking group %i", i)
 
 		// if the group contains enough points and scores low enough
 		if ( isPotentialCargo(&lidGroups[i]) && scoreCargo(&lidGroups[i]) < MAX_ACCEPTED_ERROR ) {
@@ -857,10 +869,12 @@ bool Lidar::isPotentialCargo(grouptp *testGroup) {
 	int ptsAfterClosestPt = testGroup->endIndex - 1 - closestPtIndex;
 	int ptsPerSide = pointsOnCargo(testGroup->closestPointIndex);
 
-	if (ptsBeforeClosestPt >= (ptsPerSide - 2) && ptsAfterClosestPt >= (ptsPerSide - 2)) { 
+	if (ptsBeforeClosestPt >= (ptsPerSide - 2) && ptsAfterClosestPt >= (ptsPerSide - 2)) {
+		printf("current group is potential cargo");
 		return true;
 	}
 
+	printf("current group is not potential cargo");
 	return false;
 }
 
@@ -928,6 +942,9 @@ double Lidar::expectedDistance(double deltaAngle, double distance) {
 }
 
 lidattp Lidar::findCargoCenter(grouptp *cargoGroup) {
+
+	printf("finding centre point");
+
 	double cargoAngle = 0.0;
 	double cargoDistance = 0.0;
 
