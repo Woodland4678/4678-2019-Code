@@ -74,6 +74,10 @@ void Robot::AutonomousPeriodic() {
 
 void Robot::TeleopInit() {
 	lidar->startLidar();
+
+	frc::SmartDashboard::PutNumber("Wrist Set Encoder", manipulatorArm->getElbowEncoder());
+	frc::SmartDashboard::PutNumber("Elbow Set Encoder", manipulatorArm->getElbowEncoder());
+	frc::SmartDashboard::PutNumber("Shoulder Set Encoder", manipulatorArm->getElbowEncoder());
 	// This makes sure that the autonomous stops running when
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
@@ -89,10 +93,10 @@ void Robot::TeleopPeriodic() {
 	frc::SmartDashboard::PutNumber("Elbow Encoder", manipulatorArm->getElbowEncoder());
 	frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistEncoder());
 
-	frc::SmartDashboard::PutNumber("Shoulder Encoder", manipulatorArm->getShoulderEncoder());
-	frc::SmartDashboard::PutNumber("Wrist Encoder", manipulatorArm->getWristEncoder());
-	frc::SmartDashboard::PutNumber("Elbow Encoder", manipulatorArm->getElbowEncoder());
-	frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistEncoder());
+	frc::SmartDashboard::PutNumber("Shoulder Pot", manipulatorArm->getShoulderPot());
+	frc::SmartDashboard::PutNumber("Wrist Pot", manipulatorArm->getWristPot());
+	frc::SmartDashboard::PutNumber("Elbow Pot", manipulatorArm->getElbowPot());
+	//frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistPot());
 
 	frc::Scheduler::GetInstance()->Run();
 }
