@@ -34,8 +34,6 @@ void GoToBall::Initialize() {
 void GoToBall::Execute() {
 
     if (Robot::lidar->readComplete() == true)  {
-        printf("Here3\n");
-        Robot::lidar->filterData( false, 60, 300, 50, 1500);
         printf("Here4\n");
         lidattp centrePt = Robot::lidar->findCargo();
         printf("centre point angle: %i\n", centrePt.angle);
@@ -48,6 +46,7 @@ void GoToBall::Execute() {
 
 // Make ifthis return true when this Command no longer needs to run execute()
 bool GoToBall::IsFinished() {
+    
     printf("Here5\n");
     if (cargoIsFound) {
         printf("Here6\n");
