@@ -75,9 +75,9 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {
 	lidar->startLidar();
 
-	frc::SmartDashboard::PutNumber("Wrist Set Encoder", manipulatorArm->getElbowEncoder());
+	frc::SmartDashboard::PutNumber("Wrist Set Encoder", manipulatorArm->getWristEncoder());
 	frc::SmartDashboard::PutNumber("Elbow Set Encoder", manipulatorArm->getElbowEncoder());
-	frc::SmartDashboard::PutNumber("Shoulder Set Encoder", manipulatorArm->getElbowEncoder());
+	frc::SmartDashboard::PutNumber("Shoulder Set Encoder", manipulatorArm->getShoulderEncoder());
 	// This makes sure that the autonomous stops running when
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
