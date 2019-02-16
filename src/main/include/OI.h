@@ -28,6 +28,7 @@ private:
 	std::shared_ptr<frc::JoystickButton> operatorBtn6_RB_HPCargoIntake;
 	std::shared_ptr<frc::JoystickButton> operatorBtn5_LB_HPHatchIntake;
 	std::shared_ptr<frc::Joystick> driver;
+	std::shared_ptr<frc::JoystickButton> driverBtn7_LT_Spin180;
 	std::shared_ptr<frc::JoystickButton> driverBtn8_RT_GoToBall;
 	std::shared_ptr<frc::JoystickButton> driverBtn1_X_LineUpToBay;
 	std::shared_ptr<frc::JoystickButton> driverBtn6_RB_Intake;
