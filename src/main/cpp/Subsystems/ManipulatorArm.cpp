@@ -86,15 +86,15 @@ void ManipulatorArm::Periodic() {
 // here. Call these from Commands.
 
 void ManipulatorArm::setShoulderEncoder(int val){
-    shoulder->Set(ControlMode::Position, val);
+    //shoulder->Set(ControlMode::Position, val);
 }
 
 void ManipulatorArm::setElbowEncoder(int val){
-    elbow->Set(ControlMode::Position, val);
+    //elbow->Set(ControlMode::Position, val);
 }
 
 void ManipulatorArm::setWristEncoder(int val){
-    wrist->Set(ControlMode::Position, val);
+    //wrist->Set(ControlMode::Position, val);
 }
 
 int ManipulatorArm::getShoulderEncoder(){
