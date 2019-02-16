@@ -916,7 +916,7 @@ double Lidar::scoreCargo( grouptp *testGroup ) {
 
 	cargoStartIndex = i + 1;
 
-	for (i = basePtIndex + 1; i < testGroup->startIndex; i++) {
+	for (i = basePtIndex + 1; i < testGroup->endIndex; i++) {
 		double ptDistance = lidFiltered[i].dist;
 		double deltaAngle = basePtAngle - lidFiltered[i].angle;
 		
