@@ -44,13 +44,25 @@ void DriveRobot::Execute() {
 
     // Clip function for the left motor    
     if(std::abs(leftPower - oldLeftPower) > maxChange){
-        if(oldLeftPower > 0 && oldLeftPower < leftPower){
+        if(oldLeftPower > 0 && oldLeftPower < leftPower){ //if robot is moving forward, and accelerating
             leftPower = oldLeftPower + maxChange;
+            frc::SmartDashboard::PutString("left motor status: ", "accel in pos");
          }
 
-        if(oldLeftPower < 0 && oldLeftPower > leftPower){
+        if(oldLeftPower < 0 && oldLeftPower > leftPower){ //if robot is moving backward, and accelerating
             leftPower = oldLeftPower - maxChange;
-        }    
+            frc::SmartDashboard::PutString("left motor status: ", "accel in neg");
+        }
+
+        if(oldLeftPower > 0 && oldLeftPower > leftPower && oldLeftPower > 0.1){ //if robot is moving forward, and decelerating 
+            leftPower = oldLeftPower - oldLeftPower/10;
+            frc::SmartDashboard::PutString("left motor status: ", "decel in pos");
+        }
+
+        if(oldLeftPower < 0 && oldLeftPower < leftPower && oldLeftPower < -0.1){ //if robot is moving backward, and decelerating
+            leftPower = oldLeftPower - oldLeftPower/10;
+            frc::SmartDashboard::PutString("left motor status: ", "dec in neg");
+        }
     }
 
     // Clip function for right motor
@@ -62,7 +74,21 @@ void DriveRobot::Execute() {
         if(oldRightPower < 0 && oldRightPower > rightPower){
             rightPower = oldRightPower - maxChange;
         }    
+
+        if(oldRightPower > 0 && oldRightPower > rightPower && oldRightPower > 0.1){ //if robot is moving forward, and decelerating 
+            rightPower = oldRightPower - oldRightPower/10;
+        }
+
+        if(oldRightPower < 0 && oldRightPower < rightPower && oldRightPower <-0.1){ //if robot is moving backward, and decelerating
+            rightPower = oldRightPower - oldRightPower/10;
+        }
     }
+
+    if(rightPower > 0 && leftPower < 0 || rightPower < 0 && leftPower > 0){
+        rightPower = rightPower/6;
+        leftPower = leftPower/ 6;
+    }
+
  
     // Set old powers for the next time function is called
     oldLeftPower = leftPower;
