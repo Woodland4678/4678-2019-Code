@@ -74,8 +74,6 @@ private:
 	// set this to 0 so they can detect when the next valid set of data is available.
 	int glob_lidar_count; // Number of samples in lidat[] available for processing.
 
-
-
 	lidattp lidat[1024]; // Allow up to 1024 samples in the final array prepared for processing.
 	tpPoint lidatXY[1024];
 	int xyCount;
@@ -122,7 +120,6 @@ private:
 	int groupCount = 0;
 	int cargoStartIndex;
 	int cargoEndIndex;
-
 
 	//bool m_calculator1_init;
 

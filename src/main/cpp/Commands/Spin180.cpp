@@ -29,19 +29,24 @@ void Spin180::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void Spin180::Execute() {
-    Robot::drivetrain->setLeftMotor(0.5);
-    Robot::drivetrain->setRightMotor(0.5);
-    spinTime++;
+    Robot::drivetrain->setLeftMotor(-0.2);
+    Robot::drivetrain->setRightMotor(0.2);
+    m_spinTime++;
+    frc::SmartDashboard::PutNumber("spinTime ", m_spinTime);
 }
 
 // Make this return true when this Command no longer needs to run execute()
 bool Spin180::IsFinished() {
-    if(spinTime > 100){
-        return true;    
-    }
-    else{
+    if(m_spinTime > 80){
         Robot::drivetrain->setLeftMotor(0);
         Robot::drivetrain->setRightMotor(0);
+        m_spinTime = 0;
+        frc::SmartDashboard::PutString("spinState: ", "Done spinning");
+        
+        return true;    
+    }
+    else{     
+        frc::SmartDashboard::PutString("spinState: ", "Spinning!");
         return false;
     }
 }

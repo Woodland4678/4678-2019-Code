@@ -53,7 +53,7 @@ OI::OI() {
     driver.reset(new frc::Joystick(0));
     
     driverBtn7_LT_Spin180.reset(new frc::JoystickButton(driver.get(), 7));
-    driverBtn7_LT_Spin180->WhileHeld(new Spin180());
+    driverBtn7_LT_Spin180->WhenPressed(new Spin180());
     driverBtn8_RT_GoToBall.reset(new frc::JoystickButton(driver.get(), 8));
     driverBtn8_RT_GoToBall->WhileHeld(new GoToBall());
     driverBtn1_X_LineUpToBay.reset(new frc::JoystickButton(driver.get(), 1));
