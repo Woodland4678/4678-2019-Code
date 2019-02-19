@@ -49,16 +49,15 @@ void Drivetrain::Periodic() {
 
 void Drivetrain::configMotors(){
     leftSlaveOne->Follow(*leftMaster);
-    leftSlaveOne->SetSmartCurrentLimit(10,10,10);
+    leftSlaveOne->SetSmartCurrentLimit(40,40,40);
     leftSlaveTwo->Follow(*leftMaster);
-    leftSlaveTwo->SetSmartCurrentLimit(10,10,10);
+    leftSlaveTwo->SetSmartCurrentLimit(40,40,40);
     rightSlaveOne->Follow(*rightMaster);
-    rightSlaveOne->SetSmartCurrentLimit(10,10,100);
+    rightSlaveOne->SetSmartCurrentLimit(40,40,40);
     rightSlaveTwo->Follow(*rightMaster);
-    rightSlaveTwo->SetSmartCurrentLimit(10,10,10);
-    rightMaster->SetSmartCurrentLimit(10,10,10);
-    leftMaster->SetSmartCurrentLimit(10,10,10);
-
+    rightSlaveTwo->SetSmartCurrentLimit(40,40,40);
+    rightMaster->SetSmartCurrentLimit(40,40,40);
+    leftMaster->SetSmartCurrentLimit(40,40,40);
 }
 
 void Drivetrain::setLeftMotor(double power){
