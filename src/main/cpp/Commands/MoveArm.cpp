@@ -38,6 +38,14 @@ void MoveArm::Execute() {
             Robot::manipulatorArm->setElbowEncoder(e_encoder);
         else if((m_btn == 2) && (s_encoder != -1))
             Robot::manipulatorArm->setShoulderEncoder(s_encoder);
+        else{
+            double p = frc::SmartDashboard::GetNumber("Set P", 1);
+            double i = frc::SmartDashboard::GetNumber("Set I", 0);
+            double d = frc::SmartDashboard::GetNumber("Set D", 0);
+
+            Robot::manipulatorArm->setShoulderPID(p,i,d);
+        }
+
 }
 
 // Make this return true when this Command no longer needs to run execute()
