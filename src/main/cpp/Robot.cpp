@@ -78,6 +78,10 @@ void Robot::TeleopInit() {
 	frc::SmartDashboard::PutNumber("Wrist Set Encoder", manipulatorArm->getWristEncoder());
 	frc::SmartDashboard::PutNumber("Elbow Set Encoder", manipulatorArm->getElbowEncoder());
 	frc::SmartDashboard::PutNumber("Shoulder Set Encoder", manipulatorArm->getShoulderEncoder());
+
+	frc::SmartDashboard::PutNumber("Set P", 1);
+	frc::SmartDashboard::PutNumber("Set I", 0);
+	frc::SmartDashboard::PutNumber("Set D", 0);
 	// This makes sure that the autonomous stops running when
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
