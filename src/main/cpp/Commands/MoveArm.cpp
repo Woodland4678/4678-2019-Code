@@ -28,29 +28,44 @@ void MoveArm::Initialize() {
     w_encoder = frc::SmartDashboard::GetNumber("Wrist Set Encoder",-1);
     e_encoder = frc::SmartDashboard::GetNumber("Elbow Set Encoder",-1);
     s_encoder = frc::SmartDashboard::GetNumber("Shoulder Set Encoder",-1);
+
+    done = false;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void MoveArm::Execute() {
-        if((m_btn == 0) && (w_encoder != -1))
+        if((m_btn == 0) && (w_encoder != -1)) {
             Robot::manipulatorArm->setWristEncoder(w_encoder);
-        else if((m_btn == 1) && (e_encoder != -1))
+            done = true;
+        }
+        else if((m_btn == 1) && (e_encoder != -1)){
             Robot::manipulatorArm->setElbowEncoder(e_encoder);
-        else if((m_btn == 2) && (s_encoder != -1))
+            done = true;
+        }
+        else if((m_btn == 2) && (s_encoder != -1)){
             Robot::manipulatorArm->setShoulderEncoder(s_encoder);
-        else{
+            done = true;
+        }
+        else if (m_btn == 3) {
             double p = frc::SmartDashboard::GetNumber("Set P", 1);
             double i = frc::SmartDashboard::GetNumber("Set I", 0);
             double d = frc::SmartDashboard::GetNumber("Set D", 0);
 
             Robot::manipulatorArm->setShoulderPID(p,i,d);
+            done = true;
+        }
+        else if (m_btn == 4) {
+            done = Robot::manipulatorArm->moveTo(0);
+        }
+        else if (m_btn == 5) {
+            done = Robot::manipulatorArm->moveTo(1);
         }
 
 }
 
 // Make this return true when this Command no longer needs to run execute()
 bool MoveArm::IsFinished() {
-    return true;
+    return done;
 }
 
 // Called once after isFinished returns true

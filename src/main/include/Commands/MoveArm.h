@@ -43,6 +43,8 @@ private:
 	int e_encoder = -1;
 	int w_encoder = -1;
 	int s_encoder = -1;
+
+	bool done;
 };
 
 #endif
