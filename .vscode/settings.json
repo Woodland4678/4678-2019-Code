@@ -57,6 +57,5 @@
     "utility": "cpp",
     "*.inc": "cpp"
   },
-  "C_Cpp.configurationWarnings": "Disabled",
-  "C_Cpp.default.configurationProvider": "vscode-wpilib"
+  "C_Cpp.configurationWarnings": "Disabled"
 }
