@@ -220,10 +220,10 @@ void ManipulatorArm::setWaistPID(double p, double i, double d){
 }
 
 //Intakes
-void ManipulatorArm::spinOutward(double power){
+void ManipulatorArm::intakeWheelsSpin(double power){
     intakeWheels->Set(-power);
 }
 
-void ManipulatorArm::spinInward(double power){
-    intakeWheels->Set(power);
+void ManipulatorArm::intakeWheelsOff(){
+    intakeWheels->Set(0);
 }
