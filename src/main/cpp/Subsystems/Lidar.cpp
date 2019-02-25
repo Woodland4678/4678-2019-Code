@@ -17,6 +17,7 @@
 
 #include <ctime>
 #include <math.h>
+#define  _USE_MATH_DEFINES // this helps the compiler recognize constants and functions from math.h
 #include <iostream>
 #include "../../include/Subsystems/Lidar.h"
 #include "../../include/Robot.h"
