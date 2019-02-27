@@ -26,6 +26,7 @@ void ArmMotion::setStartTime(double tim) {
 }
 void ArmMotion::setDuration(double tim) {
 	m_Duration = tim;
+	m_multiplier2 = m_multiplier / (m_Duration * 1000);
 }
 void ArmMotion::setStartAngle(double angle) {
 	m_StartAngle = angle;
@@ -47,7 +48,7 @@ void ArmMotion::setOffset(double value) {
 }
 void ArmMotion::setMultiplier(double sharpness) {
 	m_Sharpness = sharpness;
-	m_multiplier = ((m_Sharpness + m_offset) * 1000) / (m_Duration * 1000);
+	m_multiplier = ((m_Sharpness + m_offset) * 1000);
 	//(multOffset / (time*1000))
 }
 
@@ -72,20 +73,21 @@ double ArmMotion::calculateNextPoint(double current) {
 	if(!m_StartSet)
 		return -1;
 	m_CurrentTime = current - m_StartTime;
-	printf("%f | a = %f\n",m_CurrentTime, sigmod(m_CurrentTime));
-	if(isComplete())
+	//printf("%f | a = %f\n",m_CurrentTime, sigmod(m_CurrentTime));
+	if(isComplete(current))
 		return -1;
 	if(m_type == 0)
 		return sigmod(m_CurrentTime);
 	else
 		return linear(m_CurrentTime);
 }
-bool ArmMotion::isComplete(double currentAngle) {
+bool ArmMotion::isComplete(double current, double currentAngle) {
 	if(currentAngle != -1) {
 		if(std::abs(currentAngle - m_EndAngle) < m_Range)
 			return true;
 		return false;
 	}
+	m_CurrentTime = current - m_StartTime;
 	if(m_CurrentTime > m_Duration)
 		return true;
 	return false;
@@ -94,11 +96,11 @@ bool ArmMotion::isComplete(double currentAngle) {
 
 //Calculations
 double ArmMotion::sigmod(double tim) {
-	return (((m_EndAngle-m_StartAngle)/(1+exp((-(m_multiplier*tim))+(m_offset + 4))))+m_StartAngle);
+	return (((m_EndAngle-m_StartAngle)/(1+exp((-(m_multiplier2*tim))+(m_offset + 4))))+m_StartAngle);
 	//		(((end-start)/(1+exp((-(mult*x))+offset)))+start);
 }
 double ArmMotion::invSigmod(double angle) {
-	return ((std::log(((m_EndAngle-m_StartAngle)/(angle-m_StartAngle)) - 1) - (m_offset + 4))/(-m_multiplier)); 
+	return ((std::log(((m_EndAngle-m_StartAngle)/(angle-m_StartAngle)) - 1) - (m_offset + 4))/(-m_multiplier2)); 
 }
 double ArmMotion::linear(double tim) {
 	return (m_EndAngle - m_StartAngle) * tim / m_Duration + m_StartAngle;

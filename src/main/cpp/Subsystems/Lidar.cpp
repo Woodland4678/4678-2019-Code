@@ -965,3 +965,40 @@ lidattp Lidar::findCargoCenter(grouptp *cargoGroup) {
 
 	return centerPt;
 }
+
+void Lidar::checkLinesForRocketCargo(){
+	for(int x=0;x<linecnt;x++){
+		if(std::abs(lines[x].length-7.19)<0.5){
+			if(std::abs(lines[x+1].length-7.19)<0.5){
+					//rocket found!
+					midPointX = (lines[x].start.x + lines[x+1].end.x)/2 - 10.625;
+					midPointY = (lines[x].start.y + lines[x+1].end.y)/2;
+					waistAngleRocketHatch = std::tan(midPointY/midPointX);
+					waistAngleHypotenuse = std::sqrt(midPointX*midPointX + midPointY*midPointY);
+
+
+			}
+		}
+	}
+}
+
+bool Lidar::getHatchPlacement(){
+	switch(hatchPlacementCase){
+		case 0:
+			readLidar();
+			hatchPlacementCase++;
+			break;
+		
+		case 1: 
+			if(readComplete()){
+				cubeFindCase++;
+			} 
+			break;
+		
+		case 2:
+			filterData(true, 120,120, 50, 1000);
+			FindLines();
+			checkLinesForRocketCargo();
+			break;
+	}
+}

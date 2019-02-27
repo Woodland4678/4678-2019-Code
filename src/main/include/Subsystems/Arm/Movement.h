@@ -14,6 +14,7 @@ private:
 	double m_offset;// = 0.25;
 	double m_Sharpness;
 	double m_multiplier;// = (9 + (m_offset)) * 1000;
+	double m_multiplier2;
 	
 	int m_Count;
 	int m_ExpectedCount;
@@ -48,7 +49,7 @@ public:
 	
 	//Move Functions
 	double calculateNextPoint(double current);
-	bool isComplete(double currentAngle = -1);
+	bool isComplete(double current, double currentAngle = -1);
 	
 };
 
