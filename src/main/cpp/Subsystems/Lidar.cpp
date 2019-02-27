@@ -9,24 +9,34 @@
 // it from being updated in the future.
 
 
-// Constants
-#define RADIUS                         152.4
-#define MAX_ACCEPTED_ERROR             20
-#define MAX_ACCEPTED_DELTA_ANGLE       1.5
-#define MAX_ACCEPTED_DELTA_DISTANCE    100
+// Cargo Constants
+#define CARGO_RADIUS						152.4		// the cross-sectional radius of the cargo 9" off the group
+#define CARGO_MAX_ACCEPTED_ERROR			20			// 
+#define CARGO_MAX_ACCEPTED_DELTA_ANGLE		1.75		// if the difference in angle between points is greater than this -> start a new group
+#define CARGO_MAX_ACCEPTED_DELTA_DISTANCE	50			// if the difference in distance between lidar readings is greater than this -> start new group
+#define CARGO_MIN_ACCEPTED_PORTION			0.8			// groups are dissmissed as not being cargo if this portion of the number of expected points is not found
+#define CARGO_SCAN_LEFT_LIMIT				120			// the cargo finding algorythm doesn't look at points more than this many degrees to the left (from directly forwards)
+#define CARGO_SCAN_RIGHT_LIMIT				120			// the cargo finding algorythm doesn't look at points more than this many degrees to the right (from directly forwards)
+#define CARGO_SCAN_MAX_DISTANCE				1500		// the cargo finding algorythm doesn't look at points closer that this distance (mm)
+#define CARGO_SCAN_MIN_DISTANCE				50			// the cargo finding algorythm doesn't look at points beyond this distance (mm)
+
+
+#define _USE_MATH_DEFINES // this is supposed to help math constants (pi) work better
 
 #include <ctime>
 #include <math.h>
 #include <iostream>
+//#include <fstream>
 #include "../../include/Subsystems/Lidar.h"
 #include "../../include/Robot.h"
 #include "frc/SerialPort.h"
+//#include "../RobotMap.h"
 
 
 
 // this function is passed into std::sort() to allow it to sort the groups bassed on .closestPointDistance
 static bool  sortCompareGroups(grouptp group1, grouptp group2) {
-	return group1.closestPointDistance < group2.closestPointDistance;
+	return group1.basePointDistance < group2.basePointDistance;
 }
 
 
@@ -500,40 +510,42 @@ void Lidar::convertToXY()
 	xyCount = j;
 	}
 
-void Lidar::filterData(bool convertXY, double leftLimit, double rightLimit, double minDistance, double maxDistance)
-	{
+void Lidar::filterData(bool convertXY, double leftLimit, double rightLimit, int minDistance, int maxDistance) {
+
 	unsigned int startidx = 0, n=0;
-	double dist, angle;
+	double angle;
 	//TODO: remove this line
 	//convertToXY();
-	for(int i = 0;i<glob_lidar_count;i++)
-		{
-		angle = ((double)lidat[i].angle / 64.0);
+	for (int i = 0; i < glob_lidar_count; i++) {
+
 		//Angle
-		if(angle < (180-leftLimit))
+		angle = ((double)lidat[i].angle / 64.0);
+
+		if (angle < (180 - leftLimit))
 			continue;
-		if(angle > (180+rightLimit))
+		if (angle > (180 + rightLimit))
 			continue;
+
 		//Distance
-		dist = lidat[i].dist;
-		if((dist < minDistance)||(dist > maxDistance))
+		if ((lidat[i].dist < minDistance) || (lidat[i].dist > maxDistance))
 			continue;
 
-		lidFiltered[n] = lidat[i];
-		lidFiltered[n].angle /= 64;
+		lidFiltered[n].angle = angle;
+		lidFiltered[n].dist = lidat[i].dist;
+		lidFiltered[n].tstamp = lidat[i].tstamp;
 
-
-		if(convertXY)
-			{
+		if (convertXY) {
 			double rad = M_PI * (lidat[i].angle / 64.0) / 180;
 			lidatXY[n].x = (std::round((lidat[i].dist) * std::sin(rad)));
 			lidatXY[n].y = -(std::round((lidat[i].dist) * std::cos(rad)));
 			}
+
 		n++;
 		}
 
-	if(convertXY)
+	if (convertXY)
 		xyCount = n;
+
 	filteredCount = n;
 
 	//TODO: Delete this debug code:
@@ -789,41 +801,36 @@ void Lidar::calculatePathToNearestCube()
 // Put methods for controlling this subsystem
 // here. Call these from Commands.
 
+
+
 // this function is the accessor point for finding cargo
-lidattp Lidar::findCargo() {
+polarPoint Lidar::findCargo() {
 
-	filterData(false, 120, 120, 50, 1500);
+	// this is William's filter function, it fills lidFiltered[] with data
+	filterData(false, CARGO_SCAN_LEFT_LIMIT, CARGO_SCAN_RIGHT_LIMIT, CARGO_SCAN_MIN_DISTANCE, CARGO_SCAN_MAX_DISTANCE);
 
-	printf("findcargo is running\n");
-	for (int i = 0; i < filteredCount; i++) {
-		printf("%i, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
-	}
-
-	// this seperates the lidar points into an array of groups
+	// this function sorts through lidFiltered[] and divides the points into groups, storing the info in lidGroups[]
 	groupPoints();
 
-	printf("groupPoint has run\n");
-	for (int i = 0; i < 256; i++) {
-		printf("%i, %i, %i, %f\n", lidGroups[i].startIndex, lidGroups[i].endIndex, lidGroups[i].closestPointIndex, lidGroups[i].closestPointDistance);
-	}
+	// these are debug statements, they print out the point out the contents of lidFiltered[] and lidGroups[]
+	for (int i = 0; i < filteredCount; i++) printf("%f, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
+	for (int i = 0; i < groupCount; i++) printf("%i, %i, %i, %i\n", lidGroups[i].startIndex, lidGroups[i].endIndex, lidGroups[i].basePointAngle, lidGroups[i].basePointDistance);
 
-	// this loop iterates through the array of groups
-	for ( int i = 0; i < groupCount; i++ ) {
+	// this loop iterates through lidGroups[] and tests if each one is a cargo
+	for ( int i = 0; i <= groupCount; i++ ) {
 
-		printf("checking group %i\n", i);
+		// if the group passes the isPotentialCargo() and the scoreGroup() test
+		if (isPotentialCargo(&lidGroups[i]) && scoreGroup(&lidGroups[i]) < CARGO_MAX_ACCEPTED_ERROR) {
 
-		// if the group contains enough points and scores low enough
-		if ( isPotentialCargo(&lidGroups[i]) && scoreCargo(&lidGroups[i]) < MAX_ACCEPTED_ERROR ) {
-
-			// then return the angle and distance to the point and the current time stamp
-			return findCargoCenter(&lidGroups[i]);
+			// findCargoCentre iterates through the points in the chossen circle and calculates the centre
+			return findCargoCenter(lidGroups[i].basePointDistance);
 		}
 	}
 
-	// if no acceptable circle is found the function returns this
-	lidattp noCargo;
+	// if no acceptable circle is found return an zeroed polarPoint objec (with a time stamp)
+	polarPoint noCargo;
 	noCargo.angle = 0.0;
-	noCargo.dist = 0.0;
+	noCargo.dist = 0;
 	noCargo.tstamp = frc::Timer::GetFPGATimestamp();
 	return noCargo;
 }
@@ -831,137 +838,171 @@ lidattp Lidar::findCargo() {
 // the function seperates the lidar points into an array of groups
 void Lidar::groupPoints() {
 
+	// reset function from previous run
 	groupCount = 0;
 
-	lidGroups[0].startIndex = 0;
-	lidGroups[0].closestPointIndex = 0;
+	// initialize first group
+	lidGroups[0].startIndex = 0;							// set the start index of the cargo
+	lidGroups[0].basePointDistance = lidFiltered[0].dist;	// sets the shortest distance in the group (sets it to the distance of lidFiltered[0] because that is currently the only point in the group)
+	lidGroups[0].basePointAngle = lidFiltered[0].angle;		// sets the angle to the closest point in the group (sets it to the angle of lidFiltered[0] because that is currently the closest point in the group)
+	lidGroups[0].scoreStartIndex = 0;						// sets the entry point for scoreGroup() (0 because there is currently only lidFiltered[0] in the group)
+	equidistantPointCount = 1;								// sets the number of points that are tied for closest in the group (sets it to 1 because only one point is currently the closest)
 
-	int p;
+	
+
+	int p; // this variable needs ot be accessible after the for loop
 
 	for (p = 1; p < filteredCount; p++ ) {
 
+		// precompile conditions
+		bool deltaAngleTooLarge = (lidFiltered[p].angle - lidFiltered[p - 1].angle) > CARGO_MAX_ACCEPTED_DELTA_ANGLE;
+		bool deltaDistanceTooLarge = std::abs(lidFiltered[p].dist - lidFiltered[p - 1].dist) > CARGO_MAX_ACCEPTED_DELTA_DISTANCE;
+
 		// if the difference in angle or distance is to large create a new group
-		bool deltaAngleTooLarge = (lidFiltered[p].angle - lidFiltered[p - 1].angle) > MAX_ACCEPTED_DELTA_ANGLE;
-		bool deltaDistanceTooLarge = std::abs( lidFiltered[p].dist - lidFiltered[p - 1].dist ) > MAX_ACCEPTED_DELTA_DISTANCE;
-		if ( deltaAngleTooLarge || deltaDistanceTooLarge) {
-			lidGroups[groupCount].endIndex = p;
-			lidGroups[groupCount].closestPointDistance = lidFiltered[lidGroups[groupCount].closestPointIndex].dist;
-			groupCount++;
-			lidGroups[groupCount].startIndex = p;
-			lidGroups[groupCount].closestPointIndex = p;
+		if (deltaAngleTooLarge || deltaDistanceTooLarge) {
+
+			// finalize values for old group
+			lidGroups[groupCount].endIndex = p - 1;									// set the group end index
+			lidGroups[groupCount].basePointAngle /= (double)equidistantPointCount;	// average the basePointAngle (until now this was storing the sum of the angles of all the points that are tied for closest)
+			groupCount++;															// increment groupCount
+
+			// initialize new group
+			equidistantPointCount = 1;												// resent equidistantPointCount
+			lidGroups[groupCount].startIndex = p;									// set the new group's start index
+			lidGroups[groupCount].basePointDistance = lidFiltered[p].dist;			// set the current basePointDistance
+			lidGroups[groupCount].basePointAngle = lidFiltered[p].angle;			// set the current basePointAngle
+			lidGroups[groupCount].scoreStartIndex = p;								// set the current entry point index for scoreGroup()
 		}
 
-		// if the group is not part of a new group and the current point is closer than the previous closest point in the group
-		else if ( lidFiltered[p].dist < lidFiltered[lidGroups[groupCount].closestPointIndex].dist ) {
+		// if the current point the closest in the group
+		else if (lidFiltered[p].dist < lidGroups[groupCount].basePointDistance) {
+			
+			equidistantPointCount = 1;										// reset the equidistantPointCount
+			lidGroups[groupCount].basePointDistance = lidFiltered[p].dist;	// update the group's basePointDistance (to the distance that is currently the shortest)
+			lidGroups[groupCount].basePointAngle = lidFiltered[p].angle;	// update the basePointAngle (to the angle of the point that is currently the closeset)
+			lidGroups[groupCount].scoreStartIndex = p;						// reset the entry point index for scoreGroup()
+		}
 
-			// set the group's closest point to the current point
-			lidGroups[groupCount].closestPointIndex = p;
+		// if the current reaiding is the same distance as the previous one
+		else if ( lidFiltered[p].dist == lidGroups[groupCount].basePointDistance) {
+
+			lidGroups[groupCount].basePointAngle += lidFiltered[p].angle;	// add to the basePointAngle, this gets averaged out when the group is finalized
+			equidistantPointCount++;										// increment the equidistancePointCount (one more point is tied for closeset in the group)
 		}
 	}
 
-	lidGroups[groupCount].endIndex = p;
-	lidGroups[groupCount].closestPointDistance = lidFiltered[lidGroups[groupCount].closestPointIndex].dist;
-	groupCount++;
+	// finilize values for the last group
+	lidGroups[groupCount].endIndex = p - 1;									// set the group end index
+	lidGroups[groupCount].basePointAngle /= (double)equidistantPointCount;	// average the basePointAngle
 
-	// this sort function orders the groups from closest to farthest
+	// sort the groups by proximity
 	std::sort(lidGroups, lidGroups+groupCount, sortCompareGroups);
 }
 
+// this function checks if the input group is possibly cargo based on the angle that the group spans
 bool Lidar::isPotentialCargo(grouptp *testGroup) {
 
-	int closestPtIndex = testGroup->closestPointIndex;
-	int ptsBeforeClosestPt = closestPtIndex - testGroup->startIndex;
-	int ptsAfterClosestPt = testGroup->endIndex - 1 - closestPtIndex;
-	int ptsPerSide = pointsOnCargo(testGroup->closestPointIndex);
+	double angleBeforeCentrePoint = testGroup->basePointAngle - lidFiltered[testGroup->startIndex].angle;		// stores the angle between the smallest angle in the group and the group's basePointAngle
+	double angleAfterCentrePoint = lidFiltered[testGroup->endIndex].angle - testGroup->basePointAngle;			// stores the angle between the largest angle in the group and the group's basePointAngle
+	double minAnglePerSide = angleOnCargo((double)testGroup->basePointDistance) * CARGO_MIN_ACCEPTED_PORTION;	// stores the minimum angle on each side of the basePoint needed for the group to be considered a potential cargo
 
-	if (ptsBeforeClosestPt >= (ptsPerSide - 2) && ptsAfterClosestPt >= (ptsPerSide - 2)) {
-		printf("current group is potential cargo");
+	printf("angle before: %f, angle after: %f, minimum angle per side: %f\n", angleBeforeCentrePoint, angleAfterCentrePoint, minAnglePerSide);
+
+	if (angleBeforeCentrePoint >= minAnglePerSide && angleAfterCentrePoint >= minAnglePerSide)
 		return true;
-	}
-
-	printf("current group is not potential cargo");
-	return false;
+	else
+		return false;
 }
 
 // this function returns the number of points expected to be visible on the cargo, based on the distance to the closest point
-int Lidar::pointsOnCargo(double distance) {
-	return (asin(RADIUS/(distance + RADIUS))*180/3.14159 - 1);
+double Lidar::angleOnCargo(double distance) {
+	return asin(CARGO_RADIUS/(distance + CARGO_RADIUS)) * 180.0/M_PI;
 }
 
 // this function itterates through points on a posible cargo and scores it based how close the readings are to the expected values
-double Lidar::scoreCargo( grouptp *testGroup ) {
-	double cargoError = 0.0;
-	int pointCount = 0;
+double Lidar::scoreGroup(grouptp *testGroup) {
 
-	int basePtIndex = testGroup->closestPointIndex;
-	double basePtAngle = lidFiltered[basePtIndex].angle;
-	double basePtDistance = testGroup->closestPointDistance;
+	// reset the function from the previous run
+	double cargoError = 0.0;	// stores the error of the group
+	int pointCount = 0;			// stores the number of points found to be in the gorup
 
-	int i;
-	for (i = basePtIndex - 1; i >= testGroup->startIndex; i--) {
-		double ptDistance = lidFiltered[i].dist;
-		double deltaAngle = basePtAngle - lidFiltered[i].angle;
-		
-		double distanceExpected = expectedDistance(deltaAngle, basePtDistance);
+	// function variable declarations
+	int i;						// this variable must be assesible after the loops
+	double deltaAngle;			// stores the difference in angle between the current point and the group's basePointAngle
+	double distanceExpected;	// stores the difference in distance between the current point and the group's basePointDistance
 
-		if (distanceExpected == -1) {
+	// starting from the the group's scoreStartIndex, this loop iterates through lidFiltered backwards
+	// until it finds it reaches the end of the group or it finds a point that does not mathematicaly fit on the cargo
+	for (i = testGroup->scoreStartIndex; i >= testGroup->startIndex; i--) {
+
+		deltaAngle = testGroup->basePointAngle - lidFiltered[i].angle;								// set deltaAngle
+		distanceExpected = expectedDistance(deltaAngle, (double)testGroup->basePointDistance);		// set distanceExpected
+
+		// if the the angle of the point is found to be off the edge of the cargo distanceExpected is set to -1.0
+		if (distanceExpected == -1.0) {
 			break;
 		} else {
-			cargoError += std::abs(lidFiltered[i].dist - distanceExpected);
+			cargoError += std::abs((double)lidFiltered[i].dist - distanceExpected);		// increases the cargoError by the difference between the expected distance and the distance measured by the lidar
+			pointCount++;																// incrementents the point count (one more point was found to be on the potential cargo)
+		}
+	}
+	cargoStartIndex = i + 1;		// set the cargoStartIndex to the first index that was found to be on the cargo
+
+	// starting from one after the the group's scoreStartIndex, this loop iterates through lidFiltered forwards
+	// until it finds it reaches the end of the group or it finds a point that does not mathematicaly fit on the cargo
+	for (i = testGroup->scoreStartIndex + 1; i <= testGroup->endIndex; i++) {
+
+		deltaAngle = testGroup->basePointAngle - lidFiltered[i].angle;
+		distanceExpected = expectedDistance(deltaAngle, (double)testGroup->basePointDistance);
+
+		if (distanceExpected == -1.0) {
+			break;
+		} else {
+			cargoError += std::abs((double)lidFiltered[i].dist - distanceExpected);
 			pointCount++;
 		}
 	}
+	cargoEndIndex = i - 1;			// set the cargoStartIndex to the last index that was found to be on the cargo
 
-	cargoStartIndex = i + 1;
+	printf("start index: %i, end index: %i, error: %f\n", cargoStartIndex, cargoEndIndex, (cargoError/pointCount));
 
-	for (i = basePtIndex + 1; i < testGroup->endIndex; i++) {
-		double ptDistance = lidFiltered[i].dist;
-		double deltaAngle = basePtAngle - lidFiltered[i].angle;
-		
-		double distanceExpected = expectedDistance(deltaAngle, basePtDistance);
-
-		if (distanceExpected == -1) {
-			break;
-		} else {
-			cargoError += std::abs(lidFiltered[i].dist - distanceExpected);
-			pointCount++;
-		}
-	}
-
-	cargoEndIndex = i;
-
-	printf("cargo error: %f", (cargoError / pointCount));
-
-	return cargoError / pointCount;
+	return cargoError/pointCount; 	// average cargoError by dividing by the number of points found on the cargo and return the value
 }
 
 // this function conducts the math to calculate the expected distance to the ball based on the angle of the lidar reading
 double Lidar::expectedDistance(double deltaAngle, double distance) {
-	distance += RADIUS;
-	double twoCosTheta = 2*distance*cos(deltaAngle*3.14159/180);
-	double discriminant = (twoCosTheta*twoCosTheta - 4*(distance*distance - RADIUS*RADIUS));
-	if (discriminant < 0.0) {
+
+	distance += CARGO_RADIUS;	// increase the input distance by the cargo radius (this distance is used as the distace to the centre of the cargo)
+
+	double twoCosTheta = 2.0 * distance * cos(deltaAngle*M_PI/180.0);	// this value is used multiple times so it is precaclulated to avoid running cos() twice
+
+	double discriminant = (twoCosTheta*twoCosTheta - 4.0 * (distance*distance - CARGO_RADIUS*CARGO_RADIUS));	// the discriminant is calculated to determine of the point is on the cargo
+
+	// if the discriminant is negative the point is not mathematically on the carog and there is no answer and the function returns -1.0
+	if (discriminant < 0.0)
 		return -1.0;
-	}
-	return (twoCosTheta - sqrt(discriminant))/2;
+
+	// otherwise the expected distance to the point on the cargo (based on the angle between the reading and the centre of the cargo) is returned
+	else
+		return (twoCosTheta - sqrt(discriminant)) / 2;
+
 }
 
-lidattp Lidar::findCargoCenter(grouptp *cargoGroup) {
+// this function takes a cargo group as input and averages the point between the cargoStartIndex and cargoEndIndex in order to find the centre of the cargo
+polarPoint Lidar::findCargoCenter(int basePointDistance) {
 
-	printf("finding centre point\n");
+	// reset variables from previous run
+	double cargoAngle = 0.0;		// stores the sum of the angles of all the points on the cargo
 
-	double cargoAngle = 0.0;
-	double cargoDistance = 0.0;
-
-	for (int i = cargoStartIndex; i < cargoEndIndex; i++) {	
+	// this loops sums the the angles of all the points on the cargo
+	for (int i = cargoStartIndex; i <= cargoEndIndex; i++) {	
 		cargoAngle += lidFiltered[i].angle;
-		cargoDistance += lidFiltered[i].dist;
 	}
 
-	lidattp centerPt;
-	centerPt.angle = cargoAngle / (cargoEndIndex - cargoStartIndex);
-	centerPt.dist = cargoGroup->closestPointDistance + RADIUS;
-	centerPt.tstamp = frc::Timer::GetFPGATimestamp();
+	polarPoint centerPt;													// declare polarPoint object to return
+	centerPt.angle = cargoAngle / (cargoEndIndex - cargoStartIndex + 1);	// sets the cargo angle to the average angle of all the points on the cargo
+	centerPt.dist = basePointDistance + (int)CARGO_RADIUS;					// sets the cargo distance to the group's base point distance plus the cargo's radius
+	centerPt.tstamp = frc::Timer::GetFPGATimestamp();						// sets the time stamp to the current time
 
 	return centerPt;
 }
