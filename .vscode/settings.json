@@ -56,8 +56,12 @@
     "typeinfo": "cpp",
     "utility": "cpp",
     "*.inc": "cpp",
+<<<<<<< HEAD
     "numeric": "cpp",
     "bitset": "cpp"
+=======
+    "complex": "cpp"
+>>>>>>> 4b93c43931935df01dd8a8be59e624b1be00e789
   },
   "C_Cpp.configurationWarnings": "Disabled"
 }

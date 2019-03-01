@@ -25,42 +25,45 @@ MoveArm::MoveArm(int btn): frc::Command() {
 
 // Called just before this Command runs the first time
 void MoveArm::Initialize() {
-    w_encoder = frc::SmartDashboard::GetNumber("Wrist Set Encoder",-1);
-    e_encoder = frc::SmartDashboard::GetNumber("Elbow Set Encoder",-1);
-    s_encoder = frc::SmartDashboard::GetNumber("Shoulder Set Encoder",-1);
-
     done = false;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void MoveArm::Execute() {
-        if((m_btn == 0) && (w_encoder != -1)) {
-            Robot::manipulatorArm->setWristEncoder(w_encoder);
-            done = true;
-        }
-        else if((m_btn == 1) && (e_encoder != -1)){
-            Robot::manipulatorArm->setElbowEncoder(e_encoder);
-            done = true;
-        }
-        else if((m_btn == 2) && (s_encoder != -1)){
-            Robot::manipulatorArm->setShoulderEncoder(s_encoder);
-            done = true;
-        }
-        else if (m_btn == 3) {
-            double p = frc::SmartDashboard::GetNumber("Set P", 1);
-            double i = frc::SmartDashboard::GetNumber("Set I", 0);
-            double d = frc::SmartDashboard::GetNumber("Set D", 0);
-
-            Robot::manipulatorArm->setShoulderPID(p,i,d);
-            done = true;
-        }
-        else if (m_btn == 4) {
-            done = Robot::manipulatorArm->moveTo(0);
-        }
-        else if (m_btn == 5) {
-            done = Robot::manipulatorArm->moveTo(1);
-        }
-
+    switch(m_btn) {
+		case 0:
+			break;
+		case 1: //Carry
+			done = Robot::manipulatorArm->moveTo(10);
+			break;
+		case 2: //Rocket Low
+			done = Robot::manipulatorArm->moveTo(0);
+			break;
+		case 3: //Rocket Medium
+			done = Robot::manipulatorArm->moveTo(1);
+			break;
+		case 4: //Rocket High
+			done = Robot::manipulatorArm->moveTo(2);
+			break;
+		case 5: //Fine Motion
+			
+			break;
+		case 6:	//Pick up
+			
+			break;
+		case 7: //Human Station Hatch
+			done = Robot::manipulatorArm->moveTo(3);
+			break;
+		case 8: //Human Station Cargo
+			done = Robot::manipulatorArm->moveTo(6);
+			break;
+		case 9: //Swap Intake
+			
+			break;
+		case 10: //Cargo Ship
+			done = Robot::manipulatorArm->moveTo(7);
+			break;
+	}
 }
 
 // Make this return true when this Command no longer needs to run execute()
