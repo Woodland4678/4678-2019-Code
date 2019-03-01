@@ -34,7 +34,7 @@ void IntakeControl::Execute() {
 
     // Deadzone check
     if (JoyY < 0.05 && JoyY > -0.05) {
-        JoyY = 0;
+        JoyY = 0.0;
     }
 
     Robot::manipulatorArm->intakeWheelsSpin(JoyY);

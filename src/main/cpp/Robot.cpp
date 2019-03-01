@@ -107,7 +107,9 @@ void Robot::TeleopPeriodic() {
 	frc::SmartDashboard::PutNumber("Elbow Pot", manipulatorArm->getElbowPot());
 	//frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistPot());
 
-	frc::Scheduler::GetInstance()->Run();
+	Robot::climber->testMovement();
+
+	
 }
 
 #ifndef RUNNING_FRC_TESTS

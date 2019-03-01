@@ -55,7 +55,9 @@
     "tuple": "cpp",
     "typeinfo": "cpp",
     "utility": "cpp",
-    "*.inc": "cpp"
+    "*.inc": "cpp",
+    "numeric": "cpp",
+    "bitset": "cpp"
   },
   "C_Cpp.configurationWarnings": "Disabled"
 }

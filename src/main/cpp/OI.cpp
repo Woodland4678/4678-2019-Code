@@ -63,13 +63,13 @@ OI::OI() {
     // driverBtn5_LB_Release.reset(new frc::JoystickButton(driver.get(), 5));
     // driverBtn5_LB_Release->WhenPressed(new IntakeControl(1));
     driverBtn10_START_ClimbMedium.reset(new frc::JoystickButton(driver.get(), 10));
-    driverBtn10_START_ClimbMedium->WhileHeld(new Climb(0));
+    driverBtn10_START_ClimbMedium->WhenPressed(new Climb(0));
     driverBtn9_BACK_ClimbHigh.reset(new frc::JoystickButton(driver.get(), 9));
-    driverBtn9_BACK_ClimbHigh->WhileHeld(new Climb(1));
+    driverBtn9_BACK_ClimbHigh->WhenPressed(new Climb(1));
     driverBtn4_Y_LineUpToRocketFar.reset(new frc::JoystickButton(driver.get(), 4));
     driverBtn4_Y_LineUpToRocketFar->WhileHeld(new LineUpToRocket(2));
     driverBtn3_B_LineUpToRocketMiddle.reset(new frc::JoystickButton(driver.get(), 3));
-    driverBtn3_B_LineUpToRocketMiddle->WhileHeld(new LineUpToRocket(1));
+    driverBtn3_B_LineUpToRocketMiddle->WhenPressed(new LineUpToRocket(1));
     driverBtn2_A_LineUpToRocketClose.reset(new frc::JoystickButton(driver.get(), 2));
     driverBtn2_A_LineUpToRocketClose->WhileHeld(new LineUpToRocket(0));
 
