@@ -33,9 +33,12 @@ void GoToBall::Execute() {
 
     if (Robot::lidar->readComplete() == true)  {
         polarPoint centrePt = Robot::lidar->findCargo();
-        printf("centre point angle: %f\n", centrePt.angle);
-        printf("centre point distance: %i\n", centrePt.dist);
-        printf("time stamp: %i\n", centrePt.tstamp);
+
+        //if (centrePt.dist == 0)
+        //    printf("death\n");
+        //if (centrePt.dist != 0)
+        //    printf("oops!\n");
+        printf("angle: %f, distance: %i\n", centrePt.angle, centrePt.dist);
         
         cargoIsFound = true;
     }
