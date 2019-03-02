@@ -1069,6 +1069,6 @@ bool Lidar::getHatchPlacement(){
 
 // 	}
 
-}
+//}
 
 
