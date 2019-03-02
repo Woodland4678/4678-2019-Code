@@ -1012,10 +1012,10 @@ polarPoint Lidar::findCargoCenter(int basePointDistance) {
 	return centerPt;
 }
 
-void Lidar::checkLinesForRocketCargo(){
+void Lidar::checkLinesForHatches(){ //checks to see if any viewed lines resemble the walls of a rockets hatch walls so that the waist can rotate toward the hatches
 	for(int x=0;x<linecnt;x++){
-		if(std::abs(lines[x].length-7.19)<0.5){
-			if(std::abs(lines[x+1].length-7.19)<0.5){
+		if(std::abs(lines[x].length-183)<13){
+			if(std::abs(lines[x+1].length-183)<13){
 					//rocket found!
 					midPointX = (lines[x].start.x + lines[x+1].end.x)/2 - 10.625;
 					midPointY = (lines[x].start.y + lines[x+1].end.y)/2;
@@ -1044,7 +1044,31 @@ bool Lidar::getHatchPlacement(){
 		case 2:
 			filterData(true, 120,120, 50, 1000);
 			FindLines();
-			checkLinesForRocketCargo();
+			checkLinesForHatches();
 			break;
 	}
 }
+
+// not completed
+// void Lidar::checkLinesForHatchWalls(){ //checks lines for hatch walls to drive to
+// 	switch(driveToHatchWallCase){
+// 		case 0:
+// 			readLidar();
+// 			driveToHatchWallCase++;
+// 			break;
+// 		case 1:
+// 			if(readComplete()){
+// 				driveToHatchWallCase++;
+// 			}
+// 			break;
+// 		case 2:
+// 			filterData(true, 120,120,50,1000);
+// 			FindLines();
+		
+
+
+// 	}
+
+}
+
+
