@@ -71,6 +71,9 @@ ManipulatorArm::ManipulatorArm() : frc::Subsystem("ManipulatorArm") {
 	elbowPot.reset(new frc::AnalogInput(2));
 	wristPot.reset(new frc::AnalogInput(3));
 
+	cargoSensor.reset(new frc::DigitalInput(0));
+	//hatchSensor.reset(new frc::DigitalInput());
+
 	hatchServo.reset(new frc::Servo(0));
     AddChild("Servo", hatchServo);
 
@@ -161,6 +164,9 @@ void ManipulatorArm::InitDefaultCommand() {
 }
 
 void ManipulatorArm::Periodic() {
+
+	frc::SmartDashboard::PutBoolean("Cargo", cargoSensor->Get());
+
     // Put code here to be run every loop
 
 	//Forward Kinematics
@@ -666,6 +672,11 @@ void ManipulatorArm::clearInCargoPosition() {
 bool ManipulatorArm::getInCargoPosition() {
 	return (m_InCargoPosition);
 }
+
+//bool ManipulatorArm::ifCargo() {
+//	return cargoSensor->Get();
+//}
+
 void ManipulatorArm::setInHatchPosition() {
 	m_InHatchPosition = true;
 }

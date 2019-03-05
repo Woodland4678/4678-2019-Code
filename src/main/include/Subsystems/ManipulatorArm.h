@@ -40,6 +40,9 @@ private:
 	std::shared_ptr<frc::AnalogInput> wristPot;
 	std::shared_ptr<frc::Servo> hatchServo;
 
+	std::shared_ptr<frc::DigitalInput> cargoSensor;
+	
+
 	ArmSegment *m_Segs[4];
 	ArmMotion *m_Moves[5];
 	int m_MotionCase = 0;
