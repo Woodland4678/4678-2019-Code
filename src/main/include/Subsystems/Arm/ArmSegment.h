@@ -21,6 +21,9 @@ private:
 		
 		double absAngle;
 		double relAngle;
+
+		double absAngleTarget; // What we want abs Angle to be (mostly for wrist, maybe waist eventually)
+
 	} phytp;
 	
 	typedef struct convertInfo {
@@ -80,21 +83,29 @@ public:
 	void setCloseLoopError(int value);
 	void setFeedbackSensorType(ctre::phoenix::motorcontrol::FeedbackDevice device);
 	void setFramePeriod(ctre::phoenix::motorcontrol::StatusFrame frame, int valueMS);
-	void setSelectedSensorValue(int value);
+	void setSelectedSensorValue(double value);
+	void setAbsAngleTarget(double ang1);
+
 	
 	//Encoders
 	int getQuadEncoderReading();
 	int getAbsEncoderReading();
-	int getSelectedSensorValue();
+	double getSelectedSensorValue();
 	int getPotentiometerReading();
 	
 	double getRelAngle();
 	double getAbsAngle();
+	double getLength();
+
 	
 	double getStartX();
 	double getStartY();
 	double getEndX();
 	double getEndY();
+
+	double getCurrent();
+	double getAbsAngleTarget();
+
 	
 	ArmSegment * getParent();
 	
@@ -103,6 +114,9 @@ public:
 	double getConversionIntercept_Encoder();
 	double getConversionSlope_Pot();
 	double getConversionIntercept_Pot();
+
+	void setConvSlope_Pot(double value);
+	bool setAng(double ang);
 	
 	double convertAngleToEncoder(double angle);
 	double convertEncoderToAngle(double encoder);

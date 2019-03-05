@@ -25,7 +25,7 @@ private:
 	double invSigmod(double angle);
 	double linear(double tim);
 	double invlinear(double angle);
-	
+
 public:
 	ArmMotion(double startAngle, double endAngle, double duration, int type =0 );
 	
@@ -44,6 +44,9 @@ public:
 	int getCount();
 	int getCountEfficiency();
 	double getMultiplier();
+
+	double getDuration();
+	double getStartTime();
 	
 	double getTimeFromAngle(double angle);
 	

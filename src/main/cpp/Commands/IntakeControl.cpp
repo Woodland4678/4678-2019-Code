@@ -37,6 +37,16 @@ void IntakeControl::Execute() {
         JoyY = 0.0;
     }
 
+    // If direction is pull-in, set indicator that cargo claw is holding cargo.  This
+    // is really only relevant in the floor pick up and human station positions.
+    // setting a bool in ManipulatorArm to track this.
+    if ((Robot::manipulatorArm->getInCargoPosition()) && (JoyY > 0.01))
+        Robot::manipulatorArm->setIntakeMode(2); // Mode 2, we have cargo.
+    if (JoyY <-0.01) // Cargo ejected
+        Robot::manipulatorArm->setIntakeMode(0); // Mode 0, we just spit out the cargo.
+
+
+    // If direction is push-out, set indicator that cargo claw is no longer holding cargo.
     Robot::manipulatorArm->intakeWheelsSpin(JoyY);
 
     m_finished = !Robot::oi->getdriver()->GetRawButton(6);

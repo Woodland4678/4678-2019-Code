@@ -78,7 +78,7 @@ private:
 	int glob_lidar_ready; // Gets set to 1 when lidar data is ready in lidat[].  Processing routines should
 	// set this to 0 so they can detect when the next valid set of data is available.
 	int glob_lidar_count; // Number of samples in lidat[] available for processing.
-
+	int glob_lidar_exists; // when 0, don't try to get lidar data.
 
 
 	lidattp lidat[1024]; // Allow up to 1024 samples in the final array prepared for processing.

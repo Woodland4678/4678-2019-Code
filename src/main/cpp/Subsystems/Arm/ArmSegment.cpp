@@ -3,6 +3,7 @@
 #include "ctre/phoenix.h"
 #include "rev/CANSparkMax.h"
 #include "Subsystems/Arm/ArmSegment.h"
+#include "math.h"
 
 //Constructor
 ArmSegment::ArmSegment(std::shared_ptr<WPI_TalonSRX> controller, std::shared_ptr<frc::AnalogInput> pot, double len, ArmSegment *parent, double x, double y) {
@@ -55,15 +56,15 @@ bool ArmSegment::initEncoderValues() {
 	
 	int pot = getPotentiometerReading();
 	double ang = convertPotToAngle((double)pot);
-	int enc = (int)convertAngleToEncoder(ang);
+	double enc = convertAngleToEncoder(ang);
 
-	printf("\n%i | %f | %i | %i",pot,ang,enc,getSelectedSensorValue());
+	printf("\n%i | %f | %f | %f",pot,ang,enc,getSelectedSensorValue());
 
 	setSelectedSensorValue(enc);
 
 	//Check value
 	int cnt = 0;
-	while((getSelectedSensorValue() != enc)&&(cnt < 50)) {
+	while((fabs(getSelectedSensorValue() - enc) > 10.0)&&(cnt < 50)) {
 		setSelectedSensorValue(enc);
 		cnt++;
 	}
@@ -101,6 +102,9 @@ void ArmSegment::setPotValues(double pot1, double ang1, double pot2, double ang2
 	m_PotSet = true;
 	m_AngSet = true;
 }
+void ArmSegment::setAbsAngleTarget(double ang1){
+	m_physicalAttributes.absAngleTarget = ang1;
+}
 void ArmSegment::setPhysicalAttributes(double x, double y) {
 	m_physicalAttributes.posX = x;
 	m_physicalAttributes.posY = y;
@@ -131,11 +135,17 @@ int ArmSegment::getQuadEncoderReading() {
 int ArmSegment::getAbsEncoderReading() {
 	return m_Controller->GetSensorCollection().GetPulseWidthPosition();
 }
-int ArmSegment::getSelectedSensorValue() {
+double ArmSegment::getSelectedSensorValue() {
 	if(m_Talon)
 		return m_Controller->GetSelectedSensorPosition(0);
 	else
 		return m_ControllerREV->GetEncoder().GetPosition();
+}
+double ArmSegment::getCurrent() {
+	if(m_Talon)
+		return m_Controller->GetOutputCurrent();
+	else
+		return m_ControllerREV->GetOutputCurrent();
 }
 int ArmSegment::getPotentiometerReading() {
 	return m_potentiometer->GetValue();
@@ -164,6 +174,12 @@ double ArmSegment::getRelAngle() {
 double ArmSegment::getAbsAngle() {
 	return m_physicalAttributes.absAngle;
 }
+double ArmSegment::getAbsAngleTarget() {
+	return m_physicalAttributes.absAngleTarget;
+}
+double ArmSegment::getLength() {
+	return m_physicalAttributes.length;
+}
 
 //Conversions
 double ArmSegment::convertAngleToEncoder(double angle) {
@@ -178,6 +194,25 @@ double ArmSegment::convertAngleToPot(double angle) {
 }
 double ArmSegment::convertPotToAngle(double pot) {
 	return (pot * m_ConversionValues.convPAM + m_ConversionValues.convPAY);
+}
+
+void ArmSegment::setConvSlope_Pot(double value) {
+	m_ConversionValues.convPAM = value;
+}
+
+bool ArmSegment::setAng(double ang) {
+	int enc = (int)convertAngleToEncoder(ang);
+	setSelectedSensorValue(enc);
+
+	//Check value
+	int cnt = 0;
+	while((getSelectedSensorValue() != enc)&&(cnt < 50)) {
+		setSelectedSensorValue(enc);
+		cnt++;
+	}
+	if(cnt >= 50)
+		return false;
+	return true;
 }
 
 double ArmSegment::getConversionSlope_Encoder() {
@@ -242,9 +277,9 @@ void ArmSegment::setFeedbackSensorType(ctre::phoenix::motorcontrol::FeedbackDevi
 void ArmSegment::setFramePeriod(ctre::phoenix::motorcontrol::StatusFrame frame, int valueMS) {
 	m_Controller->SetStatusFramePeriod(frame, valueMS, 0);
 }
-void ArmSegment::setSelectedSensorValue(int value){
+void ArmSegment::setSelectedSensorValue(double value){
 	if(m_Talon)
-		m_Controller->SetSelectedSensorPosition(value, 0, 0);
+		m_Controller->SetSelectedSensorPosition((int)value, 0, 0);
 	else{
 		m_ControllerREV->GetEncoder().SetPosition(value);
 	}

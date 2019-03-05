@@ -67,6 +67,12 @@ double ArmMotion::getMultiplier() {
 double ArmMotion::getTimeFromAngle(double angle) {
 	return invSigmod(angle);
 }
+double ArmMotion::getDuration() {
+	return m_Duration;
+}
+double ArmMotion::getStartTime() {
+	return m_StartTime;
+}
 
 //Move Functions
 double ArmMotion::calculateNextPoint(double current) {
@@ -95,6 +101,11 @@ bool ArmMotion::isComplete(double current, double currentAngle) {
 
 
 //Calculations
+// Since we'll be using the identical sigmoid for each of the 4 joints, we really only need to
+// calculate the time_mult value once per cycle, not once for each axis.
+// Testing of the arm by performing moving to high placement
+// then disable, lower arm to ground and re-enable shows that full arm
+// speed is not an issue so 
 double ArmMotion::sigmod(double tim) {
 	return (((m_EndAngle-m_StartAngle)/(1+exp((-(m_multiplier2*tim))+(m_offset + 4))))+m_StartAngle);
 	//		(((end-start)/(1+exp((-(mult*x))+offset)))+start);

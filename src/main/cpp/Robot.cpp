@@ -77,31 +77,80 @@ void Robot::TeleopInit() {
 	lidar->startLidar();
 
 	manipulatorArm->openLog();
-
-	frc::SmartDashboard::PutNumber("Wrist Set Encoder", manipulatorArm->getWristEncoder());
-	frc::SmartDashboard::PutNumber("Elbow Set Encoder", manipulatorArm->getElbowEncoder());
-	frc::SmartDashboard::PutNumber("Shoulder Set Encoder", manipulatorArm->getShoulderEncoder());
-
-	frc::SmartDashboard::PutNumber("Set P", 1);
-	frc::SmartDashboard::PutNumber("Set I", 0);
-	frc::SmartDashboard::PutNumber("Set D", 0);
-
-	frc::SmartDashboard::PutNumber("Test", 0);
 	// This makes sure that the autonomous stops running when
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
 	// these lines or comment it out.
+
+	atshoulder = 119.0;
+	atelbow = -145.0;
+
 	if (autonomousCommand != nullptr)
 		autonomousCommand->Cancel();
 }
 
 void Robot::TeleopPeriodic() {
+	char buf[255];
 
 	//frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistPot());
 
-	Robot::climber->testMovement();
+	// Code added to allow use of POV to move shoulder and elbow for
+	// establishing target positions with the robot driving them.
 
-	
+	// printf("Operator POV=%d\n\r",Robot::oi->getoperator1()->GetPOV());
+	switch(Robot::oi->getoperator1()->GetPOV())
+	{
+		case 0: // Up
+			atshoulder += 0.5;
+			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
+			sprintf(buf,"%f,%f\n\r",atshoulder,atelbow);
+			frc::SmartDashboard::PutString("Shoulder+Elbow",buf);
+		break;
+		case 90: // Right
+			atelbow += 0.5;
+			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
+			//printf("Right Sh=%f, El=%f\n\r",atshoulder,atelbow);
+			sprintf(buf,"%f,%f\n\r",atshoulder,atelbow);
+			frc::SmartDashboard::PutString("Shoulder+Elbow",buf);
+		break;
+		case 180: // Down
+			atshoulder -= 0.5;
+			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
+			//printf("Down Sh=%f, El=%f\n\r",atshoulder,atelbow);
+			sprintf(buf,"%f,%f\n\r",atshoulder,atelbow);
+			frc::SmartDashboard::PutString("Shoulder+Elbow",buf);
+		break;
+		case 270: // Left
+			atelbow -= 0.5;
+			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
+			//printf("Left Sh=%f, El=%f\n\r",atshoulder,atelbow);
+			sprintf(buf,"%f,%f\n\r",atshoulder,atelbow);
+			frc::SmartDashboard::PutString("Shoulder+Elbow",buf);
+		break;
+	}
+	switch(Robot::oi->getdriver()->GetPOV())
+	{
+		case 0: // Up
+			Robot::manipulatorArm->incAbsAngleTarget(); // m_Segs[2]->setAbsAngleTarget(Robot::manipulatorArm->m_Segs[2]->getAbsAngleTarget() + 0.25);
+			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
+		break;
+		case 90: // Right
+			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
+			//printf("Right Sh=%f, El=%f\n\r",atshoulder,atelbow);
+		break;
+		case 180: // Down
+			Robot::manipulatorArm->decAbsAngleTarget(); // m_Segs[2]->setAbsAngleTarget(Robot::manipulatorArm->m_Segs[2]->getAbsAngleTarget() - 0.25);
+			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
+			//printf("Down Sh=%f, El=%f\n\r",atshoulder,atelbow);
+		break;
+		case 270: // Left
+			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
+			//printf("Left Sh=%f, El=%f\n\r",atshoulder,atelbow);
+		break;
+	}
+	//Robot::climber->testMovement();
+
+	frc::Scheduler::GetInstance()->Run();
 }
 
 #ifndef RUNNING_FRC_TESTS
