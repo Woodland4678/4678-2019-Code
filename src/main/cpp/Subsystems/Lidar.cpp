@@ -9,7 +9,7 @@
 // it from being updated in the future.
 
 
-// Cargo Constants
+// Cargo Finding Constants
 #define CARGO_RADIUS						152.4		// the cross-sectional radius of the cargo 9" off the ground
 #define CARGO_MAX_ACCEPTED_ERROR			10			// 
 #define CARGO_MAX_ACCEPTED_DELTA_ANGLE		1.75		// if the difference in angle between points is greater than this -> start a new group
@@ -21,6 +21,10 @@
 #define CARGO_SCAN_MAX_DISTANCE				1500		// the cargo finding algorithm doesn't look at points closer that this distance (mm)
 #define CARGO_SCAN_MIN_DISTANCE				50			// the cargo finding algorithm doesn't look at points beyond this distance (mm)
 
+// Rocket Hatch Finding COnstants
+#define MAX_ACCPETED_ROCKET_FIN_LENGTH		745			// educated guess, needs testing
+#define MIN_ACCPETED_ROCKET_FIN_LEGNTH		700			// same
+#define ROCKET_SIDE_CENTRE_OFFSET			234.95		// the distance between the edge of the rocket side and the centre of the rocket side
 
 #define _USE_MATH_DEFINES // this is supposed to help math constants (pi) work better
 
@@ -569,10 +573,10 @@ void Lidar::FindLines(){
 	//Find lines
 	double distX, distY, totalDist, angle, angle2, diff;
 	bool newline; //used for determine outliers and whether or not to create a new line
-	int n,m,NumLines=0;
+	int n, m, NumLines = 0;
 	int skipto = 0;
 	//Loop through the data
-	for(n=0;n<xyCount;n++)
+	for(n = 0; n < xyCount; n++)
 		{
 		//Allows the code to skip over data points that are determine to
 		//	be outliers
@@ -810,7 +814,7 @@ void Lidar::calculatePathToNearestCube()
 // Put methods for controlling this subsystem
 // here. Call these from Commands.
 
-
+////////////////////////////////////////////////////////////// BALL FINDING //////////////////////////////////////////////////////////////////////
 
 // this function is the accessor point for finding cargo
 polarPoint Lidar::findCargo() {
@@ -856,8 +860,6 @@ void Lidar::groupPoints() {
 	lidGroups[0].basePointAngle = lidFiltered[0].angle;		// sets the angle to the closest point in the group (sets it to the angle of lidFiltered[0] because that is currently the closest point in the group)
 	lidGroups[0].scoreStartIndex = 0;						// sets the entry point for scoreGroup() (0 because there is currently only lidFiltered[0] in the group)
 	equidistantPointCount = 1;								// sets the number of points that are tied for closest in the group (sets it to 1 because only one point is currently the closest)
-
-	
 
 	int p; // this variable needs ot be accessible after the for loop
 
@@ -1020,15 +1022,103 @@ polarPoint Lidar::findCargoCenter(int basePointDistance) {
 	return centerPt;
 }
 
+////////////////////////////////////////////////////////////// ROCKET HATCH FINDING //////////////////////////////////////////////////////////////////////
+
+tpPoint Lidar::findRocketHatch() {
+
+	// ReadLidar() and FindLines() will be run from the command from where this is called
+
+	// iterate through all the lines forwards
+	for (int line = 0; line < linecnt; line++) {
+
+		// if the current line is the right length to be a rocketship fin
+		if (lines[line].length < MAX_ACCPETED_ROCKET_FIN_LENGTH && lines[line].length > MIN_ACCPETED_ROCKET_FIN_LEGNTH) {
+
+			// if either of the next two lines are the side of a rocket (check the next two in case the small side of the fin is visible)
+			if ( lineIsRocketSide(&lines[line], &lines[line + 1]) || lineIsRocketSide(&lines[line], &lines[line + 2]) ) {
+
+				// return the centre of the cargo side
+				return findRocketSideCentre(&rocketSideLine, true);
+			}
+		}
+	}
+	
+	// iterate through all the lines backwards
+	for (int line = 0; line < linecnt; line--) {
+
+		// if the current line is the right length to be a rocketship fin
+		if (lines[line].length < MAX_ACCPETED_ROCKET_FIN_LENGTH && lines[line].length > MIN_ACCPETED_ROCKET_FIN_LEGNTH) {
+
+			// if either of the previous two lines are the side of a rocket (check the previous two in case the small side of the fin is visible)
+			if ( lineIsRocketSide(&lines[line], &lines[line - 1]) || lineIsRocketSide(&lines[line], &lines[line - 2]) ) {
+
+				// return the centre of the cargo side
+				return findRocketSideCentre(&rocketSideLine, false);
+			}
+		}
+	}
+
+	tpPoint noRocket;
+	noRocket.x, noRocket.y = 0;
+	noRocket.tstamp = frc::Timer::GetFPGATimestamp();
+	return noRocket;
+}
+
+bool Lidar::lineIsRocketSide(tpLine *finLine, tpLine *testLine) {
+
+	if (true) {}
+
+}
+
+// this function returns a x-y point with the centre of the rocketship side
+tpPoint Lidar::findRocketSideCentre(tpLine *rocketSideLine, bool forwards) {
+
+	// if we are looking at the left side of the rocket ship (forwards because the lidar reads clockwise)
+	if (forwards) {
+	
+		// store the difference in x and y between the lines start and end points
+		// these values are multiplied by a scaler ratio in order to find the centre of the rocket side
+		double xDist = (double)(rocketSideLine->end.x - rocketSideLine->start.x);
+		double yDist = (double)(rocketSideLine->end.y - rocketSideLine->start.y);
+		double distance = ROCKET_SIDE_CENTRE_OFFSET;
+		
+		// calculates the scaler value to apply to the xDist and yDist values
+		double scaler = ( -2.0 * (xDist + yDist) + sqrt( pow((2.0 * (xDist + yDist)), 2.0) - 8.0 * (pow(xDist, 2.0) + pow(yDist, 2.0) - pow(distance, 2.0)) ) ) / 4.0;
+
+		// create rocket side centre point object
+		tpPoint rocketSideCentre;
+		rocketSideCentre.x = rocketSideLine->start.x + round(scaler * xDist);
+		rocketSideCentre.y = rocketSideLine->start.y + round(scaler * yDist);
+		rocketSideCentre.tstamp = frc::Timer::GetFPGATimestamp();
+
+		return rocketSideCentre;
+	}
+
+	// if we are looking at the right side of the rocket ship (!forwards because the lidar reads clockwise)
+	else {
+
+		// store the difference in x and y between the lines start and end points
+		// these values are multiplied by a scaler ratio in order to find the centre of the rocket side
+		int xDist = rocketSideLine->end.x - rocketSideLine->start.x;
+		int yDist = rocketSideLine->end.y - rocketSideLine->start.y;
+
+	}
+
+
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Lidar::checkLinesForHatches(){ //checks to see if any viewed lines resemble the walls of a rockets hatch walls so that the waist can rotate toward the hatches
 	for(int x=0;x<linecnt;x++){
 		if(std::abs(lines[x].length-183)<13){
 			if(std::abs(lines[x+1].length-183)<13){
-					//rocket found!
-					midPointX = (lines[x].start.x + lines[x+1].end.x)/2 - 10.625;
-					midPointY = (lines[x].start.y + lines[x+1].end.y)/2;
-					waistAngleRocketHatch = std::tan(midPointY/midPointX);
-					waistAngleHypotenuse = std::sqrt(midPointX*midPointX + midPointY*midPointY);
+				//rocket found!
+				midPointX = (lines[x].start.x + lines[x+1].end.x)/2 - 10.625;
+				midPointY = (lines[x].start.y + lines[x+1].end.y)/2;
+				waistAngleRocketHatch = std::tan(midPointY/midPointX);
+				waistAngleHypotenuse = std::sqrt(midPointX*midPointX + midPointY*midPointY);
 
 
 			}
@@ -1057,6 +1147,7 @@ bool Lidar::getHatchPlacement(){
 	}
 }
 
+/*
 // not completed
 // void Lidar::checkLinesForHatchWalls(){ //checks lines for hatch walls to drive to
 // 	switch(driveToHatchWallCase){
@@ -1080,3 +1171,4 @@ bool Lidar::getHatchPlacement(){
 //}
 
 
+*/

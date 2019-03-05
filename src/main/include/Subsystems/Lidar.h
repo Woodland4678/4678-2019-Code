@@ -176,6 +176,11 @@ public:
 	float waistAngleRocketHatch;
 	float waistAngleHypotenuse;
 
+	// Find rocket hatch
+	tpPoint findRocketHatch();
+	bool lineIsRocketSide(tpLine *finLine, tpLine *testLine);				// returns wether or not the testLine is the side of the rocket based on the rocket ship wing (finLine)
+	tpLine rocketSideLine;													// stores which line is the side of the rocket
+	tpPoint findRocketSideCentre(tpLine *rocketSideLine, bool forwards);	// returns the centre of the rocket side based on the input line's slope and start point or endpoint
 
 	//driving to rockets hatch wall methods and variables
 	void checkLinesForHatchWalls();
