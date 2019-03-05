@@ -15,11 +15,7 @@
 #include "frc/WPILib.h"
 #include "rev/CANSparkMax.h"
 
-/**
- *
- *
- * @author ExampleAuthor
- */
+
 class Drivetrain: public frc::Subsystem {
 private:
 	// It's desirable that everything possible is private except

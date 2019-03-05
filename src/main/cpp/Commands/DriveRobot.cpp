@@ -45,20 +45,23 @@ void DriveRobot::Execute() {
     double JoyY = Robot::oi->getdriver()->GetY();
 
     // Deadzone clip
-    if(JoyX < 0.05 && JoyX > -0.05) {
+    if(JoyX < 0.05 && JoyX > -0.05)
         JoyX = 0;
-    }
+    
+    if(JoyY < 0.05 && JoyY > -0.05)
+        JoyY = 0;
+    
 
     double leftPower = -(JoyY - 0.75 * JoyX);
     double rightPower = -(JoyY + 0.75 * JoyX);
 
-    
-    // Clip function for the left motor    
+    /*
+    // Clip function for the left motor
     if(std::abs(leftPower - m_oldLeftPower) > m_maxChange){
         if(m_oldLeftPower > 0 && m_oldLeftPower < leftPower){ //if robot is moving forward, and accelerating
             leftPower = m_oldLeftPower + m_maxChange;
             frc::SmartDashboard::PutString("left motor status: ", "accel in pos");
-         }
+        }
 
         if(m_oldLeftPower < 0 && m_oldLeftPower > leftPower){ //if robot is moving backward, and accelerating
             leftPower = m_oldLeftPower - m_maxChange;
@@ -99,7 +102,7 @@ void DriveRobot::Execute() {
         rightPower = rightPower/1.05;
         leftPower = leftPower/1.05;
     }
-    
+    */
 
     // Set old powers for the next time function is called
     m_oldLeftPower = leftPower;
