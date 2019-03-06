@@ -44,65 +44,116 @@ void DriveRobot::Execute() {
     double JoyX = Robot::oi->getdriver()->GetX();
     double JoyY = Robot::oi->getdriver()->GetY();
 
-    // Deadzone clip
-    if(JoyX < 0.05 && JoyX > -0.05)
-        JoyX = 0;
+    // Apply deadzone
+    if (JoyX*JoyX + JoyY*JoyY < 0.0025)
+        JoyX, JoyY = 0;
     
-    if(JoyY < 0.05 && JoyY > -0.05)
-        JoyY = 0;
-    
-
+    // Convert joystick values to motor power
     double leftPower = -(JoyY - 0.75 * JoyX);
     double rightPower = -(JoyY + 0.75 * JoyX);
 
-    /*
-    // Clip function for the left motor
-    if(std::abs(leftPower - m_oldLeftPower) > m_maxChange){
-        if(m_oldLeftPower > 0 && m_oldLeftPower < leftPower){ //if robot is moving forward, and accelerating
+    // Calculate power difference
+    double leftPowerDifference = leftPower - m_oldLeftPower;
+    double rightPowerDifference = rightPower - m_oldRightPower;
+
+    // Throttle left motor acceloration
+    if (leftPowerDifference > m_maxChange) {
+
+        // if the left motor is travelling forwards and is set to accelorate too fast
+        if (leftPower > m_oldLeftPower)
             leftPower = m_oldLeftPower + m_maxChange;
-            frc::SmartDashboard::PutString("left motor status: ", "accel in pos");
-        }
 
-        if(m_oldLeftPower < 0 && m_oldLeftPower > leftPower){ //if robot is moving backward, and accelerating
+        // if the left motor is travelling backwards and is set to accelorate too fast
+        else
             leftPower = m_oldLeftPower - m_maxChange;
-            frc::SmartDashboard::PutString("left motor status: ", "accel in neg");
-        }
+    }
+    
+    // Throttle left motor deccelloration
+    else if (leftPowerDifference < -m_maxChange) {
 
-        if(m_oldLeftPower > 0 && m_oldLeftPower > leftPower && m_oldLeftPower > 0.1){ //if robot is moving forward, and decelerating 
-            leftPower = m_oldLeftPower - m_oldLeftPower/10;
-            frc::SmartDashboard::PutString("left motor status: ", "decel in pos");
-        }
-
-        if(m_oldLeftPower < 0 && m_oldLeftPower < leftPower && m_oldLeftPower < -0.1){ //if robot is moving backward, and decelerating
-            leftPower = m_oldLeftPower - m_oldLeftPower/10;
-            frc::SmartDashboard::PutString("left motor status: ", "dec in neg");
-        }
+        // if the left motor is travelling forwards and is set to decellorating too fast
+        if (leftPower < m_oldLeftPower)
+            leftPower = m_oldLeftPower - m_maxChange;
+        
+        // if the left motor is travelling backwards and is set to decellorating too fast
+        else
+            leftPower = m_oldLeftPower + m_maxChange;
     }
 
-    // Clip function for right motor
-    if(std::abs(rightPower - m_oldRightPower) > m_maxChange){
-        if(m_oldRightPower > 0 && m_oldRightPower < rightPower){
+    // Throttle right motor acceloration
+    if (rightPowerDifference > m_maxChange) {
+
+        // if the right motor is travelling forwards and is set to accelorate too fast
+        if (rightPower > m_oldRightPower)
             rightPower = m_oldRightPower + m_maxChange;
-        }
 
-        if(m_oldRightPower < 0 && m_oldRightPower > rightPower){
+        //if the right motor is travelling backwards and is set to accelorate too fast
+        else
             rightPower = m_oldRightPower - m_maxChange;
-        }    
-
-        if(m_oldRightPower > 0 && m_oldRightPower > rightPower && m_oldRightPower > 0.1){ //if robot is moving forward, and decelerating 
-            rightPower = m_oldRightPower - m_oldRightPower/10;
-        }
-
-        if(m_oldRightPower < 0 && m_oldRightPower < rightPower && m_oldRightPower <-0.1){ //if robot is moving backward, and decelerating
-            rightPower = m_oldRightPower - m_oldRightPower/10;
-        }
     }
 
-    if(rightPower > 0 && leftPower < 0 || rightPower < 0 && leftPower > 0){
-        rightPower = rightPower/1.05;
-        leftPower = leftPower/1.05;
+    // Throttle right motor deccelloration
+    else if (rightPowerDifference < -m_maxChange) {
+
+        // if the right motor is travelling forwards and is set to decellorating too fast
+        if (rightPower > m_oldRightPower)
+            rightPower = m_oldRightPower - m_maxChange;
+        
+        // if the right motor is trabelling backwards and is set to decellorating too fast
+        else
+            rightPower = m_oldRightPower + m_maxChange;
     }
-    */
+
+
+/*    
+//    // // Clip function for the left motor
+//    // if(std::abs(leftPower - m_oldLeftPower) > m_maxChange){
+//    //     if(m_oldLeftPower > 0 && m_oldLeftPower < leftPower){ //if robot is moving forward, and accelerating
+//    //         leftPower = m_oldLeftPower + m_maxChange;
+//    //         frc::SmartDashboard::PutString("left motor status: ", "accel in pos");
+//    //     }
+//
+//    //     if(m_oldLeftPower < 0 && m_oldLeftPower > leftPower){ //if robot is moving backward, and accelerating
+//    //         leftPower = m_oldLeftPower - m_maxChange;
+//    //         frc::SmartDashboard::PutString("left motor status: ", "accel in neg");
+//    //     }
+//
+//    //     if(m_oldLeftPower > 0 && m_oldLeftPower > leftPower && m_oldLeftPower > 0.1){ //if robot is moving forward, and decelerating 
+//    //         leftPower = m_oldLeftPower - m_oldLeftPower/10;
+//    //         frc::SmartDashboard::PutString("left motor status: ", "decel in pos");
+//    //     }
+//
+//    //     if(m_oldLeftPower < 0 && m_oldLeftPower < leftPower && m_oldLeftPower < -0.1){ //if robot is moving backward, and decelerating
+//    //         leftPower = m_oldLeftPower - m_oldLeftPower/10;
+//    //         frc::SmartDashboard::PutString("left motor status: ", "dec in neg");
+//    //     }
+//    // }
+//
+//    // // Clip function for right motor
+//    // if(std::abs(rightPower - m_oldRightPower) > m_maxChange){
+//    //     if(m_oldRightPower > 0 && m_oldRightPower < rightPower){
+//    //         rightPower = m_oldRightPower + m_maxChange;
+//    //     }
+//
+//    //     if(m_oldRightPower < 0 && m_oldRightPower > rightPower){
+//    //         rightPower = m_oldRightPower - m_maxChange;
+//    //     }    
+//
+//    //     if(m_oldRightPower > 0 && m_oldRightPower > rightPower && m_oldRightPower > 0.1){ //if robot is moving forward, and decelerating 
+//    //         rightPower = m_oldRightPower - m_oldRightPower/10;
+//    //     }
+//
+//    //     if(m_oldRightPower < 0 && m_oldRightPower < rightPower && m_oldRightPower <-0.1){ //if robot is moving backward, and decelerating
+//    //         rightPower = m_oldRightPower - m_oldRightPower/10;
+//    //     }
+//    // }
+//
+//    // if(rightPower > 0 && leftPower < 0 || rightPower < 0 && leftPower > 0){
+//    //     rightPower = rightPower/1.05;
+//    //     leftPower = leftPower/1.05;
+//    // }
+*/
+    
 
     // Set old powers for the next time function is called
     m_oldLeftPower = leftPower;
