@@ -44,6 +44,30 @@ void DriveRobot::Execute() {
     double JoyX = Robot::oi->getdriver()->GetX();
     double JoyY = Robot::oi->getdriver()->GetY();
 
+    // Deadzone.
+    if (fabs(JoyX) < 0.05 && fabs(JoyY) < 0.05)
+        JoyX = 0.0;
+    else
+        JoyX -= 0.05;
+
+    if (fabs(JoyY) < 0.05)
+        JoyY = 0.0;
+    else
+        JoyY -= 0.05;
+    
+    // Square (and preserve the sign)
+    double JoyY2 = JoyY * JoyY;
+    if (JoyY < 0)
+        JoyY2 = -JoyY2;
+    double JoyX2 = JoyX * JoyX;
+    if (JoyX < 0)
+        JoyX2 = -JoyX2;
+
+    // Calculate Power Value.
+    double leftPower = -(JoyY2 - JoyX2);
+    double rightPower = -(JoyY2 + JoyX2);
+
+/*
     // Apply deadzone
     if (JoyX*JoyX + JoyY*JoyY < 0.0025)
         JoyX, JoyY = 0;
@@ -103,7 +127,8 @@ void DriveRobot::Execute() {
         else
             rightPower = m_oldRightPower + m_maxChange;
     }
-    
+
+  */  
 
     // Set old powers for the next time function is called
     m_oldLeftPower = leftPower;
