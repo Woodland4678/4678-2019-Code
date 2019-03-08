@@ -846,7 +846,7 @@ polarPoint Lidar::findCargo() {
 			cargoWaistPoint.dist = sqrt(lidarDist*lidarDist + WAIST_DISTANCE*WAIST_DISTANCE -2 * lidarDist * WAIST_DISTANCE * cos(lidAngle * M_PI / 180.0));
 
 			// calculate the angle from the waist to the ball (using sine law)
-			cargoWaistPoint.angle = asin(lidarDist * sin(cargoWaistPoint.angle * M_PI / 180.0) / cargoWaistPoint.dist) / M_PI * 180.0;
+			cargoWaistPoint.angle = asin(lidarDist * sin(cargoWaistPoint.angle * M_PI / 180.0) / cargoWaistPoint.dist) / M_PI * 180.0 - 180;
 
 			return cargoWaistPoint;
 		}
@@ -933,7 +933,7 @@ bool Lidar::isPotentialCargo(grouptp *testGroup) {
 	double minAnglePerSide = minAngle * CARGO_MIN_ACCEPTED_SIDE_PORTION;		// the group is determined to not be a cargo if there is less than this angle on each side of the group's basePoint
 	double minTotalAngle = minAngle * CARGO_MIN_ACCPETED_TOTAL_PORTION;			// the group is determined to not be a cargo if there is less than this angle in total on the cargo
 
-	printf("an before: %f, a after: %f, min a per side: %f, total a: %f, min total a: %f\n", angleBeforeCentrePoint, angleAfterCentrePoint, minAnglePerSide, totalAngleOnCargo, minTotalAngle);
+	//printf("an before: %f, a after: %f, min a per side: %f, total a: %f, min total a: %f\n", angleBeforeCentrePoint, angleAfterCentrePoint, minAnglePerSide, totalAngleOnCargo, minTotalAngle);
 
 	if (angleBeforeCentrePoint > minAnglePerSide && angleAfterCentrePoint > minAnglePerSide && totalAngleOnCargo > minTotalAngle)
 		return true;
@@ -991,7 +991,7 @@ double Lidar::scoreGroup(grouptp *testGroup) {
 	}
 	cargoEndIndex = i - 1;			// set the cargoStartIndex to the last index that was found to be on the cargo
 
-	printf("start index: %i, end index: %i, error: %f\n", cargoStartIndex, cargoEndIndex, (cargoError/pointCount));
+	//printf("start index: %i, end index: %i, error: %f\n", cargoStartIndex, cargoEndIndex, (cargoError/pointCount));
 
 	return std::abs(cargoError/pointCount); 	// average cargoError by dividing by the number of points found on the cargo and return the value
 }
@@ -1119,6 +1119,7 @@ tpPoint Lidar::findRocketSideCentre(tpLine *rocketSideLine, bool forwards) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
 void Lidar::checkLinesForHatches(){ //checks to see if any viewed lines resemble the walls of a rockets hatch walls so that the waist can rotate toward the hatches
 	for(int x=0;x<linecnt;x++){
 		if(std::abs(lines[x].length-183)<13){
