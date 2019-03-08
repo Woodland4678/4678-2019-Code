@@ -89,3 +89,78 @@ double Drivetrain::getRightEncoder(){
 // Put methods for controlling this subsystem
 // here. Call these from Commands.
 
+void Drivetrain::joystickDriveCalculator() {
+
+    double joyX = Robot::oi->getdriver()->GetX();
+    double joyY = Robot::oi->getdriver()->GetY();
+    double radiusSquared = joyX*joyX + joyY*joyY;
+    double joyV = joyY - joyX;                      // used in calculating the motor power
+    double joyW = joyY + joyX;                      // used in calculating the motor power
+
+    double leftPower = 0.0;
+    double rightPower = 0.0;
+
+    int quadrant = 0;
+
+    // Check deadzone
+    if (radiusSquared > deadzone) {
+        setLeftMotor(0);
+        setRightMotor(0);
+        return;
+    }
+
+    // check quadrant
+    if (joyY >= 0.0) {
+        if (joyX >= 0.0)   
+            quadrant = 1;
+        else
+            quadrant = 2;
+    } else {
+        if (joyX < 0.0)
+            quadrant = 3;
+        else
+            quadrant = 4;
+    }
+    
+    switch (quadrant) {
+
+        // quadrant 1
+        case 1:
+
+            // in this quadrant the left motor will always be going forwards, scaled back depending on how far the joystick is from its centre
+            setLeftMotor( (radiusSquared - deadzone) / (1.0 - deadzone) );
+
+            setRightMotor( (((k + 1)*(joyV + 1) - k) / (k + joyV + 1)) * ((radiusSquared - deadzone) / (1.0 - deadzone)) );
+
+            break;
+
+        // quadrant 2
+        case 2:
+
+            setRightMotor( (radiusSquared - deadzone) / (1.0 - deadzone) );
+
+            setLeftMotor( (((k + 1)*(joyW + 1) - k) / (k + joyW + 1)) * ((radiusSquared - deadzone) / (1.0 - deadzone)) );
+
+            break;
+        
+        // quadrant 3
+        case 3:
+
+            setLeftMotor( -(radiusSquared - deadzone) / (1.0 - deadzone) );
+
+            setRightMotor( (((k + 1)*(joyV + 1) - k) / (k + joyV + 1)) * ((radiusSquared - deadzone) / (1.0 - deadzone)) );
+
+            break;
+        
+        // quadrant 4
+        case 4:
+
+            setRightMotor( -(radiusSquared - deadzone) / (1.0 - deadzone) );
+
+            setLeftMotor( (((k + 1)*(joyW + 1) - k) / (k + joyW + 1)) * ((radiusSquared - deadzone) / (1.0 - deadzone)) );
+
+            break;
+    }
+
+
+}
