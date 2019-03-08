@@ -827,7 +827,7 @@ polarPoint Lidar::findCargo() {
 	groupPoints();
 
 	// these are debug statements, they print out the point out the contents of lidFiltered[] and lidGroups[]
-	// for (int i = 0; i < filteredCount; i++) printf("%f, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
+	for (int i = 0; i < filteredCount; i++) printf("%f, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
 	// for (int i = 0; i < groupCount; i++) printf("%i, %i, %f, %i, %i\n", lidGroups[i].startIndex, lidGroups[i].endIndex, lidGroups[i].basePointAngle, lidGroups[i].basePointDistance, lidGroups[i].scoreStartIndex);
 
 	// this loop iterates through lidGroups[] and tests if each one is a cargo
@@ -1038,7 +1038,7 @@ tpPoint Lidar::findRocketHatch() {
 	// ReadLidar() and FindLines() will be run from the command from where this is called
 
 	// iterate through all the lines forwards
-	for (int line = 0; line < linecnt; line++) {
+	for (int line = 0; line < linecnt - 2; line++) {
 
 		// if the current line is the right length to be a rocketship fin
 		if (lines[line].length < MAX_ACCPETED_ROCKET_FIN_LENGTH && lines[line].length > MIN_ACCPETED_ROCKET_FIN_LEGNTH) {
@@ -1053,7 +1053,7 @@ tpPoint Lidar::findRocketHatch() {
 	}
 	
 	// iterate through all the lines backwards
-	for (int line = 0; line < linecnt; line--) {
+	for (int line = linecnt; line >= 2; line--) {
 
 		// if the current line is the right length to be a rocketship fin
 		if (lines[line].length < MAX_ACCPETED_ROCKET_FIN_LENGTH && lines[line].length > MIN_ACCPETED_ROCKET_FIN_LEGNTH) {
