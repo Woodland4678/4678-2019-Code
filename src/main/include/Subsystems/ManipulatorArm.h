@@ -87,6 +87,7 @@ public:
 	void clearInCargoPosition();
 	bool getInCargoPosition();
 	bool ifCargo();
+	bool ifHatch();
 	void setInHatchPosition();
 	void clearInHatchPosition();
 	bool getInHatchPosition();

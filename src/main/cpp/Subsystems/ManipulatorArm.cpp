@@ -774,6 +774,9 @@ bool ManipulatorArm::getInCargoPosition() {
 bool ManipulatorArm::ifCargo() {
 	return !cargoSensor->Get();
 }
+bool ManipulatorArm::ifHatch() {
+	return !hatchSensor->Get();
+}
 void ManipulatorArm::setInHatchPosition() {
 	m_InHatchPosition = true;
 }

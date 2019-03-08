@@ -95,27 +95,29 @@ void MoveArm::Execute() {
 			done = Robot::manipulatorArm->moveToXY(22.0,75.0,-100,0,20.0);			
 			break;
 		case 6:	//Pick up - Cargo Ground Intake.
-			// Set AbsTargetAngle to -28.41 (Rel is 38.83)
-			if (!done2) // Stay high to ensure we don't high robot.
-				{
-				done2 = Robot::manipulatorArm->moveToXY(25.68,24,-28.41,0,20.0); 
-				if (done2)
+			if(!Robot::manipulatorArm->ifHatch()){
+				// Set AbsTargetAngle to -28.41 (Rel is 38.83)
+				if (!done2) // Stay high to ensure we don't high robot.
 					{
-					Robot::manipulatorArm->setInCargoPosition();
-					Robot::manipulatorArm->intakeWheelsSpin(-0.7); // Wheels running.
-					printf("Wheels set to run 2\n\r");
+					done2 = Robot::manipulatorArm->moveToXY(25.68,24,-28.41,0,20.0); 
+					if (done2)
+						{
+						Robot::manipulatorArm->setInCargoPosition();
+						Robot::manipulatorArm->intakeWheelsSpin(-0.7); // Wheels running.
+						printf("Wheels set to run 2\n\r");
+						}
 					}
-				}
-			else
-				{
-				done = Robot::manipulatorArm->moveToXY(25.68,16,-28.41,0,20.0);
-				if (done)
+				else
 					{
-					Robot::manipulatorArm->setInCargoPosition();
-					Robot::manipulatorArm->intakeWheelsSpin(-0.7); // Wheels running.
-					printf("Wheels set to run 1\n\r");
+					done = Robot::manipulatorArm->moveToXY(25.68,16,-28.41,0,20.0);
+					if (done)
+						{
+						Robot::manipulatorArm->setInCargoPosition();
+						Robot::manipulatorArm->intakeWheelsSpin(-0.7); // Wheels running.
+						printf("Wheels set to run 1\n\r");
+						}
 					}
-				}
+			}
 			break;
 		case 7: //Human Station Hatch
 			if (Robot::manipulatorArm->ifCargo() == false) {
@@ -132,7 +134,7 @@ void MoveArm::Execute() {
 			}
 			break;
 		case 8: //Human Station Cargo
-			if (Robot::manipulatorArm->ifCargo() == false) {
+			if(!Robot::manipulatorArm->ifHatch()){
 				done = Robot::manipulatorArm->moveToXY(16.0,44.0,10.0,0,20.0);
 				if (done)
 					{
