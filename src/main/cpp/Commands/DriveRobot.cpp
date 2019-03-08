@@ -44,22 +44,125 @@ void DriveRobot::Execute() {
     double JoyX = Robot::oi->getdriver()->GetX();
     double JoyY = Robot::oi->getdriver()->GetY();
 
-    // Deadzone clip
-    if(JoyX < 0.05 && JoyX > -0.05) {
-        JoyX = 0;
-    }
+    // Deadzone.
+    if (fabs(JoyX) < 0.05 && fabs(JoyY) < 0.05)
+        JoyX = 0.0;
+    else
+        JoyX -= 0.05;
 
+    if (fabs(JoyY) < 0.05)
+        JoyY = 0.0;
+    else
+        JoyY -= 0.05;
+    
+    // Square (and preserve the sign)
+    double JoyY2 = JoyY * JoyY;
+    if (JoyY < 0)
+        JoyY2 = -JoyY2;
+    double JoyX2 = JoyX * JoyX;
+    if (JoyX < 0)
+        JoyX2 = -JoyX2;
+
+    // Calculate Power Value.
+    double leftPower = -(JoyY2 - JoyX2);
+    double rightPower = -(JoyY2 + JoyX2);
+
+/*
+    // Apply deadzone
+    if (JoyX*JoyX + JoyY*JoyY < 0.0025)
+        JoyX, JoyY = 0;
+    
+    // Convert joystick values to motor power
     double leftPower = -(JoyY - 0.75 * JoyX);
     double rightPower = -(JoyY + 0.75 * JoyX);
 
+    // Calculate power difference
+    double leftPowerDifference = leftPower - m_oldLeftPower;
+    double rightPowerDifference = rightPower - m_oldRightPower;
+
+    // Throttle left motor acceloration
+    if (leftPowerDifference > m_maxChange) {
+
+        // if the left motor is travelling forwards and is set to accelorate too fast
+        if (leftPower > m_oldLeftPower)
+            leftPower = m_oldLeftPower + m_maxChange;
+
+        // if the left motor is travelling backwards and is set to accelorate too fast
+        else
+            leftPower = m_oldLeftPower - m_maxChange;
+    }
     
-    // Clip function for the left motor    
+    // Throttle left motor deccelloration
+    else if (leftPowerDifference < -m_maxChange) {
+
+        // if the left motor is travelling forwards and is set to decellorating too fast
+        if (leftPower < m_oldLeftPower)
+            leftPower = m_oldLeftPower - m_maxChange;
+        
+        // if the left motor is travelling backwards and is set to decellorating too fast
+        else
+            leftPower = m_oldLeftPower + m_maxChange;
+    }
+
+    // Throttle right motor acceloration
+    if (rightPowerDifference > m_maxChange) {
+
+        // if the right motor is travelling forwards and is set to accelorate too fast
+        if (rightPower > m_oldRightPower)
+            rightPower = m_oldRightPower + m_maxChange;
+
+        //if the right motor is travelling backwards and is set to accelorate too fast
+        else
+            rightPower = m_oldRightPower - m_maxChange;
+    }
+
+    // Throttle right motor deccelloration
+    else if (rightPowerDifference < -m_maxChange) {
+
+        // if the right motor is travelling forwards and is set to decellorating too fast
+        if (rightPower > m_oldRightPower)
+            rightPower = m_oldRightPower - m_maxChange;
+        
+        // if the right motor is trabelling backwards and is set to decellorating too fast
+        else
+            rightPower = m_oldRightPower + m_maxChange;
+    }
+
+  */  
+
+    // Set old powers for the next time function is called
+    m_oldLeftPower = leftPower;
+    m_oldRightPower = rightPower;
+    
+    frc::SmartDashboard::PutNumber("left Power: ", leftPower);
+    frc::SmartDashboard::PutNumber("right Power: ", rightPower);
+    Robot::drivetrain->setLeftMotor(leftPower);
+    Robot::drivetrain->setRightMotor(rightPower);
+}
+
+// Make this return true when this Command no longer needs to run execute()
+bool DriveRobot::IsFinished() {
+    return false;
+}
+
+// Called once after isFinished returns true
+void DriveRobot::End() {
+
+}
+
+// Called when another command which requires one or more of the same
+// subsystems is scheduled to run
+void DriveRobot::Interrupted() {
+
+}
+
+/*
+    // Clip function for the left motor
     if(std::abs(leftPower - m_oldLeftPower) > m_maxChange){
         if(m_oldLeftPower > 0 && m_oldLeftPower < leftPower){ //if robot is moving forward, and accelerating
             leftPower = m_oldLeftPower + m_maxChange;
             frc::SmartDashboard::PutString("left motor status: ", "accel in pos");
-         }
-
+        }
         if(m_oldLeftPower < 0 && m_oldLeftPower > leftPower){ //if robot is moving backward, and accelerating
             leftPower = m_oldLeftPower - m_maxChange;
             frc::SmartDashboard::PutString("left motor status: ", "accel in neg");
@@ -99,30 +202,4 @@ void DriveRobot::Execute() {
         rightPower = rightPower/1.05;
         leftPower = leftPower/1.05;
     }
-    
-
-    // Set old powers for the next time function is called
-    m_oldLeftPower = leftPower;
-    m_oldRightPower = rightPower;
-    
-    frc::SmartDashboard::PutNumber("left Power: ", leftPower);
-    frc::SmartDashboard::PutNumber("right Power: ", rightPower);
-    Robot::drivetrain->setLeftMotor(leftPower);
-    Robot::drivetrain->setRightMotor(rightPower);
-}
-
-// Make this return true when this Command no longer needs to run execute()
-bool DriveRobot::IsFinished() {
-    return false;
-}
-
-// Called once after isFinished returns true
-void DriveRobot::End() {
-
-}
-
-// Called when another command which requires one or more of the same
-// subsystems is scheduled to run
-void DriveRobot::Interrupted() {
-
-}
+    */

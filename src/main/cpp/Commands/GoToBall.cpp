@@ -31,13 +31,9 @@ void GoToBall::Initialize() {
 // Called repeatedly when this Command is scheduled to run
 void GoToBall::Execute() {
 
-    if (Robot::lidar->readComplete() == true)  {
+    if (Robot::lidar->readComplete() == true) {
         polarPoint centrePt = Robot::lidar->findCargo();
 
-        //if (centrePt.dist == 0)
-        //    printf("death\n");
-        //if (centrePt.dist != 0)
-        //    printf("oops!\n");
         printf("angle: %f, distance: %i\n", centrePt.angle, centrePt.dist);
         
         cargoIsFound = true;

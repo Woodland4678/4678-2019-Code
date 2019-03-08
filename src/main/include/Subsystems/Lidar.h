@@ -124,11 +124,12 @@ private:
 
 	// Cargo finding variables
 	grouptp lidGroups[256];
-	int groupCount;				// stores the number of groups created by groupPoints()
-	int cargoStartIndex;		// stores the index of the first point in a potential cargo
-	int cargoEndIndex;			// stores the index of the last point in a potential cargo
-	int equidistantPointCount;	// stores the number of points tied for closest in the group that is curretnly being created (this variable is reused for each group)
-
+	int groupCount;					// stores the number of groups created by groupPoints()
+	int cargoStartIndex;			// stores the index of the first point in a potential cargo
+	int cargoEndIndex;				// stores the index of the last point in a potential cargo
+	int equidistantPointCount;		// stores the number of points tied for closest in the group that is curretnly being created (this variable is reused for each group)
+	polarPoint cargoCentrePoint;	// stores the centre point of the cargo while it is being offset to find its position in relation to the lidar
+	polarPoint cargoWaistPoint;		// stores the centre point of the cargo while it is being offset to find its position in relation to the waist
 
 	//bool m_calculator1_init;
 
@@ -165,7 +166,7 @@ public:
 	bool isPotentialCargo(grouptp *testGroup);
 	double scoreGroup(grouptp *testGroup);
 	double expectedDistance(double deltaAngle, double distance); // distance must be cast to a double in the function call
-	polarPoint findCargoCenter(int basePointDistance);
+	void findCargoCenter(int basePointDistance);
 
 	// Game piece placement functions (waist rotation)
 	bool getHatchPlacement();

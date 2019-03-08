@@ -20,6 +20,7 @@
 #define CARGO_SCAN_RIGHT_LIMIT				120			// the cargo finding algorithm doesn't look at points more than this many degrees to the right (from directly forwards)
 #define CARGO_SCAN_MAX_DISTANCE				1500		// the cargo finding algorithm doesn't look at points closer that this distance (mm)
 #define CARGO_SCAN_MIN_DISTANCE				50			// the cargo finding algorithm doesn't look at points beyond this distance (mm)
+#define WAIST_DISTANCE						183			// distance between waist and lidar
 
 // Rocket Hatch Finding COnstants
 #define MAX_ACCPETED_ROCKET_FIN_LENGTH		745			// educated guess, needs testing
@@ -835,8 +836,19 @@ polarPoint Lidar::findCargo() {
 		// if the group passes the isPotentialCargo() and the scoreGroup() test
 		if (isPotentialCargo(&lidGroups[i]) && scoreGroup(&lidGroups[i]) < CARGO_MAX_ACCEPTED_ERROR) {
 
-			// findCargoCentre iterates through the points in the chossen circle and calculates the centre
-			return findCargoCenter(lidGroups[i].basePointDistance);
+			// findCargoCentre iterates through the points in the chosen circle and calculates the centre
+			
+			// stores the cargo centre's angle and distance in variables with shorter names (because Andrew is OCD about how long his lines of code are ~ Hannah)
+			double lidarDist = (double)cargoCentrePoint.dist;
+			double lidAngle = (double)cargoCentrePoint.angle;
+			
+			// calculate the distance from the waist to the ball (using cosine law)
+			cargoWaistPoint.dist = sqrt(lidarDist*lidarDist + WAIST_DISTANCE*WAIST_DISTANCE -2 * lidarDist * WAIST_DISTANCE * cos(lidAngle * M_PI / 180.0));
+
+			// calculate the angle from the waist to the ball (using sine law)
+			cargoWaistPoint.angle = asin(lidarDist * sin(cargoWaistPoint.angle * M_PI / 180.0) / cargoWaistPoint.dist) / M_PI * 180.0 - 180;
+
+			return cargoWaistPoint;
 		}
 	}
 
@@ -848,7 +860,7 @@ polarPoint Lidar::findCargo() {
 	return noCargo;
 }
 
-// the function seperates the lidar points into an array of groups
+// the function separates the lidar points into an array of groups
 void Lidar::groupPoints() {
 
 	// reset function from previous run
@@ -921,7 +933,7 @@ bool Lidar::isPotentialCargo(grouptp *testGroup) {
 	double minAnglePerSide = minAngle * CARGO_MIN_ACCEPTED_SIDE_PORTION;		// the group is determined to not be a cargo if there is less than this angle on each side of the group's basePoint
 	double minTotalAngle = minAngle * CARGO_MIN_ACCPETED_TOTAL_PORTION;			// the group is determined to not be a cargo if there is less than this angle in total on the cargo
 
-	printf("an before: %f, a after: %f, min a per side: %f, total a: %f, min total a: %f\n", angleBeforeCentrePoint, angleAfterCentrePoint, minAnglePerSide, totalAngleOnCargo, minTotalAngle);
+	//printf("an before: %f, a after: %f, min a per side: %f, total a: %f, min total a: %f\n", angleBeforeCentrePoint, angleAfterCentrePoint, minAnglePerSide, totalAngleOnCargo, minTotalAngle);
 
 	if (angleBeforeCentrePoint > minAnglePerSide && angleAfterCentrePoint > minAnglePerSide && totalAngleOnCargo > minTotalAngle)
 		return true;
@@ -934,7 +946,7 @@ double Lidar::angleOnCargo(int distance) {
 	return asin(CARGO_RADIUS/((double)distance + CARGO_RADIUS)) * 180.0/M_PI;
 }
 
-// this function itterates through points on a posible cargo and scores it based how close the readings are to the expected values
+// this function iterates through points on a possible cargo and scores it based how close the readings are to the expected values
 double Lidar::scoreGroup(grouptp *testGroup) {
 
 	// reset the function from the previous run
@@ -979,7 +991,7 @@ double Lidar::scoreGroup(grouptp *testGroup) {
 	}
 	cargoEndIndex = i - 1;			// set the cargoStartIndex to the last index that was found to be on the cargo
 
-	printf("start index: %i, end index: %i, error: %f\n", cargoStartIndex, cargoEndIndex, (cargoError/pointCount));
+	//printf("start index: %i, end index: %i, error: %f\n", cargoStartIndex, cargoEndIndex, (cargoError/pointCount));
 
 	return std::abs(cargoError/pointCount); 	// average cargoError by dividing by the number of points found on the cargo and return the value
 }
@@ -993,7 +1005,7 @@ double Lidar::expectedDistance(double deltaAngle, double distance) {
 
 	double discriminant = (twoCosTheta*twoCosTheta - 4.0 * (distance*distance - CARGO_RADIUS*CARGO_RADIUS));	// the discriminant is calculated to determine of the point is on the cargo
 
-	// if the discriminant is negative the point is not mathematically on the carog and there is no answer and the function returns -1.0
+	// if the discriminant is negative the point is not mathematically on the cargo and there is no answer and the function returns -1.0
 	if (discriminant < 0.0)
 		return -1.0;
 
@@ -1004,7 +1016,7 @@ double Lidar::expectedDistance(double deltaAngle, double distance) {
 }
 
 // this function takes a cargo group as input and averages the point between the cargoStartIndex and cargoEndIndex in order to find the centre of the cargo
-polarPoint Lidar::findCargoCenter(int basePointDistance) {
+void Lidar::findCargoCenter(int basePointDistance) {
 
 	// reset variables from previous run
 	double cargoAngle = 0.0;		// stores the sum of the angles of all the points on the cargo
@@ -1014,12 +1026,9 @@ polarPoint Lidar::findCargoCenter(int basePointDistance) {
 		cargoAngle += lidFiltered[i].angle;
 	}
 
-	polarPoint centerPt;													// declare polarPoint object to return
-	centerPt.angle = cargoAngle / (cargoEndIndex - cargoStartIndex + 1);	// sets the cargo angle to the average angle of all the points on the cargo
-	centerPt.dist = basePointDistance + (int)CARGO_RADIUS;					// sets the cargo distance to the group's base point distance plus the cargo's radius
-	centerPt.tstamp = frc::Timer::GetFPGATimestamp();						// sets the time stamp to the current time
-
-	return centerPt;
+	cargoCentrePoint.angle = cargoAngle / (cargoEndIndex - cargoStartIndex + 1);	// sets the cargo angle to the average angle of all the points on the cargo
+	cargoCentrePoint.dist = basePointDistance + (int)CARGO_RADIUS;					// sets the cargo distance to the group's base point distance plus the cargo's radius
+	cargoCentrePoint.tstamp = frc::Timer::GetFPGATimestamp();						// sets the time stamp to the current time
 }
 
 ////////////////////////////////////////////////////////////// ROCKET HATCH FINDING //////////////////////////////////////////////////////////////////////
@@ -1110,6 +1119,7 @@ tpPoint Lidar::findRocketSideCentre(tpLine *rocketSideLine, bool forwards) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
 void Lidar::checkLinesForHatches(){ //checks to see if any viewed lines resemble the walls of a rockets hatch walls so that the waist can rotate toward the hatches
 	for(int x=0;x<linecnt;x++){
 		if(std::abs(lines[x].length-183)<13){
@@ -1148,27 +1158,27 @@ bool Lidar::getHatchPlacement(){
 }
 
 /*
-// not completed
-// void Lidar::checkLinesForHatchWalls(){ //checks lines for hatch walls to drive to
-// 	switch(driveToHatchWallCase){
-// 		case 0:
-// 			readLidar();
-// 			driveToHatchWallCase++;
-// 			break;
-// 		case 1:
-// 			if(readComplete()){
-// 				driveToHatchWallCase++;
-// 			}
-// 			break;
-// 		case 2:
-// 			filterData(true, 120,120,50,1000);
-// 			FindLines();
+not completed
+void Lidar::checkLinesForHatchWalls(){ //checks lines for hatch walls to drive to
+	switch(driveToHatchWallCase){
+		case 0:
+			readLidar();
+			driveToHatchWallCase++;
+			break;
+		case 1:
+			if(readComplete()){
+				driveToHatchWallCase++;
+			}
+			break;
+		case 2:
+			filterData(true, 120,120,50,1000);
+			FindLines();
 		
 
 
-// 	}
+ 	}
 
-//}
+}
 
 
 */
