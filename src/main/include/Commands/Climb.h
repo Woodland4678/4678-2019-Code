@@ -43,6 +43,10 @@ private:
 
 	bool done = false;
 	bool done2 = false;
+	bool done3 = false;
+	bool done4 = false;
+
+	int m_ClimbCase = 0;
 
 
 };

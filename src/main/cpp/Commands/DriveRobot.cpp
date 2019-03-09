@@ -45,53 +45,22 @@ void DriveRobot::Execute() {
     int quadrant;
 
     // Check deadzone
-    if (JoyX*JoyX + JoyY*JoyY > deadzoneRadius) {
-        m_leftPower = 0.0;
-        m_rightPower = 0.0;
-    }
-
-    else {
-        
-        // check quadrant
-        if (JoyY >= 0.0) {
-
-            // quadrant 1
-            if (JoyX >= 0.0)
-                quadrant = 1;
-
-            // quadrant 2
-            else
-                quadrant = 2;
-        
-        } else {
-        
-            // quadrant 3
-            if (JoyX < 0.0)
-                quadrant = 3;
-
-            // quadrant 4
-            else
-                quadrant = 4;
-        }
-        
-        switch(quadrant)
-
-            case 1:
-            ;
-
-    }
 
     // Deadzone.
     if (fabs(JoyX) < 0.05 && fabs(JoyY) < 0.05)
         JoyX = 0.0;
-    else
+    else if (JoyX > 0)
         JoyX -= 0.05;
+    else
+        JoyX += 0.05;
 
     if (fabs(JoyY) < 0.05)
         JoyY = 0.0;
-    else
+    else if (JoyY > 0)
         JoyY -= 0.05;
-    
+    else
+        JoyY += 0.05;
+
     // Square (and preserve the sign)
     double JoyY2 = JoyY * JoyY;
     if (JoyY < 0)
@@ -103,8 +72,6 @@ void DriveRobot::Execute() {
     // Calculate Power Value.
     double leftPower = -(JoyY2 - JoyX2);
     double rightPower = -(JoyY2 + JoyX2);
-
-
 
     // Set old powers for the next time function is called
     m_oldLeftPower = leftPower;

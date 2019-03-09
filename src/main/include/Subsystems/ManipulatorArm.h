@@ -41,6 +41,7 @@ private:
 	std::shared_ptr<frc::Servo> hatchServo;
 
 	std::shared_ptr<frc::DigitalInput> cargoSensor;
+	std::shared_ptr<frc::DigitalInput> hatchSensor;
 	
 
 	ArmSegment *m_Segs[4];

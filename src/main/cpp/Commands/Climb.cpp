@@ -29,23 +29,49 @@ Climb::Climb(int climbLevel): frc::Command() {
 }
 // Called just before this Command runs the first time
 void Climb::Initialize() {
-
+    m_ClimbCase = 0;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void Climb::Execute() {
-	//done2 = Robot::manipulatorArm->moveToXY(33.0,34.0,-280.0,20.0);
-	//if(done2)
-	//	done = Robot::manipulatorArm->moveToXY(33.0,34.0,-280.0,20.0);
-    //printf("\nHere: %i",m_climbLevel);
-    if (m_climbLevel == true) {
-		done = Robot::manipulatorArm->moveToXY(25.0,50.0,-280.0,20.0);
-        //Robot::climber->moveTo();
+    if(Robot::manipulatorArm->ifCargo()||Robot::manipulatorArm->ifHatch()){
+        done = true;
+        return;
     }
-    else {
-		done = Robot::manipulatorArm->moveToXY(33.0,34.0,-280.0,20.0);
-        //Robot::climber->reset();
+
+    if (m_climbLevel == true)
+        m_ClimbCase = 0;
+    else
+        m_ClimbCase = 1;
+    
+
+    switch (m_ClimbCase) {
+        case 0:
+            if(!done2)
+                done2 = Robot::manipulatorArm->moveToXY(25.0,40.0,-90.0,0,20.0);
+            if(done2)
+            	done3 = Robot::manipulatorArm->moveToXY(33.0,30.0,-90.0,0,20.0);
+            if(done3)
+                done = true;
+            break;
+        case 1:
+            if(!done2)
+                done2 = Robot::manipulatorArm->moveToXY(33.0,7,-90.0,0,10.0);
+            if(!done3)
+                done3 = Robot::climber->moveTo(250);
+            if(done2 && done3)
+                done = true;
+            break;
+        case 2:
+            
+            break;
+        case 3:
+            break;
     }
+
+
+	
+    
 }
 
 // Make this return true when this Command no longer needs to run execute()

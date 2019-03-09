@@ -72,20 +72,20 @@ void MoveArm::Execute() {
 			break;
 		case 2: //Rocket Low, Cargo ship place hatch.
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(25.5,19,-190.0,0,20.0);
+				done = Robot::manipulatorArm->moveToXY(25.5,17,-190.0,0,20.0);
 			else
 				done = Robot::manipulatorArm->moveToXY(25.5,27.5,10.0,0,20.0);
 			//done = Robot::manipulatorArm->moveToXY(25.5,19,20.0);
 			break;
 		case 3: //Rocket Medium
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(16.0,47.0,-190,0,20.0);
+				done = Robot::manipulatorArm->moveToXY(16.0,46.0,-190,0,20.0);
 			else
 				done = Robot::manipulatorArm->moveToXY(16.0,55.0,10.0,0,20.0);
 			break;
 		case 4: //Rocket High
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(10.0,75.0,-190,0,20.0);
+				done = Robot::manipulatorArm->moveToXY(10.0,74.0,-190,0,20.0);
 			else
 				{
 				done = Robot::manipulatorArm->moveToXY(16.0,75.0,68.5,0,20.0);
@@ -109,7 +109,7 @@ void MoveArm::Execute() {
 					}
 				else
 					{
-					done = Robot::manipulatorArm->moveToXY(25.68,16,-28.41,0,20.0);
+					done = Robot::manipulatorArm->moveToXY(25.68,13,-28.41,0,20.0);
 					if (done)
 						{
 						Robot::manipulatorArm->setInCargoPosition();
@@ -126,7 +126,7 @@ void MoveArm::Execute() {
 				else
 					{
 					Robot::manipulatorArm->setInHatchPosition();
-					done = Robot::manipulatorArm->moveToXY(25.5,19.0,-190.0,0,20.0);
+					done = Robot::manipulatorArm->moveToXY(25.5,17.0,-190.0,0,20.0);
 					}
 			}
 			else {

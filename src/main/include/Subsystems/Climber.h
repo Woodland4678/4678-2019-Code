@@ -35,7 +35,7 @@ public:
 
 	int readTalonSRXEncoder();
 	int readABSEncoder();
-	void moveTo();
+	bool moveTo(int step);
 	void reset();
 	void testMovement();
 

@@ -32,11 +32,16 @@ void GoToBall::Initialize() {
 void GoToBall::Execute() {
 
     if (Robot::lidar->readComplete() == true) {
-        polarPoint centrePt = Robot::lidar->findCargo();
+        double start = frc::Timer::GetFPGATimestamp();
+        Robot::lidar->filterData(true,120,120,50,1500);
+        Robot::lidar->FindLines();
+        double end = frc::Timer::GetFPGATimestamp();
+        printf("\nLine Time = %f",end - start);
+        //polarPoint centrePt = Robot::lidar->findCargo();
 
-        printf("angle: %f, distance: %i\n", centrePt.angle, centrePt.dist);
+        //printf("angle: %f, distance: %i\n", centrePt.angle, centrePt.dist);
         
-        cargoIsFound = true;
+        //cargoIsFound = true;
     }
 }
 

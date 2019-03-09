@@ -77,7 +77,7 @@ ManipulatorArm::ManipulatorArm() : frc::Subsystem("ManipulatorArm") {
 	wristPot.reset(new frc::AnalogInput(3));
 
 	cargoSensor.reset(new frc::DigitalInput(0));
-	//hatchSensor.reset(new frc::DigitalInput());
+	hatchSensor.reset(new frc::DigitalInput(1));
 
 	hatchServo.reset(new frc::Servo(0));
     AddChild("Servo", hatchServo);
@@ -189,51 +189,39 @@ void ManipulatorArm::Periodic() {
 	
 	if (logfile.is_open())
 		{
-		sprintf(buf,"A,%f,%f,%f,%f,%f,%f,%i,%f\n",
-			m_Segs[3]->getRelAngle(),
-			m_Segs[3]->getAbsAngle(),
-			m_Segs[3]->getStartX(),
-			m_Segs[3]->getStartY(),
-			m_Segs[3]->getEndX(),
-			m_Segs[3]->getEndY(),
+		sprintf(buf,"A,%f,%f,%f,%f,%f\n",
+			m_Segs[3]->getSelectedSensorValue(),
 			m_Segs[3]->getPotentiometerReading(),
-			m_Segs[3]->getSelectedSensorValue()
+			m_Segs[3]->getRelAngle(),
+			m_Segs[3]->convertPotToAngle(m_Segs[3]->getPotentiometerReading()),
+			m_Segs[3]->getAbsAngle()
 		);
 		logfile.write(buf,strlen(buf));
 
-		sprintf(buf,"S,%f,%f,%f,%f,%f,%f,%i,%f\n",
-			m_Segs[0]->getRelAngle(),
-			m_Segs[0]->getAbsAngle(),
-			m_Segs[0]->getStartX(),
-			m_Segs[0]->getStartY(),
-			m_Segs[0]->getEndX(),
-			m_Segs[0]->getEndY(),
+		sprintf(buf,"A,%f,%f,%f,%f,%f\n",
+			m_Segs[0]->getSelectedSensorValue(),
 			m_Segs[0]->getPotentiometerReading(),
-			m_Segs[0]->getSelectedSensorValue()
+			m_Segs[0]->getRelAngle(),
+			m_Segs[0]->convertPotToAngle(m_Segs[3]->getPotentiometerReading()),
+			m_Segs[0]->getAbsAngle()
 		);
 		logfile.write(buf,strlen(buf));
 
-		sprintf(buf,"E,%f,%f,%f,%f,%f,%f,%i,%f\n",
-			m_Segs[1]->getRelAngle(),
-			m_Segs[1]->getAbsAngle(),
-			m_Segs[1]->getStartX(),
-			m_Segs[1]->getStartY(),
-			m_Segs[1]->getEndX(),
-			m_Segs[1]->getEndY(),
+		sprintf(buf,"A,%f,%f,%f,%f,%f\n",
+			m_Segs[1]->getSelectedSensorValue(),
 			m_Segs[1]->getPotentiometerReading(),
-			m_Segs[1]->getSelectedSensorValue()
+			m_Segs[1]->getRelAngle(),
+			m_Segs[1]->convertPotToAngle(m_Segs[3]->getPotentiometerReading()),
+			m_Segs[1]->getAbsAngle()
 		);
 		logfile.write(buf,strlen(buf));
 
-		sprintf(buf,"W,%f,%f,%f,%f,%f,%f,%i,%f\n",
-			m_Segs[2]->getRelAngle(),
-			m_Segs[2]->getAbsAngle(),
-			m_Segs[2]->getStartX(),
-			m_Segs[2]->getStartY(),
-			m_Segs[2]->getEndX(),
-			m_Segs[2]->getEndY(),
+		sprintf(buf,"A,%f,%f,%f,%f,%f\n",
+			m_Segs[2]->getSelectedSensorValue(),
 			m_Segs[2]->getPotentiometerReading(),
-			m_Segs[2]->getSelectedSensorValue()
+			m_Segs[2]->getRelAngle(),
+			m_Segs[2]->convertPotToAngle(m_Segs[3]->getPotentiometerReading()),
+			m_Segs[2]->getAbsAngle()
 		);
 		logfile.write(buf,strlen(buf));
 		}
@@ -301,14 +289,16 @@ void ManipulatorArm::openLog(){
 	if (!logfile.is_open())
 		{
 		now = localtime(&t);
-		sprintf(buf,"/media/sdc/ARMA%02d%02d%02d%02d%02d%02d.txt",now->tm_year,now->tm_mon,now->tm_mday,now->tm_hour,now->tm_min,now->tm_sec);
+		sprintf(buf,"/media/sda1/ARMA%02d%02d%02d%02d%02d%02d.txt",now->tm_year,now->tm_mon,now->tm_mday,now->tm_hour,now->tm_min,now->tm_sec);
 		logfile.open(buf,std::ios::out | std::ios::binary);
 		}
 	else {
 		now = localtime(&t);
-		sprintf(buf,"/media/sdc/ARMA%02d%02d%02d%02d%02d%02d.txt",now->tm_year,now->tm_mon,now->tm_mday,now->tm_hour,now->tm_min,now->tm_sec);
+		sprintf(buf,"/media/sda1/ARMA%02d%02d%02d%02d%02d%02d.txt",now->tm_year,now->tm_mon,now->tm_mday,now->tm_hour,now->tm_min,now->tm_sec);
 		logfile.open(buf,std::ios::out | std::ios::binary);
 	}
+	if(logfile.is_open())
+		printf("\nOpen\n");
 }
 void ManipulatorArm::CloseLog() {
 	if (logfile.is_open())
@@ -491,6 +481,10 @@ bool ManipulatorArm::moveToXY(double x, double y, double wristAbsTarget, double 
 				m_StartX = m_Segs[1]->getEndX();
 				m_StartY = m_Segs[1]->getEndY();
 				m_StartW = m_Segs[2]->getRelAngle();
+				deltaX = x - m_StartX;
+				deltaY = y - m_StartY;
+				absDeltaX = fabs(deltaX);
+				absDeltaY = fabs(deltaY);
 				}
 			if (absDeltaX > absDeltaY)
 				{ // We've got more X to go than Y so m_XinchesPerSecond will be the larger one
@@ -566,8 +560,11 @@ bool ManipulatorArm::moveToXY(double x, double y, double wristAbsTarget, double 
 						moveallowed = false; // delay kinematics move till waist allows for it.					
 					}
 				}
-
-			//printf("sX=%7.2f sY=%7.2f SA=%7.2f EA=%7.2f m_X=%7.2f m_Y=%7.2f m_TX=%7.2f m_TY=%7.2f\n\r",m_StartX,m_StartY,m_InvKinShoulderAngle,m_InvKinElbowAngle,m_XinchesPerSecond,m_YinchesPerSecond,m_TargetX,m_TargetY);
+			if (moveallowed)
+				printf("A:");
+			else
+				printf("N:");
+			//printf("sX=%7.2f sY=%7.2f SA=%7.2f EA=%7.2f m_X=%7.2f m_Y=%7.2f m_TX=%7.2f m_TY=%7.2f W(%7.f,%7.2f)\n\r",m_StartX,m_StartY,m_InvKinShoulderAngle,m_InvKinElbowAngle,m_XinchesPerSecond,m_YinchesPerSecond,m_TargetX,m_TargetY,waistTarget,m_TargetWaist);
 			if (moveallowed)
 				{ // movement is allowed as per waist position.
 				m_Segs[0]->set(rev::ControlType::kPosition, m_Segs[0]->convertAngleToEncoder(m_InvKinShoulderAngle));
