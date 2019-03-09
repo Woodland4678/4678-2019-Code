@@ -29,7 +29,8 @@ void LineUpToBay::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToBay::Execute() {
-    Robot::climber->reset();
+    // ************** Steve temporarily comment this command out in case of accidental button press.
+    //Robot::climber->moveTo();
 }
 
 // Make this return true when this Command no longer needs to run execute()
