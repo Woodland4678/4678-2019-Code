@@ -62,25 +62,25 @@ void DriveRobot::Execute() {
         JoyY += 0.05;
 
     // Square (and preserve the sign)
-    double JoyY2 = JoyY * JoyY;
-    if (JoyY < 0)
-        JoyY2 = -JoyY2;
-    double JoyX2 = JoyX * JoyX;
-    if (JoyX < 0)
-        JoyX2 = -JoyX2;
+    //double JoyY2 = JoyY * JoyY;
+    //if (JoyY < 0)
+        //JoyY2 = -JoyY2;
+    //double JoyX2 = JoyX * JoyX;
+    //if (JoyX < 0)
+        //JoyX2 = -JoyX2;
 
     // Calculate Power Value.
-    double leftPower = -(JoyY2 - JoyX2);
-    double rightPower = -(JoyY2 + JoyX2);
+    //double leftPower = -(JoyY2 - JoyX2);
+    //double rightPower = -(JoyY2 + JoyX2);
 
     // Set old powers for the next time function is called
-    m_oldLeftPower = leftPower;
-    m_oldRightPower = rightPower;
+    //m_oldLeftPower = leftPower;
+    //m_oldRightPower = rightPower;
     
-    frc::SmartDashboard::PutNumber("left Power: ", leftPower);
-    frc::SmartDashboard::PutNumber("right Power: ", rightPower);
-    Robot::drivetrain->setLeftMotor(leftPower);
-    Robot::drivetrain->setRightMotor(rightPower);
+    //frc::SmartDashboard::PutNumber("left Power: ", leftPower);
+    //frc::SmartDashboard::PutNumber("right Power: ", rightPower);
+    //Robot::drivetrain->setLeftMotor(leftPower);
+    //Robot::drivetrain->setRightMotor(rightPower);
 }
 
 // Make this return true when this Command no longer needs to run execute()
@@ -89,9 +89,7 @@ bool DriveRobot::IsFinished() {
 }
 
 // Called once after isFinished returns true
-void DriveRobot::End() {
-
-}
+void DriveRobot::End() {}
 
 // Called when another command which requires one or more of the same
 // subsystems is scheduled to run

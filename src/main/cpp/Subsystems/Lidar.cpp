@@ -827,7 +827,7 @@ polarPoint Lidar::findCargo() {
 	groupPoints();
 
 	// these are debug statements, they print out the point out the contents of lidFiltered[] and lidGroups[]
-	for (int i = 0; i < filteredCount; i++) printf("%f, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
+	//for (int i = 0; i < filteredCount; i++) printf("%f, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
 	// for (int i = 0; i < groupCount; i++) printf("%i, %i, %f, %i, %i\n", lidGroups[i].startIndex, lidGroups[i].endIndex, lidGroups[i].basePointAngle, lidGroups[i].basePointDistance, lidGroups[i].scoreStartIndex);
 
 	// this loop iterates through lidGroups[] and tests if each one is a cargo
@@ -837,18 +837,22 @@ polarPoint Lidar::findCargo() {
 		if (isPotentialCargo(&lidGroups[i]) && scoreGroup(&lidGroups[i]) < CARGO_MAX_ACCEPTED_ERROR) {
 
 			// findCargoCentre iterates through the points in the chosen circle and calculates the centre
+			findCargoCenter(lidGroups[i].basePointDistance);
 			
 			// stores the cargo centre's angle and distance in variables with shorter names (because Andrew is OCD about how long his lines of code are ~ Hannah)
 			double lidarDist = (double)cargoCentrePoint.dist;
 			double lidAngle = (double)cargoCentrePoint.angle;
 			
 			// calculate the distance from the waist to the ball (using cosine law)
-			cargoWaistPoint.dist = sqrt(lidarDist*lidarDist + WAIST_DISTANCE*WAIST_DISTANCE -2 * lidarDist * WAIST_DISTANCE * cos(lidAngle * M_PI / 180.0));
+			cargoCentrePoint.dist = sqrt(lidarDist*lidarDist + WAIST_DISTANCE*WAIST_DISTANCE -2 * lidarDist * WAIST_DISTANCE * cos(lidAngle * M_PI / 180.0));
 
 			// calculate the angle from the waist to the ball (using sine law)
-			cargoWaistPoint.angle = asin(lidarDist * sin(cargoWaistPoint.angle * M_PI / 180.0) / cargoWaistPoint.dist) / M_PI * 180.0 - 180;
+			cargoCentrePoint.angle = asin(lidarDist * sin(lidAngle * M_PI / 180.0) / cargoCentrePoint.dist) / M_PI * 180.0 - 180;
 
-			return cargoWaistPoint;
+			// set the timestamp of the cargo centre to the current time stamp
+			cargoCentrePoint.tstamp = (int)(frc::Timer::GetFPGATimestamp() * 1000000.0);
+
+			return cargoCentrePoint;
 		}
 	}
 
@@ -856,7 +860,7 @@ polarPoint Lidar::findCargo() {
 	polarPoint noCargo;
 	noCargo.angle = 0.0;
 	noCargo.dist = 0;
-	noCargo.tstamp = frc::Timer::GetFPGATimestamp();
+	noCargo.tstamp = (int)(frc::Timer::GetFPGATimestamp() * 1000000.0);
 	return noCargo;
 }
 
@@ -1028,7 +1032,6 @@ void Lidar::findCargoCenter(int basePointDistance) {
 
 	cargoCentrePoint.angle = cargoAngle / (cargoEndIndex - cargoStartIndex + 1);	// sets the cargo angle to the average angle of all the points on the cargo
 	cargoCentrePoint.dist = basePointDistance + (int)CARGO_RADIUS;					// sets the cargo distance to the group's base point distance plus the cargo's radius
-	cargoCentrePoint.tstamp = frc::Timer::GetFPGATimestamp();						// sets the time stamp to the current time
 }
 
 ////////////////////////////////////////////////////////////// ROCKET HATCH FINDING //////////////////////////////////////////////////////////////////////

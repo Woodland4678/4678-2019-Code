@@ -39,7 +39,7 @@ typedef struct {
 typedef struct {   // this structure is necessary because the lidattp one uses ints for angles and shouldn't be messed with
 	int dist;      // this is an int because distance comes from the lidar in whole milimeteres
 	double angle;  // the angle is produced by diving the lidar output by 64
-	int tstamp;
+	int tstamp;    // stores the fpga time stamp at was created (GETFPGATimestamp is multiplied by 1,000,000 to make it an int)
 	} polarPoint;
 
 typedef struct Point_t {
@@ -48,16 +48,14 @@ typedef struct Point_t {
 	int tstamp;
 	} tpPoint;
 
-typedef struct Line_T
-	{
+typedef struct Line_T {
 	tpPoint start;
 	tpPoint end;
 	double angle;
 	int length;
 	} tpLine;
 
-typedef struct Cube_T
-	{
+typedef struct Cube_T {
 	tpPoint location;
 	int distance;
 	double angle;
@@ -128,8 +126,7 @@ private:
 	int cargoStartIndex;			// stores the index of the first point in a potential cargo
 	int cargoEndIndex;				// stores the index of the last point in a potential cargo
 	int equidistantPointCount;		// stores the number of points tied for closest in the group that is curretnly being created (this variable is reused for each group)
-	polarPoint cargoCentrePoint;	// stores the centre point of the cargo while it is being offset to find its position in relation to the lidar
-	polarPoint cargoWaistPoint;		// stores the centre point of the cargo while it is being offset to find its position in relation to the waist
+	polarPoint cargoCentrePoint;	// stores the centre point of the cargo
 
 	//bool m_calculator1_init;
 
