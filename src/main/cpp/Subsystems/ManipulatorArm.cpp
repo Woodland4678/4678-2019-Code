@@ -77,7 +77,7 @@ ManipulatorArm::ManipulatorArm() : frc::Subsystem("ManipulatorArm") {
 	wristPot.reset(new frc::AnalogInput(3));
 
 	cargoSensor.reset(new frc::DigitalInput(0));
-	//hatchSensor.reset(new frc::DigitalInput());
+	hatchSensor.reset(new frc::DigitalInput(1));
 
 	hatchServo.reset(new frc::Servo(0));
     AddChild("Servo", hatchServo);

@@ -39,11 +39,11 @@ void Climb::Execute() {
 	//	done = Robot::manipulatorArm->moveToXY(33.0,34.0,-280.0,20.0);
     //printf("\nHere: %i",m_climbLevel);
     if (m_climbLevel == true) {
-		done = Robot::manipulatorArm->moveToXY(25.0,50.0,-280.0,20.0);
+		done = Robot::manipulatorArm->moveToXY(25.0,50.0,-280.0,0,20.0);
         //Robot::climber->moveTo();
     }
     else {
-		done = Robot::manipulatorArm->moveToXY(33.0,34.0,-280.0,20.0);
+		done = Robot::manipulatorArm->moveToXY(33.0,34.0,-280.0,0,20.0);
         //Robot::climber->reset();
     }
 }
