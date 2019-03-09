@@ -827,7 +827,7 @@ polarPoint Lidar::findCargo() {
 	groupPoints();
 
 	// these are debug statements, they print out the point out the contents of lidFiltered[] and lidGroups[]
-	for (int i = 0; i < filteredCount; i++) printf("%f, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
+	//for (int i = 0; i < filteredCount; i++) printf("%f, %i\n", lidFiltered[i].angle, lidFiltered[i].dist);
 	// for (int i = 0; i < groupCount; i++) printf("%i, %i, %f, %i, %i\n", lidGroups[i].startIndex, lidGroups[i].endIndex, lidGroups[i].basePointAngle, lidGroups[i].basePointDistance, lidGroups[i].scoreStartIndex);
 
 	// this loop iterates through lidGroups[] and tests if each one is a cargo
@@ -837,7 +837,7 @@ polarPoint Lidar::findCargo() {
 		if (isPotentialCargo(&lidGroups[i]) && scoreGroup(&lidGroups[i]) < CARGO_MAX_ACCEPTED_ERROR) {
 
 			// findCargoCentre iterates through the points in the chosen circle and calculates the centre
-			findCargoCenter();
+			findCargoCenter(lidGroups[i].basePointDistance);
 			
 			// stores the cargo centre's angle and distance in variables with shorter names (because Andrew is OCD about how long his lines of code are ~ Hannah)
 			double lidarDist = (double)cargoCentrePoint.dist;
