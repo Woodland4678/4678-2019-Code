@@ -133,7 +133,8 @@ bool ManipulatorArm::Init(){
 	//Waist
 	m_Segs[3]->setEncoderValues(WAIST_ENCODER_1, WAIST_ANGLE_1, WAIST_ENCODER_2, WAIST_ANGLE_2);
 	m_Segs[3]->setPotValues(WAIST_POT_1, WAIST_ANGLE_1, WAIST_POT_2, WAIST_ANGLE_2);
-	m_Segs[3]->initEncoderValues();	
+	//m_Segs[3]->initEncoderValues();	
+	m_Segs[3]->setSelectedSensorValue(m_Segs[3]->convertAngleToEncoder(0));
     m_Segs[3]->setPID(0.05,0,0);
 	// m_Segs[3]->setVoltageLimit(true, 3);
 	m_Segs[3]->setCurrentPeakLimit(true,30.0); // Set current limit for now.
@@ -189,38 +190,39 @@ void ManipulatorArm::Periodic() {
 	
 	if (logfile.is_open())
 		{
-		sprintf(buf,"A,%f,%f,%f,%f,%f\n",
+		sprintf(buf,"A,%f,%i,%f,%f,%f\n",
 			m_Segs[3]->getSelectedSensorValue(),
 			m_Segs[3]->getPotentiometerReading(),
-			m_Segs[3]->getRelAngle(),
+			m_Segs[3]->convertEncoderToAngle(m_Segs[3]->getSelectedSensorValue()),
 			m_Segs[3]->convertPotToAngle(m_Segs[3]->getPotentiometerReading()),
 			m_Segs[3]->getAbsAngle()
 		);
 		logfile.write(buf,strlen(buf));
 
-		sprintf(buf,"A,%f,%f,%f,%f,%f\n",
+		sprintf(buf,"S,%f,%i,%f,%f,%f\n",
 			m_Segs[0]->getSelectedSensorValue(),
 			m_Segs[0]->getPotentiometerReading(),
-			m_Segs[0]->getRelAngle(),
-			m_Segs[0]->convertPotToAngle(m_Segs[3]->getPotentiometerReading()),
+			m_Segs[0
+			]->convertEncoderToAngle(m_Segs[0]->getSelectedSensorValue()),
+			m_Segs[0]->convertPotToAngle(m_Segs[0]->getPotentiometerReading()),
 			m_Segs[0]->getAbsAngle()
 		);
 		logfile.write(buf,strlen(buf));
 
-		sprintf(buf,"A,%f,%f,%f,%f,%f\n",
+		sprintf(buf,"E,%f,%i,%f,%f,%f\n",
 			m_Segs[1]->getSelectedSensorValue(),
 			m_Segs[1]->getPotentiometerReading(),
-			m_Segs[1]->getRelAngle(),
-			m_Segs[1]->convertPotToAngle(m_Segs[3]->getPotentiometerReading()),
+			m_Segs[1]->convertEncoderToAngle(m_Segs[1]->getSelectedSensorValue()),
+			m_Segs[1]->convertPotToAngle(m_Segs[1]->getPotentiometerReading()),
 			m_Segs[1]->getAbsAngle()
 		);
 		logfile.write(buf,strlen(buf));
 
-		sprintf(buf,"A,%f,%f,%f,%f,%f\n",
+		sprintf(buf,"W,%f,%i,%f,%f,%f\n",
 			m_Segs[2]->getSelectedSensorValue(),
 			m_Segs[2]->getPotentiometerReading(),
-			m_Segs[2]->getRelAngle(),
-			m_Segs[2]->convertPotToAngle(m_Segs[3]->getPotentiometerReading()),
+			m_Segs[2]->convertEncoderToAngle(m_Segs[2]->getSelectedSensorValue()),
+			m_Segs[2]->convertPotToAngle(m_Segs[2]->getPotentiometerReading()),
 			m_Segs[2]->getAbsAngle()
 		);
 		logfile.write(buf,strlen(buf));
@@ -642,6 +644,8 @@ bool ManipulatorArm::moveToXY(double x, double y, double wristAbsTarget, double 
 
 			// Check if we're done
 			if ((fabs(m_StartX - m_TargetX) < inchesPerSecond/50)&&(fabs(m_StartY - m_TargetY) < inchesPerSecond/50))
+				return true;
+			if(m_CycleCount > (m_Cycles+25))
 				return true;
 			break;
 		}
