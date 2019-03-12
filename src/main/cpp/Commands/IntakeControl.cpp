@@ -47,7 +47,7 @@ void IntakeControl::Execute() {
 
 
     // If direction is push-out, set indicator that cargo claw is no longer holding cargo.
-    Robot::manipulatorArm->intakeWheelsSpin(JoyY);
+    Robot::manipulatorArm->intakeWheelsSpin(-JoyY);
 
     m_finished = !Robot::oi->getdriver()->GetRawButton(6);
 

@@ -160,14 +160,18 @@ void Drivetrain::joystickDriveCalculator() {
         
         // quadrant 3
         case 3:
-            leftPower = -radiusScaler;
-            rightPower = joyV;
+            //leftPower = -radiusScaler;
+            //rightPower = joyV;
+            rightPower = joyY - joyX;
+            leftPower = joyY + joyX;
             break;
         
         // quadrant 4
         case 4:
-            leftPower = joyV;
-            rightPower = -radiusScaler;
+            //leftPower = joyV;
+            //rightPower = -radiusScaler;
+            rightPower = joyY - joyX;
+            leftPower = joyY + joyX;
             break;
     }
 
@@ -191,6 +195,6 @@ void Drivetrain::joystickDriveCalculator() {
     
 
     // set motor power
-    //setLeftMotor(leftPower);
-    //setRightMotor(rightPower);
+    setLeftMotor(leftPower);
+    setRightMotor(rightPower);
 }

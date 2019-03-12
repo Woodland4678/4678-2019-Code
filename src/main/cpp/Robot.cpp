@@ -91,9 +91,21 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic() {
 	char buf[255];
+	double JoyY(Robot::oi->getdriver()->GetRawAxis(3));
 
+    // Deadzone check
+    if (JoyY < 0.05 && JoyY > -0.05) {
+        JoyY = 0.0;
+    }
+	else {
+		if ((Robot::manipulatorArm->getInCargoPosition()) && (JoyY > 0.01))
+			Robot::manipulatorArm->setIntakeMode(2); // Mode 2, we have cargo.
+		if (JoyY <-0.01) // Cargo ejected
+			Robot::manipulatorArm->setIntakeMode(0); // Mode 0, we just spit out the cargo.
+	}
 	//frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistPot());
-
+	if(Robot::manipulatorArm->m_CurrentPosition == 0)
+		Robot::manipulatorArm->intakeWheelsSpin(-JoyY);
 	// Code added to allow use of POV to move shoulder and elbow for
 	// establishing target positions with the robot driving them.
 

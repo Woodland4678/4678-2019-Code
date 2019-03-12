@@ -34,38 +34,42 @@ void Climb::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void Climb::Execute() {
+    //Make sure the intakes are empty
     if(Robot::manipulatorArm->ifCargo()||Robot::manipulatorArm->ifHatch()){
         done = true;
         return;
     }
+    //Make sure the climbing button is always held down
+    if((!Robot::oi->getdriver()->GetRawButton(9))&&(!Robot::oi->getdriver()->GetRawButton(10))){
+        //William: Small problem what to do if the arm and stilts are partly down
+        done = true;
+        return;
+    }
 
-    if (m_climbLevel == true)
-        m_ClimbCase = 0;
-    else
-        m_ClimbCase = 1;
-    
+    done2 = false;
+    done3 = false;
 
     switch (m_ClimbCase) {
-        case 0:
-            if(!done2)
-                done2 = Robot::manipulatorArm->moveToXY(25.0,40.0,-90.0,0,20.0);
+        case 0: //Move arm up above the platform
+            done2 = Robot::manipulatorArm->moveToXY(25.0,40.0,-90.0,0,20.0);
             if(done2)
-            	done3 = Robot::manipulatorArm->moveToXY(33.0,30.0,-90.0,0,20.0);
-            if(done3)
-                done = true;
+                m_ClimbCase = 1;
             break;
-        case 1:
+        case 1: //Move arm down on the platform
+            done2 = Robot::manipulatorArm->moveToXY(33.0,30.0,-90.0,0,20.0);
+            if(done2)
+                m_ClimbCase = 2;
+            break;
+        case 2://Move the robot up
             if(!done2)
-                done2 = Robot::manipulatorArm->moveToXY(33.0,7,-90.0,0,10.0);
+                done2 = Robot::manipulatorArm->moveToXY(33.0,6,-90.0,0,10.0);
             if(!done3)
                 done3 = Robot::climber->moveTo(250);
             if(done2 && done3)
-                done = true;
+                m_ClimbCase = 3;
             break;
-        case 2:
-            
-            break;
-        case 3:
+        case 3://Move forward using intakes
+            //Use lidar to detect how far away we are
             break;
     }
 

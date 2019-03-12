@@ -39,12 +39,37 @@ void DriveRobot::Execute() {
     frc::SmartDashboard::PutNumber("motor 15", m_pdp->GetCurrent(15));
     frc::SmartDashboard::PutNumber("pdp 5", m_pdp->GetCurrent(5));*/
 
+    // double JoyX = Robot::oi->getdriver()->GetX();
+    // double JoyY = Robot::oi->getdriver()->GetY();
+
+// **** steve test
+// TODO: If we keep this test code, clean up everything else!!!!
     double JoyX = Robot::oi->getdriver()->GetX();
     double JoyY = Robot::oi->getdriver()->GetY();
-    double JoyZ = JoyY - JoyX;
-    int quadrant;
 
-    // Check deadzone
+    // TODO: shouold have a constant for deadzone
+    if (JoyX < 0.05 && JoyX > -0.05) {
+        JoyX = 0;
+    }
+
+    if (JoyY < 0.05 && JoyY > -0.05) {
+        JoyY = 0;
+    }
+
+    // Calculate Power Value.
+    // Multiplier last year was 0.75, but too sensitive this year. 
+    // March 9 11:00 am Start for drivers at 0.35 and adjust
+    double leftPower = -(JoyY - 0.35 * JoyX);   
+    double rightPower = -(JoyY + 0.35 * JoyX);
+
+    frc::SmartDashboard::PutNumber("left Power: ", leftPower);-
+    frc::SmartDashboard::PutNumber("right Power: ", rightPower);
+    Robot::drivetrain->setLeftMotor(leftPower);
+    Robot::drivetrain->setRightMotor(rightPower);
+
+    // Steve test ****
+
+    //Robot::drivetrain->joystickDriveCalculator();
 
     // Deadzone.
     if (fabs(JoyX) < 0.05 && fabs(JoyY) < 0.05)
@@ -77,10 +102,10 @@ void DriveRobot::Execute() {
     //m_oldLeftPower = leftPower;
     //m_oldRightPower = rightPower;
     
-    //frc::SmartDashboard::PutNumber("left Power: ", leftPower);
-    //frc::SmartDashboard::PutNumber("right Power: ", rightPower);
-    //Robot::drivetrain->setLeftMotor(leftPower);
-    //Robot::drivetrain->setRightMotor(rightPower);
+    // frc::SmartDashboard::PutNumber("left Power: ", leftPower);
+    // frc::SmartDashboard::PutNumber("right Power: ", rightPower);
+    // Robot::drivetrain->setLeftMotor(leftPower);
+    // Robot::drivetrain->setRightMotor(rightPower);
 }
 
 // Make this return true when this Command no longer needs to run execute()

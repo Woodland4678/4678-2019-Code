@@ -69,6 +69,7 @@ void MoveArm::Execute() {
 			if(Robot::manipulatorArm->isHatchMode())
 				wristAbsAngle = -190.0;
 			done = Robot::manipulatorArm->moveToXY(7.0,26.0,wristAbsAngle,0,20.0); // Move to X,Y co-ords
+			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 2: //Rocket Low, Cargo ship place hatch.
 			if(Robot::manipulatorArm->isHatchMode())
@@ -76,12 +77,14 @@ void MoveArm::Execute() {
 			else
 				done = Robot::manipulatorArm->moveToXY(25.5,27.5,10.0,0,20.0);
 			//done = Robot::manipulatorArm->moveToXY(25.5,19,20.0);
+			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 3: //Rocket Medium
 			if(Robot::manipulatorArm->isHatchMode())
 				done = Robot::manipulatorArm->moveToXY(16.0,46.0,-190,0,20.0);
 			else
 				done = Robot::manipulatorArm->moveToXY(16.0,55.0,10.0,0,20.0);
+			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 4: //Rocket High
 			if(Robot::manipulatorArm->isHatchMode())
@@ -90,6 +93,7 @@ void MoveArm::Execute() {
 				{
 				done = Robot::manipulatorArm->moveToXY(16.0,75.0,68.5,0,20.0);
 				}
+			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 5: //Fine Motion
 			done = Robot::manipulatorArm->moveToXY(22.0,75.0,-100,0,20.0);			
@@ -117,6 +121,7 @@ void MoveArm::Execute() {
 						printf("Wheels set to run 1\n\r");
 						}
 					}
+				Robot::manipulatorArm->m_CurrentPosition = 5;
 			}
 			break;
 		case 7: //Human Station Hatch
@@ -128,6 +133,7 @@ void MoveArm::Execute() {
 					Robot::manipulatorArm->setInHatchPosition();
 					done = Robot::manipulatorArm->moveToXY(25.5,17.0,-190.0,0,20.0);
 					}
+				Robot::manipulatorArm->m_CurrentPosition = 5;
 			}
 			else {
 				done = true;
@@ -140,8 +146,9 @@ void MoveArm::Execute() {
 					{
 					Robot::manipulatorArm->setInCargoPosition();
 					// Start intake rollers.  Move to any other position will stop them.
-					Robot::manipulatorArm->intakeWheelsSpin(0.5); // Wheel running.
+					Robot::manipulatorArm->intakeWheelsSpin(-0.5); // Wheel running.
 					}
+				Robot::manipulatorArm->m_CurrentPosition = 5;
 			}
 			else {
 				done = true;
@@ -157,6 +164,7 @@ void MoveArm::Execute() {
 				done = Robot::manipulatorArm->moveToXY(25.5,19.0,-190,0,20.0);
 			else
 				done = Robot::manipulatorArm->moveToXY(18.0,42.0,-10,0,20.0);
+			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 	}
 }
