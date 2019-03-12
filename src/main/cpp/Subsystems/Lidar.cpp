@@ -838,16 +838,18 @@ polarPoint Lidar::findCargo() {
 
 			// findCargoCentre iterates through the points in the chosen circle and calculates the centre
 			findCargoCenter(lidGroups[i].basePointDistance);
-			
-			// stores the cargo centre's angle and distance in variables with shorter names (because Andrew is OCD about how long his lines of code are ~ Hannah)
-			double lidarDist = (double)cargoCentrePoint.dist;
-			double lidAngle = (double)cargoCentrePoint.angle;
-			
-			// calculate the distance from the waist to the ball (using cosine law)
-			cargoCentrePoint.dist = sqrt(lidarDist*lidarDist + WAIST_DISTANCE*WAIST_DISTANCE -2 * lidarDist * WAIST_DISTANCE * cos(lidAngle * M_PI / 180.0));
 
-			// calculate the angle from the waist to the ball (using sine law)
-			cargoCentrePoint.angle = asin(lidarDist * sin(lidAngle * M_PI / 180.0) / cargoCentrePoint.dist) / M_PI * 180.0 - 180;
+			// Brad M: do the following calculations up in the GotoBall code in case we want to reuse for a future robot
+
+//			// stores the cargo centre's angle and distance in variables with shorter names (because Andrew is OCD about how long his lines of code are ~ Hannah)
+//			double lidarDist = (double)cargoCentrePoint.dist;
+//			double lidAngle = (double)cargoCentrePoint.angle;
+//			
+//			// calculate the distance from the waist to the ball (using cosine law)
+//			cargoCentrePoint.dist = sqrt(lidarDist*lidarDist + WAIST_DISTANCE*WAIST_DISTANCE -2 * lidarDist * WAIST_DISTANCE * cos(lidAngle * M_PI / 180.0));
+//
+//			// calculate the angle from the waist to the ball (using sine law)
+//			cargoCentrePoint.angle = asin(lidarDist * sin(lidAngle * M_PI / 180.0) / cargoCentrePoint.dist) / M_PI * 180.0 - 180;
 
 			// set the timestamp of the cargo centre to the current time stamp
 			cargoCentrePoint.tstamp = (int)(frc::Timer::GetFPGATimestamp() * 1000000.0);
