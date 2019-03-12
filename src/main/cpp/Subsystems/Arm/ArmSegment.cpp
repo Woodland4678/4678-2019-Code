@@ -54,13 +54,19 @@ bool ArmSegment::initEncoderValues() {
 	if((!m_EncSet)||(!m_AngSet)||(!m_PotSet))
 		return false;
 	
+	//Creating conversions from encoder to pot
+	m_ConversionValues.convPEM = (m_ConversionValues.potLimit1 - m_ConversionValues.potLimit2) / (m_ConversionValues.encLimit1 - m_ConversionValues.encLimit2);
+	m_ConversionValues.convPEY = m_ConversionValues.potLimit2 - m_ConversionValues.encLimit2 * m_ConversionValues.convPEM;
+
 	int pot = getPotentiometerReading();
 	double ang = convertPotToAngle((double)pot);
 	double enc = convertAngleToEncoder(ang);
 
-	printf("\n%i | %f | %f | %f",pot,ang,enc,getSelectedSensorValue());
+	m_Offset = getSelectedSensorValue() - enc;
 
-	setSelectedSensorValue(enc);
+	printf("\n%i | %f | %f | %f\n",pot,ang,enc,m_Offset);
+
+	/*setSelectedSensorValue(enc);
 
 	//Check value
 	int cnt = 0;
@@ -70,7 +76,7 @@ bool ArmSegment::initEncoderValues() {
 	}
 	printf(" | %i\n",cnt);
 	if(cnt >= 50)
-		return false;
+		return false;*/
 	return true;
 }
 
@@ -110,11 +116,11 @@ void ArmSegment::setPhysicalAttributes(double x, double y) {
 	m_physicalAttributes.posY = y;
 }
 void ArmSegment::set(ctre::phoenix::motorcontrol::ControlMode mode, double value) {
-	m_Controller->Set(mode, value);
+	m_Controller->Set(mode, value + m_Offset);
 }
 
 void ArmSegment::set(rev::ControlType mode, double value) {
-	m_ControllerREV->GetPIDController().SetReference(value, mode);
+	m_ControllerREV->GetPIDController().SetReference(value + m_Offset, mode);
 }
 
 //Calculations
@@ -137,9 +143,9 @@ int ArmSegment::getAbsEncoderReading() {
 }
 double ArmSegment::getSelectedSensorValue() {
 	if(m_Talon)
-		return m_Controller->GetSelectedSensorPosition(0);
+		return m_Controller->GetSelectedSensorPosition(0)-m_Offset;
 	else
-		return m_ControllerREV->GetEncoder().GetPosition();
+		return m_ControllerREV->GetEncoder().GetPosition()-m_Offset;
 }
 double ArmSegment::getCurrent() {
 	if(m_Talon)
@@ -196,6 +202,13 @@ double ArmSegment::convertPotToAngle(double pot) {
 	return (pot * m_ConversionValues.convPAM + m_ConversionValues.convPAY);
 }
 
+double ArmSegment::convertPotToEncoder(double pot) {
+	return (((pot) - (m_ConversionValues.convPEY))/(m_ConversionValues.convPEM));
+}
+double ArmSegment::convertEncoderToPot(double encoder) {
+	return (encoder * m_ConversionValues.convPEM + m_ConversionValues.convPEY);
+}
+
 void ArmSegment::setConvSlope_Pot(double value) {
 	m_ConversionValues.convPAM = value;
 }
@@ -229,11 +242,76 @@ double ArmSegment::getConversionIntercept_Pot() {
 }
 
 //Calibrate
-bool ArmSegment::checkAngleAccuracy() {
+void ArmSegment::setSkipChecks(int skipAngle, int potSkip){
+	m_skipPotDiff = potSkip;
+	m_skipAngle = skipAngle;
+}
+
+double ArmSegment::getAngleAccuracy() {
+	double enc = getSelectedSensorValue();
+	int pot = getPotentiometerReading();
+
+	double eAngle = convertEncoderToAngle(enc);
+	double pAngle = convertPotToAngle(pot);
+
+	//What is the difference between enc angle and pot angle?
+	return fabs(eAngle - pAngle);
 	
 }
+double ArmSegment::getPotAccuracy() {
+	double enc = getSelectedSensorValue();
+	int pot = getPotentiometerReading();
+
+	double ePot = convertEncoderToPot(enc);
+	return fabs(ePot - pot);
+}
+
 bool ArmSegment::calibrate() {
-	
+	switch(m_calCase)
+		{
+		case 0:
+			m_CalPotCnt = 0;
+			m_calCase++;
+			break;
+		case 1: //Get pot readings
+			m_CalPots[m_CalPotCnt] = getPotentiometerReading();
+			m_CalPotCnt++;
+			if(m_CalPotCnt > 8)
+				m_calCase++;
+			break;
+		case 2: {//Parse pot readings - Calibrate
+			double avPot = 0;
+			int h_Idx = 0, h_Val = 0, l_Idx = 0, l_Val = 9999;
+			for(int x=0;x<8;x++) {
+				if(m_CalPots[x] < l_Val) {
+					l_Val = m_CalPots[x];
+					l_Idx = x;
+				}
+				if(m_CalPots[x] > h_Val) {
+					h_Val = m_CalPots[x];
+					h_Idx = x;
+				}
+			}
+
+			for(int x=0;x<8;x++) {
+				if((x != h_Idx)&&(x != l_Idx))
+					avPot += m_CalPots[x];
+			}
+			avPot /= 6;
+
+			//printf("\nPot = %f", avPot);
+
+			double ang = convertPotToAngle(avPot);
+			double enc = convertAngleToEncoder(ang);
+
+			m_Offset = (getSelectedSensorValue()+m_Offset) - enc;
+			printf("\nOffset = %f | ang = %f | pot = %f", m_Offset, ang, avPot);
+			m_calCase = 0;
+			return true;
+			}
+			break;
+		}
+return false;
 }
 
 //Initialize functions for Talon SRX

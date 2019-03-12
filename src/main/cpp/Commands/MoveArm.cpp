@@ -63,6 +63,11 @@ void MoveArm::Execute() {
 				{
 				Robot::manipulatorArm->fineMotion(); // default command, do fine motion.S
 				}
+			if (Robot::oi->getoperator1()->GetPOV() == 180) 
+				{
+				m_btn = 11;
+				}
+
 			break;
 		case 1: //Carry
 			wristAbsAngle = -10.0; // This is for cargo.
@@ -165,6 +170,21 @@ void MoveArm::Execute() {
 			else
 				done = Robot::manipulatorArm->moveToXY(18.0,42.0,-10,0,20.0);
 			Robot::manipulatorArm->m_CurrentPosition = 0;
+			break;
+		case 11:
+			if(!done2){
+				done2 = Robot::manipulatorArm->moveToXY(16.0,46.0,-190,0,20.0);
+				Robot::manipulatorArm->InitCalibrate();
+			}
+			else 
+				{
+				//printf("\nHere");
+				done = Robot::manipulatorArm->Calibrate();
+				if(done){
+					printf("\nhere");
+					m_btn = 0;
+				}
+				}
 			break;
 	}
 }

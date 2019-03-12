@@ -46,6 +46,10 @@ private:
 
 	ArmSegment *m_Segs[4];
 	ArmMotion *m_Moves[5];
+	bool m_Skip[4][5];
+	int m_readCnt[4];
+	bool m_SkipFinal[4];
+
 	int m_MotionCase = 0;
 	int m_SwapCase = 0;
 
@@ -59,6 +63,11 @@ private:
 	bool m_InCargoPosition = false; // Set to true when we might be taking in cargo.
 	bool m_InHatchPosition = false; // Set to trun when we might be taking in a hatch.
 	int m_SpawTarget = 0;
+
+	bool doneS = false;
+	bool doneE = false;
+	bool doneW = false;
+	bool doneA = false;
 
 public:
 // constructor
@@ -96,6 +105,8 @@ public:
 	int getIntakeMode();
 	void fineMotion();
 
+	void InitCalibrate();
+	bool Calibrate();
 
 
 	//Intakes
