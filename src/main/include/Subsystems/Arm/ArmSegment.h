@@ -42,6 +42,8 @@ private:
 		double convY;
 		double convPAM;
 		double convPAY;
+		double convPEM;
+		double convPEY;
 	} contp;
 	
 	std::shared_ptr<WPI_TalonSRX> m_Controller;
@@ -57,7 +59,16 @@ private:
 	bool m_PotSet = false;
 	
 	bool m_Talon = true;
-	
+
+	int m_skipAngle = 10;
+	int m_skipPotDiff = 200;
+
+	int m_calCase = 0;
+	int m_CalPots[8];
+	int m_CalPotCnt = 0;
+	int m_CalEncs[8];
+	int m_CalEncCnt = 0;
+
 	//Internal Functions
 	void m_calculateConversions();
 	double m_calculateAbsAngle();
@@ -122,12 +133,16 @@ public:
 	double convertEncoderToAngle(double encoder);
 	double convertAngleToPot(double angle);
 	double convertPotToAngle(double pot);
+	double convertPotToEncoder(double pot);
+	double convertEncoderToPot(double encoder);
 	
 	//Calibrate
-	bool checkAngleAccuracy();
+	void setSkipChecks(int skipAngle, int potSkip);
+	double getAngleAccuracy();
+	double getPotAccuracy();
 	bool calibrate();
 	
-
+	double m_Offset = 0;
 	
 };
 

@@ -110,7 +110,7 @@ void Robot::TeleopPeriodic() {
 	// establishing target positions with the robot driving them.
 
 	// printf("Operator POV=%d\n\r",Robot::oi->getoperator1()->GetPOV());
-	switch(Robot::oi->getoperator1()->GetPOV())
+	/*switch(Robot::oi->getoperator1()->GetPOV())
 	{
 		case 0: // Up
 			atshoulder += 0.5;
@@ -159,7 +159,7 @@ void Robot::TeleopPeriodic() {
 			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
 			//printf("Left Sh=%f, El=%f\n\r",atshoulder,atelbow);
 		break;
-	}
+	} */
 	//Robot::climber->testMovement();
 
 	frc::Scheduler::GetInstance()->Run();
