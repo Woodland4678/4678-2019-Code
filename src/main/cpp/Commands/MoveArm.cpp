@@ -91,7 +91,7 @@ void MoveArm::Execute() {
 				done = Robot::manipulatorArm->moveToXY(10.0,74.0,-190,0,20.0);
 			else
 				{
-				done = Robot::manipulatorArm->moveToXY(16.0,75.0,68.5,0,20.0);
+				done = Robot::manipulatorArm->moveToXY(16.0,75.0,40.0,0,20.0);
 				}
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;

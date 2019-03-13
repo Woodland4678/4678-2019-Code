@@ -38,7 +38,7 @@
 #define WRIST_ANGLE_1     -90 // Hatch Clamp at 90 deg, roller part of claw inwards.
 #define WRIST_ANGLE_2     -180 // Hatch Clamp Straight Out.
 #define WRIST_ENCODER_1   833
-#define WRIST_ENCODER_2   1857 // 1857 - 833 = 1024 (0.25 x 4096 = 1/4 rotation = 90 deg)
+#define WRIST_ENCODER_2   3678 // 1857 - 833 = 1024 (0.25 x 4096 = 1/4 rotation = 90 deg)
 
 #define WAIST_ANGLE_1     -68 // Fully CCW
 #define WAIST_ANGLE_2     68 // Fully CW.  0 is straight ahead.
