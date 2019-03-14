@@ -701,8 +701,12 @@ bool ManipulatorArm::Calibrate() {
 	if (!doneA)
 		doneA = m_Segs[3]->calibrate();
 
-	if(doneS && doneE && doneW && doneA)
+	if(doneS && doneE && doneW && doneA) {
+		m_StartX = m_Segs[1]->getEndX();
+		m_StartY = m_Segs[1]->getEndY();
+		m_StartW = m_Segs[2]->getRelAngle();
 		return true;
+	}
 	return false;
 }
 
@@ -799,6 +803,23 @@ void ManipulatorArm::moveWaist(double angle) {
 bool ManipulatorArm::isHatchMode() {
 	return (m_IntakeMode == 1); // true if we expect we have a hatch in the intake
 }
+
+void ManipulatorArm::calculateWristVectors(){
+	double sx = m_Segs[2]->getStartX();
+	double sy = m_Segs[2]->getStartY();
+
+	double ang = m_Segs[1]->getRelAngle() - m_Segs[2]->getRelAngle();
+
+	m_VectorWheelsX = sx + 13.75 * cos((ang - 31.63)* (M_PI/180));
+	m_VectorWheelsY = sx + 13.75 * sin((ang - 31.63)* (M_PI/180));
+
+	m_VectorBottomX = sx + 14 * cos((ang + 33.26)* (M_PI/180));
+	m_VectorBottomY = sx + 14 * sin((ang + 33.26)* (M_PI/180));
+
+	m_VectorHatchX = sx + 13 * cos((ang - 180)* (M_PI/180));
+	m_VectorHatchY = sx + 13 * sin((ang - 180)* (M_PI/180));
+}
+
 
 //Intakes
 void ManipulatorArm::intakeWheelsSpin(double power){

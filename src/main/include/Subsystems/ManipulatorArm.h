@@ -69,6 +69,13 @@ private:
 	bool doneW = false;
 	bool doneA = false;
 
+	double m_VectorWheelsX = 0;
+	double m_VectorWheelsY = 0;
+	double m_VectorBottomX = 0;
+	double m_VectorBottomY = 0;
+	double m_VectorHatchX = 0;
+	double m_VectorHatchY = 0;
+
 public:
 // constructor
 	ManipulatorArm();
