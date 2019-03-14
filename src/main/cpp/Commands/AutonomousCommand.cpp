@@ -23,6 +23,29 @@ AutonomousCommand::AutonomousCommand(): frc::Command() {
 
 // Called just before this Command runs the first time
 void AutonomousCommand::Initialize() {
+    
+	if (Robot::oi->getAutoSwitch()->GetRawButton(14)) {
+		autoSide += 1;
+	}
+	if (Robot::oi->getAutoSwitch()->GetRawButton(15)) {
+		autoSide += 2;
+	}
+    if (Robot::oi->getAutoSwitch()->GetRawButton(16)) {
+		autoSide += 4;
+	}
+
+    // switch 2 determines the objective during autonomous
+    // see AutoScenarioHelpers.cpp  transformConsoleSwitch2 - values there must match below
+
+	if (Robot::oi->getAutoSwitch()->GetRawButton(13)) {
+		autoMode += 1;
+	}
+	if (Robot::oi->getAutoSwitch()->GetRawButton(12)) {
+		autoMode += 2;
+	}
+	if (Robot::oi->getAutoSwitch()->GetRawButton(11)) {
+		autoMode += 4;
+	}
 
 }
 

@@ -59,6 +59,9 @@ void Drivetrain::setRightMotor(double power) {
     rightMaster->Set(-power);
 }
 
+void Drivetrain::resetGoToDistanceState() {
+    goToDistanceState = 0;
+}
 //void Drivetrain::test(double power){
    // rightSlaveTwo->Set(power);
 //}
@@ -197,4 +200,218 @@ void Drivetrain::joystickDriveCalculator() {
     // set motor power
     setLeftMotor(leftPower);
     setRightMotor(rightPower);
+}
+bool Drivetrain::goToDistance(double rightCentimeters, double leftCentimeters, double power, int rampUpDistance,
+			int rampDownDistance, double startingPower, double endingPower) {
+		//SmartDashboard.putNumber("Left Wheels Position", getLeftEncoder());
+		//SmartDashboard.putNumber("Right Wheels Position", getRightEncoder());
+
+		// --------------------------------------------------------------------------
+		// -----------------------Reset variables if
+		// necessary-----------------------
+		// --------------------------------------------------------------------------
+
+		// If this method is being called for the first time since it last
+		// finished, you want to record the initial encoder values
+		if (goToDistanceState == 0) {
+			goToDistanceState++;
+			startingLeftDistance = getLeftEncoder();
+			startingRightDistance = getRightEncoder();
+			// Robot.logger.info("Drivetrain",
+			// "goToDistance starting encoder values are " + getRightEncoder() +
+			// ", " + getLeftEncoder());
+		}
+
+
+		// --------------------------------------------------------------------------
+		// ---------------------Get target and current
+		// distances---------------------
+		// --------------------------------------------------------------------------
+
+		// Get target distance in centimeters
+		targetLeft = leftCentimeters * encoderClicksPerCentimeter; // used to be
+																	// parameters
+		targetRight = rightCentimeters * encoderClicksPerCentimeter; // used to
+																		// be
+																		// parameters
+		//System.out.println(
+			//	"hi goToDistanceState=" + goToDistanceState + " " + startingLeftDistance + " " + startingRightDistance + " tleft="+targetLeft+" tright="+targetRight);
+
+		// Get the current distance in centimeters
+		currentLeft = abs(getLeftEncoder() - startingLeftDistance);
+		currentRight = abs(getRightEncoder() - startingRightDistance);
+		currentLeftCentimeters = currentLeft / encoderClicksPerCentimeter; // used
+																			// to
+																			// use
+																			// the
+																			// parameter
+		currentRightCentimeters = currentRight / encoderClicksPerCentimeter; // used
+																				// to
+																				// use
+																				// the
+																				// parameter
+																				// (same
+																				// name)
+
+		// Find the percentage the left and right are to their target
+		leftPercentThere = abs(currentLeft / targetLeft);
+		rightPercentThere = abs(currentRight / targetRight);
+		//System.out.println("Percentages At " + leftPercentThere + ", " + rightPercentThere+" CurrentLeft="+currentLeft+" CurrentRight"+currentRight);
+		//System.out.println("Leftcm="+currentLeftCentimeters+" Rightcm="+currentRightCentimeters);
+
+		// Initially set the powers to their default values
+		leftMotorMultiplier = 1;
+		rightMotorMultiplier = 1;
+
+		// --------------------------------------------------------------------------
+		// ----------------Adjust powers if one side has gone
+		// farther----------------
+		// --------------------------------------------------------------------------
+
+		// Difference between how far the left and right have gone
+		powerOffset = GO_TO_DISTANCE_CORRECTION_SPEED * abs(leftPercentThere - rightPercentThere);
+
+		// Only start adjusting the powers once the motors have gone 2 percent
+		// of the target distance, to avoid calculation errors
+		if (currentRight >= (targetRight * 0.02) && (currentLeft >= (targetLeft * 0.02))) {
+			// If the right is closer than the left, increase the left power and
+			// decrease the right power
+			if (rightPercentThere > (leftPercentThere + 0.001)) {
+				leftMotorMultiplier *= 1 + powerOffset;
+				rightMotorMultiplier *= 1 - powerOffset;
+			}
+
+			// If the left is closer than the right, increase the right power,
+			// and decrease the left power
+			if ((rightPercentThere + 0.001) < leftPercentThere) {
+				leftMotorMultiplier *= 1 - powerOffset;
+				rightMotorMultiplier *= 1 + powerOffset;
+			}
+		}
+		//System.out.println("percentages at " + (int)(leftPercentThere * 100) + ", " + (int)(rightPercentThere * 100) + " Power Offset At " + (((int)(1000 * powerOffset)) / 1000.0));
+		// --------------------------------------------------------------------------
+		// -----------------------Flip the powers if
+		// necessary-----------------------
+		// --------------------------------------------------------------------------
+
+		// We use the absolute values for setting the powers, so we have to flip
+		// the powers based on what direction the robot is going
+		if (targetRight < 0) {
+			// If the robot is trying to go backwards and has not passed the
+			// target
+			if (getRightEncoder() - startingRightDistance > targetRight) {
+				rightMotorMultiplier *= -1;
+			}
+		} else {
+			// If the robot is trying to go forwards and has passed the target
+			if (getRightEncoder() - startingRightDistance > targetRight) {
+				rightMotorMultiplier *= -1;
+			}
+		}
+
+		if (targetLeft < 0) {
+			// If the robot is trying to go backwards and has not passed the
+			// target
+			if (getLeftEncoder() - startingLeftDistance > targetLeft) {
+				leftMotorMultiplier *= -1;
+			}
+		} else {
+			// If the robot is trying to go forwards and has passed the target
+			if (getLeftEncoder() - startingLeftDistance > targetLeft) {
+				leftMotorMultiplier *= -1;
+			}
+		}
+
+		// --------------------------------------------------------------------------
+		// -----------------------------Ramp Down
+		// Speeds-----------------------------
+		// --------------------------------------------------------------------------
+
+		double rampDownPercentage = 1;
+		if (currentRightCentimeters < rampUpDistance) {
+			rampDownPercentage = ((currentRightCentimeters / rampUpDistance) * (1 - startingPower)) + startingPower;
+			// Robot.logger.info("Drivetrain", "goToDistance ramping down " +
+			// (int)(rampDownPercentage * 100) + "%");
+		} else if (currentRightCentimeters > abs(rightCentimeters) - rampDownDistance) {
+			rampDownPercentage = (((abs(rightCentimeters) - currentRightCentimeters) / rampDownDistance)
+					* (1 - endingPower)) + endingPower;
+			// Robot.logger.info("Drivetrain", "goToDistance ramping down " +
+			// (int)(rampDownPercentage * 100) + "%");
+		}
+
+		// Robot.logger.debug("Drivetrain", "goToDistance target is " +
+		// rightCentimeters + ", " + leftCentimeters + " current is " +
+		// (-(int)((getRightEncoder() - startingRightDistance) /
+		// Robot.encoderClicksPerCentimeter())) + ", " +
+		// (-(int)((getLeftEncoder() - startingLeftDistance) /
+		// Robot.encoderClicksPerCentimeter())));
+
+	//	System.out.println("Left Power = "+leftMotorMultiplier * power * rampDownPercentage+" Right Power = "+rightMotorMultiplier * power * rampDownPercentage);
+		setLeftMotor(rightMotorMultiplier * power * rampDownPercentage);
+		setRightMotor(leftMotorMultiplier * power * rampDownPercentage);
+
+		// If the left and the right both have gone far enough stop the motors,
+		// and reset the goToDistanceState so that the next time
+		// the method is called, it will record the starting encoder values
+		// again
+		if (rightPercentThere >= 1 && leftPercentThere >= 1) {
+			setLeftMotor(0);
+			setRightMotor(0);
+			goToDistanceState = 0;
+			// System.out.println("Drivetrain goToDistance at target");
+			// System.out.println("Drivetrain goToDistance final encoder values
+			// are "+ getRightEncoder() + ", " + getLeftEncoder());
+			return true;
+		}
+		//System.out.println(" return false here...");
+
+		return false;
+}
+double error = 0;
+bool Drivetrain::GyroTurn(double current, double turnAmount, double p, double i, double d){
+
+	static double past = 0;
+	static double iValue = 0;
+	static int counter = 0;
+	// Never go more than 180 degrees in either direction with this function so make sure the step over 360 degrees is
+	// handled correctly.  eg at 270 , go to 10 error = 10 - 270 = -260, error should be 370 - 270 = 100 (-260 + 360)
+	// eg at 30 go to 300, error = 300 - 30 = 270, error should be 300 - 390 = -90 (270 - 360)
+	// so, error of less than -180 needs to be adjusted by +360
+	// error of more than +180 is adjusted by -360
+	error = turnAmount - current;
+	if (error < -180.0)
+		error += 360.0;
+	if (error > 180.0)
+		error -= 360.0;
+	double pValue = p*error;
+	iValue += i*(error);
+	double dValue = d*(past - current);
+	double totalValue = pValue + iValue + dValue;
+
+	printf("Gyro: %f  tv = %f\n",current, totalValue);
+
+	if(totalValue > 0.8)
+		totalValue = 0.8;
+	if(totalValue < -0.8)
+		totalValue = -0.8;
+
+	setRightMotor(-totalValue);
+	setLeftMotor(totalValue);
+
+
+	past = current;
+	if (std::abs(error) < 1.5) {
+		counter++;
+	} else {
+		counter = 0;
+	}
+	if(counter >= 10){
+		past = 0;
+		iValue = 0;
+		counter = 0;
+		setRightMotor(0);
+		setLeftMotor(0);
+		return true;
+	}
+	return false;
 }
