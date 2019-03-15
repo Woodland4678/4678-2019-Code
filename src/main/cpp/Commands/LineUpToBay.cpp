@@ -24,18 +24,19 @@ LineUpToBay::LineUpToBay(): frc::Command() {
 
 // Called just before this Command runs the first time
 void LineUpToBay::Initialize() {
-
+    done = false;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToBay::Execute() {
     // ************** Steve temporarily comment this command out in case of accidental button press.
-    Robot::climber->reset();
+    if(!done)
+        done = Robot::climber->moveInches(13, 1.0);
 }
 
 // Make this return true when this Command no longer needs to run execute()
 bool LineUpToBay::IsFinished() {
-    return true;
+    return done;
 }
 
 // Called once after isFinished returns true

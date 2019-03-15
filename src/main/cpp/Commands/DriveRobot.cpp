@@ -59,7 +59,7 @@ void DriveRobot::Execute() {
     if ((JoyY > -0.05)&&(JoyY <= 0.05)) {
         JoyY = 0.0;
         if(Robot::manipulatorArm->m_FineLimitHit)
-            JoyY = 0.3;
+            JoyY = -0.2;
     }
     else if (JoyY < -0.05)
         JoyY += 0.05;
