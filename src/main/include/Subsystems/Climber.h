@@ -39,6 +39,8 @@ public:
 	void reset();
 	void testMovement();
 
+	bool m_Climbing = false;
+
 };
 
 #endif

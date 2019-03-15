@@ -92,7 +92,10 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic() {
 	char buf[255];
-	double JoyY(Robot::oi->getdriver()->GetRawAxis(3));
+
+	//frc::SmartDashboard::PutNumber("Dist", lidar->climbDistance());
+
+	double JoyY = oi->getdriver()->GetRawAxis(3);
 
     // Deadzone check
     if (JoyY < 0.05 && JoyY > -0.05) {

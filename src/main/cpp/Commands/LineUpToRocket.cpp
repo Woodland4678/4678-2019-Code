@@ -15,7 +15,6 @@
 
 LineUpToRocket::LineUpToRocket(int side): frc::Command() {
     m_side = side;
-    clamped = false;
 
         // Use requires() here to declare subsystem dependencies
     // eg. requires(Robot::chassis.get());
@@ -32,13 +31,7 @@ void LineUpToRocket::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToRocket::Execute() {
-    clamped = !clamped;
-    if (clamped == true) {
-        Robot::manipulatorArm->grabHatch();
-    }
-    else {
-        Robot::manipulatorArm->releaseHatch();
-    }
+    
 }
 
 // Make this return true when this Command no longer needs to run execute()

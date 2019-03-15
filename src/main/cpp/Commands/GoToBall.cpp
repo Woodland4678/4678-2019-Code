@@ -27,7 +27,7 @@ GoToBall::GoToBall(): frc::Command() {
 // Called just before this Command runs the first time
 void GoToBall::Initialize() {
     // Reset the class variable for this iteration
-    m_state = GotoStateStartScan;
+    m_state = 0;
 
     m_polarBallPt.angle = 0.0;
     m_polarBallPt.dist  = 0;
@@ -46,80 +46,96 @@ void GoToBall::Execute() {
         //move to carry
 
         //Once carry is complete
-        m_state = GotoStateFinished;
+        m_state = 7;
         return;
     }
-
+    printf("Ball State = %i",m_state);
     switch (m_state)  {
-    case GotoStateStartScan:
-        Robot::lidar->readLidar();
-        m_state = GotoStateScanning;
-        break;
+        case 0:
+            Robot::manipulatorArm->setInCargoPosition();
+            m_Move1 = Robot::manipulatorArm->moveToXY(25.5,27.5,10.0,0,20.0); // Move to X,Y co-ords
+            if(m_Move1)
+                m_state = 1;
+            break;
+        case 1:
+            Robot::lidar->readLidar();
+            m_state = 2;
+            break;
 
-    case GotoStateScanning:
-        // Check to see if the lidar scan is complete
-        if (Robot::lidar->readComplete() == true) {
-            m_state = GotoStateReadData;
+        case 2:
+            // Check to see if the lidar scan is complete
+            if (Robot::lidar->readComplete() == true) {
+                m_state = 3;
+            }
+            break;
+
+        case 3:
+            // Call the lidar code to find a cargo ball
+            m_polarBallPt = Robot::lidar->findCargo();
+
+            // Check if we got anything back
+            if (m_polarBallPt.angle == 0.0 && m_polarBallPt.dist == 0) {
+                // TODO: should this do another lidar scan or finish?
+                m_state = 1;//restart scan;
+            }
+            else {
+                    m_state = 4;
+            }
+            break;
+
+        case 4:  {
+            // We have a ball within range of the arm - move the waist and arm to position over the ball
+            const int  k_WaistDistance(183);   // distance between the waist and the lidar
+
+            // Need to make the distance and angle relative to the center of the waist
+            const double  lidar_dist = static_cast<double>(m_polarBallPt.dist);
+            const double  lidar_angle = m_polarBallPt.angle;
+
+            // calculate the distance from the waist to the ball (using cosine law)
+            const double  waist_distance = sqrt(lidar_dist * lidar_dist + k_WaistDistance * k_WaistDistance - 
+                                            2 * lidar_dist * k_WaistDistance * cos(lidar_angle * M_PI / 180.0));
+
+            // calculate the angle from the waist to the ball (using sine law)
+            const double waist_angle = asin(lidar_dist * sin(lidar_angle * M_PI / 180.0) / lidar_dist) / M_PI * 180.0 - 180;
+
+            // Convert to cartesean coordinates for the arm
+            const double  radians = M_PI * waist_angle / 180;
+
+            m_cartX = std::round(waist_distance * std::cos(radians));
+            m_cartY = -(std::round(waist_distance * std::sin(radians)));
+            m_angle = waist_angle;
+
+            printf("Waist Angle = %f",m_angle);
+            printf("Arm Distance = %f",m_cartX);
+
+            if(m_cartX > 44){ //Outside 30"
+                //Bail for now
+                m_state = 7;
+            }
+            m_state = 5;
+            break;
         }
-        break;
 
-    case GotoStateReadData:
-        // Call the lidar code to find a cargo ball
-        m_polarBallPt = Robot::lidar->findCargo();
+        case 5:
+            //Move the arm and the waist to pickup the ball
+            //m_Move2 = Robot::manipulatorArm->moveToXY(m_cartX,13,-60,m_angle,20.0); // Move to X,Y co-ords
+            //Robot::manipulatorArm->intakeWheelsSpin(-0.7);
+            //if(m_Move2 || Robot::manipulatorArm->ifCargo())
+                m_state = 6;
+            break;
 
-        // Check if we got anything back
-        if (m_polarBallPt.angle == 0.0 && m_polarBallPt.dist == 0) {
-            // TODO: should this do another lidar scan or finish?
-            m_state = GotoStateStartScan;//GotoStateFinished;
-        }
-       else {
-            m_state = GotoStateProcessData;
-        }
-        break;
-
-    case GotoStateProcessData:  {
-        // We have a ball within range of the arm - move the waist and arm to position over the ball
-       const int  k_WaistDistance(183);   // distance between the waist and the lidar
-
-       // Need to make the distance and angle relative to the center of the waist
-  		const double  lidar_dist = static_cast<double>(m_polarBallPt.dist);
-		const double  lidar_angle = m_polarBallPt.angle;
-
-		// calculate the distance from the waist to the ball (using cosine law)
-        const double  waist_distance = sqrt(lidar_dist * lidar_dist + k_WaistDistance * k_WaistDistance - 
-                                         2 * lidar_dist * k_WaistDistance * cos(lidar_angle * M_PI / 180.0));
-
-		// calculate the angle from the waist to the ball (using sine law)
-		const double waist_angle = asin(lidar_dist * sin(lidar_angle * M_PI / 180.0) / lidar_dist) / M_PI * 180.0 - 180;
-
-        // Convert to cartesean coordinates for the arm
-        const double  radians = M_PI * waist_angle / 180;
-
-		m_cartX = std::round(waist_distance * std::sin(radians));
-		m_cartY = -(std::round(waist_distance * std::cos(radians)));
-        m_angle = waist_angle;
-        m_state = GotoStateMoveArm;
-        break;
+        case 6:
+            //m_Move3 = Robot::manipulatorArm->moveToXY(7.0,26.0,-10.0,0,20.0);
+            //if(m_Move3)
+                m_state = 7;
+            break;
     }
-
-    case GotoStateMoveArm:
-        // TODO:  Move the arm and the waist to pickup the ball
-
-        m_state = GotoStateGrabBall;
-        break;
-
-    case GotoStateGrabBall:
-        // Figure out if we want the intake to be done here or on a separate button on the controller
-        // TODO: Pickup the ball with the intake
-
-        m_state = GotoStateFinished;
-        break;
-    }
+    printf("\n");
 }
 
 // Make ifthis return true when this Command no longer needs to run execute()
 bool GoToBall::IsFinished() {
-    return (m_state == GotoStateFinished) ? true : false;    
+    return (m_state == 7) ? true : false;    
 }
 
 // Called once after isFinished returns true

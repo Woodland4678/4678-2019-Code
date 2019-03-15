@@ -47,7 +47,7 @@ private:
 	bool done4 = false;
 
 	int m_ClimbCase = 0;
-
+	int dist;
 
 };
 

@@ -1122,6 +1122,28 @@ tpPoint Lidar::findRocketSideCentre(tpLine *rocketSideLine, bool forwards) {
 
 }
 
+int Lidar::climbDistance() {
+	filterData(false,45,45,60,40000);
+	//Take the first point and last, find center
+	tpPoint p1, p2, pcenter;
+
+	double rad = M_PI * (lidFiltered[0].angle) / 180;
+	p1.x = (std::round((lidFiltered[0].dist) * std::cos(rad)));
+	p1.y = -(std::round((lidFiltered[0].dist) * std::sin(rad)));
+
+	int last = filteredCount - 1;
+	rad = M_PI * (lidFiltered[last].angle) / 180;
+	p2.x = (std::round((lidFiltered[last].dist) * std::cos(rad)));
+	p2.y = -(std::round((lidFiltered[last].dist) * std::sin(rad)));
+
+	pcenter.x = (p1.x + p2.x) / 2;
+	pcenter.y = (p1.y + p2.y) / 2;
+
+	//printf("Fd = %i | x1 = %i , y1 = %i | x2 = %i , y2 = %i | cx = %i, cy = %i\n",filteredCount, p1.x, p1.y, p2.x, p2.y,pcenter.x, pcenter.y);
+
+	return (pcenter.x*-1);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*

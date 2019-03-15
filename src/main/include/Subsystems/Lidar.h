@@ -184,6 +184,8 @@ public:
 	void checkLinesForHatchWalls();
 	int driveToHatchWallCase;
 
+	int climbDistance();
+
 	//
 
 	bool isSwitchAuto = false;

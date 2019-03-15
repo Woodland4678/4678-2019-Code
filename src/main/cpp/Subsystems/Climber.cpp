@@ -89,12 +89,13 @@ bool Climber::moveTo(int step) {
     pos -= step;
     stilts->Set(ControlMode::Position, pos);
     printf("\nStilts = %i",pos);
-    if(pos <= -27590)
+    if(pos <= -27740)
         return true;
     return false;
 }
 
 void Climber::reset() {
+    stilts->ConfigVoltageCompSaturation(4, 0);
     stilts->Set(ControlMode::Position, -200);
 }
 
