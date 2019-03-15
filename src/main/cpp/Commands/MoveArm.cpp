@@ -63,6 +63,10 @@ void MoveArm::Execute() {
 				{
 				Robot::manipulatorArm->fineMotion(); // default command, do fine motion.S
 				}
+			else{
+				Robot::manipulatorArm->m_FineLimitHit = false;
+			}
+			
 			if (Robot::oi->getoperator1()->GetPOV() == 180) 
 				{
 				m_btn = 11;
@@ -79,8 +83,8 @@ void MoveArm::Execute() {
 		case 2: //Rocket Low, Cargo ship place hatch.
 			if(Robot::manipulatorArm->isHatchMode())
 				done = Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0); //25.5,17,-190.0,0,20.0
-			else
-				done = Robot::manipulatorArm->moveToXY(25.5,27.5,10.0,0,20.0); //25.5,27.5,10.0,0,20.0
+			else	//This is the same as the carry position
+				done = Robot::manipulatorArm->moveToXY(7.0,26.0,-10.0,0,20.0); //25.5,27.5,10.0,0,20.0
 			//done = Robot::manipulatorArm->moveToXY(25.5,19,20.0);
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
@@ -118,7 +122,7 @@ void MoveArm::Execute() {
 					}
 				else
 					{
-					done = Robot::manipulatorArm->moveToXY(25.68,13,-28.41,0,20.0);
+					done = Robot::manipulatorArm->moveToXY(25.68,13,-33.41,0,20.0);
 					if (done)
 						{
 						Robot::manipulatorArm->setInCargoPosition();
