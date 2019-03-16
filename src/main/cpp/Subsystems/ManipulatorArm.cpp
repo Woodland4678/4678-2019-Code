@@ -1097,3 +1097,7 @@ void ManipulatorArm::fineMotion() {
 			}
 		}	
 }
+
+void ManipulatorArm::disableWrist(){
+	m_Segs[2]->disableMotor();
+}
