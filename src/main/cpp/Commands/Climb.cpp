@@ -61,13 +61,14 @@ void Climb::Execute() {
                 m_ClimbCase = 2;
                 done2 = false;
                 done3 = false;
+                Robot::manipulatorArm->disableWrist();
             }
             break;
         case 2://Move the robot up
             if(!done2)
-                done2 = Robot::manipulatorArm->moveToXY(33.0,6,-93.0,0,10.0);
+                done2 = Robot::manipulatorArm->moveToXY(33.0,9,-93.0,0,10.0);
             if(!done3)
-                done3 = Robot::climber->moveTo(250);
+                done3 = Robot::climber->moveTo(400);
             if(done2 && done3)
                 m_ClimbCase = 3;
             break;
@@ -84,20 +85,27 @@ void Climb::Execute() {
             dist = Robot::lidar->climbDistance();
             printf("Dist = %i",dist);
             m_ClimbCase = 3;
-            if(dist < 1000){ //Time to spin up wheel
-                Robot::drivetrain->setRightMotor(0.4);
-                Robot::drivetrain->setLeftMotor(0.4);
+            if(dist < 1500){ //Time to spin up wheel
+                Robot::drivetrain->setRightMotor(0.2);
+                Robot::drivetrain->setLeftMotor(0.2);
                 //Robot::manipulatorArm->intakeWheelsSpin(0);
             }
-            else if(dist > 1000) //Spin intakes
+            if(dist > 1000) //Spin intakes
                 Robot::manipulatorArm->intakeWheelsSpin(-1);
-            else if(dist < 850)
+            if(dist < 900)
                 m_ClimbCase = 6;
             break;
         case 6:
             //The middle wheel is now on
+            printf("STOP!\n");
             Robot::drivetrain->setRightMotor(0);
             Robot::drivetrain->setLeftMotor(0);
+            Robot::manipulatorArm->intakeWheelsSpin(0);
+            Robot::climber->reset();
+            m_ClimbCase = 7;
+            break;
+        case 7:
+            
             break;
     }
 

@@ -97,6 +97,8 @@ public:
 	void setSelectedSensorValue(double value);
 	void setAbsAngleTarget(double ang1);
 
+	void disableMotor();
+
 	
 	//Encoders
 	int getQuadEncoderReading();

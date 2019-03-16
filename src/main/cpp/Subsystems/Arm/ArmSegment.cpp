@@ -123,6 +123,11 @@ void ArmSegment::set(rev::ControlType mode, double value) {
 	m_ControllerREV->GetPIDController().SetReference(value + m_Offset, mode);
 }
 
+void ArmSegment::disableMotor() {
+	if(m_Talon)
+		setVoltageLimit(true, 2);
+}
+
 //Calculations
 double ArmSegment::m_calculateAbsAngle() {
 	double ang = getRelAngle();

@@ -91,9 +91,11 @@ int Climber::readABSEncoder() {
 bool Climber::moveTo(int step) {
     static int pos = 0;
     pos -= step;
-    stilts->Set(ControlMode::Position, pos);
+    if(pos > -29500) //Never go beyond this
+        stilts->Set(ControlMode::Position, pos);
+    
     printf("\nStilts = %i",pos);
-    if(pos <= -27740)
+    if(pos <= -29500)
         return true;
     return false;
 }
@@ -130,7 +132,6 @@ bool Climber::moveInches(int inches, double inchesPerSecond) {
 }
 
 void Climber::reset() {
-    stilts->ConfigVoltageCompSaturation(4, 0);
     stilts->Set(ControlMode::Position, -200);
 }
 

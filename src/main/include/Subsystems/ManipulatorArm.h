@@ -118,6 +118,8 @@ public:
 	void InitCalibrate();
 	bool Calibrate();
 
+	void disableWrist();
+
 
 	//Intakes
 	void intakeWheelsSpin(double power);
