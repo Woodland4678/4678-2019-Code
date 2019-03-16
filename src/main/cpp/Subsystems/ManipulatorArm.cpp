@@ -136,8 +136,8 @@ bool ManipulatorArm::Init(){
 	//Waist
 	m_Segs[3]->setEncoderValues(WAIST_ENCODER_1, WAIST_ANGLE_1, WAIST_ENCODER_2, WAIST_ANGLE_2);
 	m_Segs[3]->setPotValues(WAIST_POT_1, WAIST_ANGLE_1, WAIST_POT_2, WAIST_ANGLE_2);
-	m_Segs[3]->initEncoderValues();	
-	//m_Segs[3]->setSelectedSensorValue(m_Segs[3]->convertAngleToEncoder(0));
+	//m_Segs[3]->initEncoderValues();	
+	m_Segs[3]->setSelectedSensorValue(m_Segs[3]->convertAngleToEncoder(0));
     m_Segs[3]->setPID(0.05,0,0);
 	// m_Segs[3]->setVoltageLimit(true, 3);
 	m_Segs[3]->setCurrentPeakLimit(true,30.0); // Set current limit for now.

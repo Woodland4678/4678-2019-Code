@@ -55,6 +55,7 @@ void MoveArm::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void MoveArm::Execute() {
+	
 	double wristAbsAngle;
 	//printf("Got m_btn = %d\n\r",m_btn);
     switch(m_btn) {
@@ -116,17 +117,17 @@ void MoveArm::Execute() {
 					if (done2)
 						{
 						Robot::manipulatorArm->setInCargoPosition();
-						Robot::manipulatorArm->intakeWheelsSpin(-0.7); // Wheels running.
+						Robot::manipulatorArm->intakeWheelsSpin(-0.85); // Wheels running.
 						printf("Wheels set to run 2\n\r");
 						}
 					}
 				else
 					{
-					done = Robot::manipulatorArm->moveToXY(25.68,13,-33.41,0,20.0);
+					done = Robot::manipulatorArm->moveToXY(25.68,15,-53.41,0,20.0);
 					if (done)
 						{
 						Robot::manipulatorArm->setInCargoPosition();
-						Robot::manipulatorArm->intakeWheelsSpin(-0.7); // Wheels running.
+						Robot::manipulatorArm->intakeWheelsSpin(-0.85); // Wheels running.
 						printf("Wheels set to run 1\n\r");
 						}
 					}
