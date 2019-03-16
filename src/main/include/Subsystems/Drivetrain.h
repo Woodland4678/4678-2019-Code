@@ -39,10 +39,16 @@ public:
 	void setRightMotor(double power);
 	double getLeftEncoder();
 	double getRightEncoder();
+
+	double  percentDone()  const;
 	bool goToDistance(double rightCentimeters, double leftCentimeters, double power, int rampUpDistance,
 			int rampDownDistance, double startingPower, double endingPower);
 	void resetGoToDistanceState();
 	bool GyroTurn(double current, double turnAmount,double p, double i, double d);
+	
+	void setToCoast();
+	void setToBrake();
+	
 	//void test(double power);
 
 

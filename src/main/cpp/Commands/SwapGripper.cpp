@@ -31,18 +31,20 @@ void SwapGripper::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void SwapGripper::Execute() {
-    frc::SmartDashboard::PutNumber("GOTODISTANCE RUN ", 100);
+
     //done = Robot::drivetrain->goToDistance(100,100,0.5,20,20,0.1,0.1);
-    done = Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), 90, 0.1, 0, 0);
-    frc::SmartDashboard::PutNumber("Left Enoder: ", Robot::drivetrain->getLeftEncoder());
-    frc::SmartDashboard::PutNumber("Right Encoder: ", Robot::drivetrain->getRightEncoder());
-    frc::SmartDashboard::PutNumber("Current Angle: ", Robot::ahrs->GetAngle());
+    //done = Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), 60, 0.01, 0, 0);
+   // frc::SmartDashboard::PutNumber("Left Enoder: ", Robot::drivetrain->getLeftEncoder());
+    frc::SmartDashboard::PutNumber("Right Distance ", (Robot::drivetrain->getRightEncoder() / 0.2183));
+    frc::SmartDashboard::PutNumber("Left Distance ", (Robot::drivetrain->getLeftEncoder() / 0.2183));
+    Robot::drivetrain->setLeftMotor(0);
+    Robot::drivetrain->setRightMotor(0);
     // done = Robot::manipulatorArm->swapIntakes();
 }
 
 // Make this return true when this Command no longer needs to run execute()
 bool SwapGripper::IsFinished() {
-    return done;
+    return false;
 }
 
 // Called once after isFinished returns true
