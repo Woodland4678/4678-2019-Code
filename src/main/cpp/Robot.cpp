@@ -92,6 +92,7 @@ void Robot::TeleopInit() {
 
 void Robot::TeleopPeriodic() {
 	char buf[255];
+	
 
 	//frc::SmartDashboard::PutNumber("Dist", lidar->climbDistance());
 

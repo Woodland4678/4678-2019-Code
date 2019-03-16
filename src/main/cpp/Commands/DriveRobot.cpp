@@ -46,7 +46,7 @@ void DriveRobot::Execute() {
 // TODO: If we keep this test code, clean up everything else!!!!
     double JoyX = Robot::oi->getdriver()->GetX();
     double JoyY = Robot::oi->getdriver()->GetY();
-
+    //frc::SmartDashboard::PutNumber("Current Angle: ", Robot::ahrs->GetAngle());
     // Get X and Y values with some deadband.  Subtract/add deadband back in to ensure we
     // start at 0.0 instead of +/-0.05
     if ((JoyX > -0.05)&&(JoyX <= 0.05))
@@ -86,10 +86,16 @@ void DriveRobot::Execute() {
     double leftPower = -(JoyY2 - 0.35 * JoyX2);   
     double rightPower = -(JoyY2 + 0.35 * JoyX2);
 
-    frc::SmartDashboard::PutNumber("left Power: ", leftPower);
-    frc::SmartDashboard::PutNumber("right Power: ", rightPower);
+    //frc::SmartDashboard::PutNumber("left Power: ", leftPower);
+   // frc::SmartDashboard::PutNumber("right Power: ", rightPower);
+
+   
 
     if(!Robot::climber->m_Climbing) {
+        if (Robot::oi->getdriver()->GetRawButton(6)) {
+            leftPower *= 0.30;
+            rightPower *= 0.30;
+        }
         Robot::drivetrain->setLeftMotor(leftPower);
         Robot::drivetrain->setRightMotor(rightPower);
     }
