@@ -160,6 +160,9 @@ bool ManipulatorArm::Init(){
 	addPosition(85,-106,-57);	//13 - temporary start climb
 	addPosition(73,-116,-42); 	//14 - temporary mid climb
 	addPosition(46,-116,-44);	//15 - temporary finish climb
+	addPosition(123,-140,-150); //16 - Frame 1
+	addPosition(123,-140,-203); //17 - Frame 2
+	addPosition(123,-156,-203); //18 - Frame 3
 
     //frc::SmartDashboard::PutNumber("Elbow Slope", m_Segs[2]->getConversionSlope());
     //frc::SmartDashboard::PutNumber("Elbow Intercept", m_Segs[2]->getConversionIntercept());

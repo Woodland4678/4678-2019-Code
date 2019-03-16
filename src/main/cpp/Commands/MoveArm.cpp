@@ -33,6 +33,7 @@ void MoveArm::Initialize() {
 		{
 		done = false;
 		done2 = false;
+		done3 = false;
 		if (Robot::manipulatorArm->getInCargoPosition())
 			{ // If we're leaving a cargo intake position, go to mode 2
 			Robot::manipulatorArm->clearInCargoPosition(); // at start of any move, clear the InCargoPosition indicator.
@@ -190,6 +191,18 @@ void MoveArm::Execute() {
 					m_btn = 0;
 				}
 				}
+			break;
+		case 12: //
+			if(!done2)
+				done2 = Robot::manipulatorArm->moveToXY(5,35,-190,0,20.0);
+			else {
+				if(!done3)
+					done3 = Robot::manipulatorArm->moveToXY(5,35,-248,0,20.0);
+				else {
+					if(!done)
+						done = Robot::manipulatorArm->moveToXY(5,19,-248,0,20.0);
+				}
+			}
 			break;
 	}
 }
