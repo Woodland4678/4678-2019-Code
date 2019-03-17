@@ -38,6 +38,8 @@ void Drivetrain::InitDefaultCommand() {
 
 void Drivetrain::Periodic() {
 	frc::SmartDashboard::PutNumber("GYRO: ", Robot::ahrs->GetAngle());
+	frc::SmartDashboard::PutNumber("Right Distance ", (Robot::drivetrain->getRightEncoder() / 0.2183));
+    frc::SmartDashboard::PutNumber("Left Distance ", (Robot::drivetrain->getLeftEncoder() / 0.2183));
 
 }
 
@@ -236,7 +238,7 @@ double  Drivetrain::percentDone()  const  {
     return (leftPercentThere > rightPercentThere) ? leftPercentThere : rightPercentThere;
 }
 
-
+int countGoToDist = 0;
 bool Drivetrain::goToDistance(double rightCentimeters, double leftCentimeters, double power, int rampUpDistance,
 			int rampDownDistance, double startingPower, double endingPower) {
 		//SmartDashboard.putNumber("Left Wheels Position", getLeftEncoder());
@@ -392,13 +394,20 @@ bool Drivetrain::goToDistance(double rightCentimeters, double leftCentimeters, d
 		// the method is called, it will record the starting encoder values
 		// again
 		if (rightPercentThere >= 1 && leftPercentThere >= 1) {
-			setLeftMotor(0);
-			setRightMotor(0);
-			goToDistanceState = 0;
-			// System.out.println("Drivetrain goToDistance at target");
-			// System.out.println("Drivetrain goToDistance final encoder values
-			// are "+ getRightEncoder() + ", " + getLeftEncoder());
-			return true;
+			countGoToDist++;
+			if (countGoToDist > 10) {
+				setLeftMotor(0);
+				setRightMotor(0);
+				goToDistanceState = 0;
+				// System.out.println("Drivetrain goToDistance at target");
+				// System.out.println("Drivetrain goToDistance final encoder values
+				// are "+ getRightEncoder() + ", " + getLeftEncoder());
+				countGoToDist = 0;
+				return true;
+			}
+			
+		} else {
+			countGoToDist = 0;
 		}
 		//System.out.println(" return false here...");
 
@@ -430,7 +439,7 @@ bool Drivetrain::GyroTurn(double current, double turnAmount, double p, double i,
 		totalValue = 0.8;
 	if(totalValue < -0.8)
 		totalValue = -0.8;
-	totalValue *= 0.7;
+	totalValue *= 0.75;
 	setRightMotor(-totalValue);
 	setLeftMotor(totalValue);
 

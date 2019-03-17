@@ -51,28 +51,28 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 	Robot::drivetrain->resetGoToDistanceState();
 	autoState = 0;
 	Robot::drivetrain->setToBrake();
-	armMovment1 = false;
+	armMovement1 = false;
 	if (autoSide == 0 && autoMode == 1) { //Left side, level 1 auto to cargo ship
-		leftCmStraightBack = -340;
-		rightCmStraightBack = - 340;
+		leftCmStraightBack = -270;
+		rightCmStraightBack = -270;
 
-		rightCmArcToCargoShip = -140;
-		leftCmArcToCargoShip = -268;
-		straightBackRampUpDistance = 270;
+		rightCmArcToCargoShip = -210;
+		leftCmArcToCargoShip = -320;
+		straightBackRampUpDistance = 100;
 
 		amountToTurn = 12 + initialGyroValue;
 	} else if (autoSide == 0 && autoMode == 2) { //left Side level 2 auto to cargo ship
-		leftCmStraightBack = -435;
-		rightCmStraightBack = - 435;
+		leftCmStraightBack = -440;
+		rightCmStraightBack = -390;
 
-		rightCmArcToCargoShip = -140;
-		leftCmArcToCargoShip = -268;
+		rightCmArcToCargoShip = -210;
+		leftCmArcToCargoShip = -300;
 
-		straightBackRampUpDistance = 270;
+		straightBackRampUpDistance = 300;
 		amountToTurn = 12 + initialGyroValue;
 	}
 
-	else if (autoSide == 2 && autoMode == 1) { //Right Side level 1 auto to cargo ship
+	else if (autoSide == 1 && autoMode == 1) { //Right Side level 1 auto to cargo ship
 		leftCmStraightBack = -340;
 		rightCmStraightBack = - 340;
 
@@ -80,7 +80,7 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		leftCmArcToCargoShip = -140;
 		straightBackRampUpDistance = 270;
 		amountToTurn = -12 + initialGyroValue;
-	} else if (autoSide == 2 && autoMode == 2) { //right side level 2 auto to cargo ship
+	} else if (autoSide == 1 && autoMode == 2) { //right side level 2 auto to cargo ship
 		leftCmStraightBack = -435;
 		rightCmStraightBack = - 435;
 
@@ -94,20 +94,102 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 
 // Called repeatedly when this Command is scheduled to run
 void AutonomousCommand::Execute() {
-	frc::SmartDashboard::PutNumber("Current Angle: ", Robot::ahrs->GetAngle());
-	//printf("AUTONOMOUS STATE: %f", autoState);
+	printf("AUTONOMOUS STATE: %f", autoState);
 	switch(autoState) {
+		// case 0:
+		// 	if (!armMovement1) {
+		// 		armMovement1 = Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0);
+		// 	} else {
+		// 		autoState++;
+		// 		cnt = 0;
+		// 	}
+		// break;
+		// case 1:
+		// 	cnt++;
+		// 	Robot::manipulatorArm->releaseHatch();
+		// 	if (cnt > 50) {
+		// 		if (Robot::drivetrain->goToDistance(-50,-50,0.35,20,30,0.2,0.15)) {
+		// 			autoState++;
+		// 			cnt = 0;
+		// 		}
+		// 	}
+		// break;
+		// case 2:
+		// 	if (!armMovement2) {
+		// 		armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
+		// 	} else {
+		// 		autoState++;
+		// 	}
+		// 	Robot::manipulatorArm->grabHatch();
+		// 	// cnt++;
+		// 	// if (cnt > 10) {
+		// 	// 	autoState++;
+		// 	// }
+		// break;
+		// case 3:
+		// 	// if (!armMovement2) {
+		// 	// 	armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
+		// 	// }
+		// 	Robot::manipulatorArm->grabHatch();
+		// 	if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), 8.5, 0.012, 0,0)) {
+		// 		autoState++;
+		// 		cnt = 0;
+		// 	}
+		// break;
+		// case 4:
+		// 	if (!armMovement2) {
+		// 		armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
+		// 	}
+		// 	cnt++;
+		// 	if (cnt > 10) {
+		// 		autoState++;
+		// 	}
+
+		// break;
+		// case 5:
+		// 	if (!armMovement2) {
+		// 		armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
+		// 	}
+		// 	if (Robot::drivetrain->goToDistance(420,420,0.6,70,70,0.2,0.2)) {
+		// 		autoState++;
+		// 	}
+		// break;
+		// case 6:
+
+		// break;
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		case 0:
 		//printf("RUNNING STATE 0");
 			//if (Robot::drivetrain->goToDistance(493,493,0.9,150,150,0.1,0.1)) {
 			//printf("Go To distance Percent complete: %f", Robot::drivetrain->percentDone());
-			if (Robot::drivetrain->goToDistance(rightCmStraightBack, leftCmStraightBack,0.9,straightBackRampUpDistance,150,0.1,0.4)) { //-69, //-315, -315 //-435,-435
-				autoState = 2;
+			if (Robot::drivetrain->goToDistance(-220, -220,0.35,125,30,0.15,0.3)) { //-69, //-315, -315 //-435,-435
+				autoState++;
 				Robot::manipulatorArm->m_CurrentPosition = 0;
 				Robot::drivetrain->resetGoToDistanceState();
+				cnt = 0;
 			}
 		break;
 		case 1:
+			if (Robot::drivetrain->goToDistance(-355, -425,0.65,100,50,0.3,0.4)) { //-69, //-315, -315 //-435,-435
+				autoState ++;
+				Robot::manipulatorArm->m_CurrentPosition = 0;
+				Robot::drivetrain->resetGoToDistanceState();
+				cnt = 0;
+			}
 			// if (Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0)) {
 			// 	autoState++;
 			// }
@@ -120,26 +202,31 @@ void AutonomousCommand::Execute() {
 
 		break;
 		case 2:
-			//if ((Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), 93, 0.01, 0, 0))) {
-			if (!armMovment1) {
-				armMovment1 = Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0);
-			}
-			if (Robot::drivetrain->goToDistance(rightCmArcToCargoShip, leftCmArcToCargoShip,0.4,0,50,0.4,0.4)) { //-164,-248
+			cnt++;
+			if (cnt > 10) {
 				autoState++;
-				Robot::drivetrain->setRightMotor(0);
-				Robot::drivetrain->setLeftMotor(0);
-				Robot::drivetrain->resetGoToDistanceState();
-			} 
+				cnt = 0;
+			}
+			//if ((Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), 93, 0.01, 0, 0))) {
+			// if (!armMovement1) {
+			// 	armMovement1 = Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0);
+			// }
+			// if (Robot::drivetrain->goToDistance(rightCmArcToCargoShip, leftCmArcToCargoShip,0.4,0,50,0.4,0.4)) { //-164,-248
+			// 	autoState++;
+			// 	Robot::drivetrain->setRightMotor(0);
+			// 	Robot::drivetrain->setLeftMotor(0);
+			// 	Robot::drivetrain->resetGoToDistanceState();
+			// } 
 		break;
 		case 3:
-			if (!armMovment1) {
-				armMovment1 = Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0);
+			if (!armMovement1) {
+				armMovement1 = Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0);
 			}
 			
 			if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), -90 + initialGyroValue, 0.015,0,0)) {
 				autoState++;
 				cnt = 0;
-			}
+			} 
 			// cnt++;
 			// if (cnt > 25) {
 			// 	//autoState++;
@@ -150,7 +237,7 @@ void AutonomousCommand::Execute() {
 		case 4:
 			cnt++;
 			if (cnt > 10) {
-				autoState++;
+				//autoState++;
 			}
 		break;
 		case 5:
@@ -161,7 +248,7 @@ void AutonomousCommand::Execute() {
 			if (!armMovement2) {
 				armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
 			}
-			if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn, 0.015, 0, 0)) {
+			if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn, 0.018, 0, 0)) {
 				autoState++;
 			}
 			// if (Robot::drivetrain->goToDistance(50,50,0.3,20,20,0.1,0.1)) {
@@ -183,15 +270,15 @@ void AutonomousCommand::Execute() {
 			// if (!armMovement2) {
 			// 	armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
 			// }
-			if (Robot::drivetrain->percentDone() > 0.6) {
-				if (!armMovement3) {
-					armMovement3 = Robot::manipulatorArm->moveToXY(28.5,21.0,-190.0,0,20.0);
-				}
-			}
-			if (Robot::drivetrain->goToDistance(430, 430, 0.6,150,150,0.2,0.4)) {
-				autoState++;
-				Robot::manipulatorArm->m_CurrentPosition = 5;
-			}
+			// if (Robot::drivetrain->percentDone() > 0.6) {
+			// 	if (!armMovement3) {
+			// 		armMovement3 = Robot::manipulatorArm->moveToXY(28.5,21.0,-190.0,0,20.0);
+			// 	}
+			// }
+			// if (Robot::drivetrain->goToDistance(430, 430, 0.6,150,150,0.2,0.4)) {
+			// 	autoState++;
+			// 	Robot::manipulatorArm->m_CurrentPosition = 5;
+			// }
 		break;
 		case 8:
 			if (!armMovement3) {

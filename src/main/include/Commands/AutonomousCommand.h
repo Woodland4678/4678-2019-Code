@@ -39,7 +39,7 @@ private:
 	int autoSide = 0;
 	int autoState = 0;
 	int cnt = 0;
-	bool armMovment1 = false;
+	bool armMovement1 = false;
 	bool armMovement2 = false;
 	bool armMovement3 = false;
 
