@@ -47,93 +47,139 @@ void Climb::Execute() {
         return;
     }
 
-    printf("Cycle: Case = %i ", m_ClimbCase);
-
-    switch (m_ClimbCase) {
-        case 0: //Move arm up above the platform
-            done2 = Robot::manipulatorArm->moveToXY(25.0,41.0,-90.0,0,20.0);
-            if(done2)
-                m_ClimbCase = 1;
-            break;
-        case 1: //Move arm down on the platform
-            done2 = Robot::manipulatorArm->moveToXY(33.0,30.0,-93.0,0,20.0);
-            if(done2){
-                m_ClimbCase = 2;
-                done2 = false;
-                done3 = false;
-                Robot::manipulatorArm->disableWrist();
-            }
-            break;
-        case 2://Move the robot up
-            if(!done2)
-                done2 = Robot::manipulatorArm->moveToXY(33.0,9.5,-93.0,0,18.0);
-            if(!done3)
-                done3 = Robot::climber->moveTo(550);
-            if(done2 && done3)
-                m_ClimbCase = 3;
-            break;
-        case 3://Move forward using intakes
-            //Use lidar to detect how far away we are
-            Robot::lidar->readLidar();
-            m_ClimbCase = 4;
-            break;
-        case 4:
-            if(Robot::lidar->readComplete())
-                m_ClimbCase = 5;
-            break;
-        case 5:
-            dist = Robot::lidar->climbDistance();
-            printf("Dist = %i",dist);
-            m_ClimbCase = 3;
-            if(dist < 1500){ //Time to spin up wheel
-                Robot::drivetrain->setRightMotor(0.2);
-                Robot::drivetrain->setLeftMotor(0.2);
-                //Robot::manipulatorArm->intakeWheelsSpin(0);
-            }
-            if(dist > 1000) //Spin intakes
-                Robot::manipulatorArm->intakeWheelsSpin(-1);
-            if(dist < 900)
-                m_ClimbCase = 6;
-            break;
-        case 6:
-            //The middle wheel is now on
-            Robot::drivetrain->setRightMotor(0);
-            Robot::drivetrain->setLeftMotor(0);
-            Robot::manipulatorArm->intakeWheelsSpin(0);
-            Robot::climber->reset();
-            m_ClimbCase = 7;
-            break;
-        case 7:
-            if(!done5)
-                done5 = Robot::manipulatorArm->moveToXY(33.0,25,-93.0,0,20.0);
-            else
-                done6 = Robot::manipulatorArm->moveToXY(20.0,25,-93.0,0,10.0);
-            if(done6)
-                m_ClimbCase = 8;
-            break;
-        case 8:
-            if(Robot::climber->readTalonSRXEncoder() < 400) {
-                Robot::drivetrain->setRightMotor(0.08);
-                Robot::drivetrain->setLeftMotor(0.08);
+    //Determine height
+    if(m_climbLevel < 2){
+        switch (m_ClimbCase) {
+            case 0:
                 Robot::lidar->readLidar();
-                m_ClimbCase = 9;
-            }
-            break;
-         case 9:
-            if(Robot::lidar->readComplete())
-                m_ClimbCase = 10;
-            break;
-        case 10:
-            dist = Robot::lidar->climbDistance();
-            printf("\nDist = %i",dist);
-            if(dist < 500){
+                m_ClimbCase = 1;
+                break;
+            case 1:
+                if(Robot::lidar->readComplete())
+                    m_ClimbCase = 2;
+                break;
+            case 2:
+                {
+                int dist = Robot::lidar->climbDistance();
+                m_ClimbCase = 0;
+                if(dist < 300)
+                    m_climbLevel = 3;
+                else
+                    m_climbLevel = 4;
+                }
+                break;
+        }
+    }
+    else {
+        switch (m_ClimbCase) {
+            case 0: //Move arm up above the platform
+                if(m_climbLevel == 3)
+                    done2 = Robot::manipulatorArm->moveToXY(25.0,41.0,-90.0,0,20.0);
+                else
+                    done2 = Robot::manipulatorArm->moveToXY(25.0,27.0,-90.0,0,20.0);
+                if(done2)
+                    m_ClimbCase = 1;
+                break;
+            case 1: //Move arm down on the platform
+                if(m_climbLevel == 3)
+                    done2 = Robot::manipulatorArm->moveToXY(33.0,27.0,-93.0,0,20.0);
+                else
+                    done2 = Robot::manipulatorArm->moveToXY(28.0,14.0,-93.0,0,20.0); //28, 14
+                if(done2){
+                    m_ClimbCase = 2;
+                    done2 = false;
+                    done3 = false;
+                    Robot::manipulatorArm->disableWrist();
+                }
+                break;
+            case 2://Move the robot up
+                if(!done2)
+                    done2 = Robot::manipulatorArm->moveToXY(33.0,7.0,-93.0,0,18.0);
+                if(!done3){
+                    if(m_climbLevel == 3)
+                        done3 = Robot::climber->moveTo(550,-29700);
+                    else
+                        done3 = Robot::climber->moveTo(550,-10800);
+                }
+                if(done2 && done3)
+                    m_ClimbCase = 3;
+                break;
+            case 3://Move forward using intakes
+                //Use lidar to detect how far away we are
+                Robot::lidar->readLidar();
+                m_ClimbCase = 4;
+                break;
+            case 4:
+                if(Robot::lidar->readComplete())
+                    m_ClimbCase = 5;
+                break;
+            case 5:
+                dist = Robot::lidar->climbDistance();
+                printf("Dist = %i",dist);
+                m_ClimbCase = 3;
+                if(m_climbLevel == 4){
+                    if(dist < 1500){ //Time to spin up wheel
+                    Robot::drivetrain->setRightMotor(0.2);
+                    Robot::drivetrain->setLeftMotor(0.2);
+                    //Robot::manipulatorArm->intakeWheelsSpin(0);
+                    }
+                    if(dist > 720) //Spin intakes
+                        Robot::manipulatorArm->intakeWheelsSpin(-1);
+                    if(dist < 650)
+                        m_ClimbCase = 6;
+                }
+                else{
+                    if(dist < 1500){ //Time to spin up wheel
+                        Robot::drivetrain->setRightMotor(0.2);
+                        Robot::drivetrain->setLeftMotor(0.2);
+                        //Robot::manipulatorArm->intakeWheelsSpin(0);
+                    }
+                    if(dist > 1000) //Spin intakes
+                        Robot::manipulatorArm->intakeWheelsSpin(-1);
+                    if(dist < 900)
+                        m_ClimbCase = 6;
+                }
+                break;
+            case 6:
+                //The middle wheel is now on
                 Robot::drivetrain->setRightMotor(0);
                 Robot::drivetrain->setLeftMotor(0);
-                done = true;
-            }
-            else
-                m_ClimbCase = 8;
-            break;
+                Robot::manipulatorArm->intakeWheelsSpin(0);
+                Robot::climber->reset();
+                m_ClimbCase = 7;
+                break;
+            case 7:
+                if(!done5)
+                    done5 = Robot::manipulatorArm->moveToXY(33.0,25,-93.0,0,20.0);
+                else
+                    done6 = Robot::manipulatorArm->moveToXY(20.0,25,-93.0,0,10.0);
+                if(done6)
+                    m_ClimbCase = 8;
+                break;
+            case 8:
+                if(Robot::climber->readTalonSRXEncoder() < 400) {
+                    Robot::drivetrain->setRightMotor(0.08);
+                    Robot::drivetrain->setLeftMotor(0.08);
+                    Robot::lidar->readLidar();
+                    m_ClimbCase = 9;
+                }
+                break;
+            case 9:
+                if(Robot::lidar->readComplete())
+                    m_ClimbCase = 10;
+                break;
+            case 10:
+                dist = Robot::lidar->climbDistance();
+                printf("\nDist = %i",dist);
+                if(dist < 500){
+                    Robot::drivetrain->setRightMotor(0);
+                    Robot::drivetrain->setLeftMotor(0);
+                    done = true;
+                }
+                else
+                    m_ClimbCase = 8;
+                break;
+        }
     }
 
     printf("\n");

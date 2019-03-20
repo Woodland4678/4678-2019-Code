@@ -1038,17 +1038,42 @@ void ManipulatorArm::setAbsAngleWrist(double angle) {
 }
 
 bool ManipulatorArm::moveWaist(double angle) {
-	bool val = false;
-	if(m_Segs[0]->getRelAngle() > 116) {
-		//Potential collision!
-		if(angle > 30)
-			angle = 30;
-		else if (angle < -30)
-			angle = -30;
-		val = true;
+	bool val = true;
+	double waistLow = -65.0;
+	double waistHigh = 65.0;
+
+	if (m_Segs[0]->getRelAngle() < 115.0) // waist is limited to full range +/-65.0 when shoulder < 115.0
+		{
+		waistLow = -65.0;
+		waistHigh = 65.0;
+		}
+	else if (m_Segs[0]->getRelAngle() < 140) // waist is limited to -31 to 36.5
+		{
+		waistLow = -31.0;
+		waistHigh = 36.5;
+		}
+	else if (m_Segs[1]->getRelAngle() > -163)
+		{
+		waistLow = -31.0;
+		waistHigh = 36.5;
+		}	
+	else
+		{
+		waistLow = -6.5;
+		waistHigh = -4.5;
+		}
+
+	if(angle > waistHigh){
+		angle = waistHigh;
+		val = false;
+	}
+	else if (angle < waistLow){
+		angle = waistLow;
+		val = false;
 	}
 
 	m_Segs[3]->set(rev::ControlType::kPosition, m_Segs[3]->convertAngleToEncoder(angle));
+	m_TargetWaist = angle;
 	return val;
 }
 

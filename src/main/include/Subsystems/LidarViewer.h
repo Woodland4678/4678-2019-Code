@@ -15,7 +15,7 @@ class LidarViewer {
   
   void  setPoints(int numPoints, lidattp* lidarPts);
   void  setLines(int numLines, tpLine * lines);
-  void addPoint(int x, int y);
+  void addPoint(double x, double y);
  private:
   LidarViewer();
   void  CameraStreamThread();

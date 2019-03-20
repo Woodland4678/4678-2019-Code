@@ -88,14 +88,14 @@ int Climber::readABSEncoder() {
     return stilts->GetSensorCollection().GetPulseWidthPosition();
 }
 
-bool Climber::moveTo(int step) {
+bool Climber::moveTo(int step, int total) {
     static int pos = 0;
     pos -= step;
-    if(pos > -29700) //Never go beyond this
+    if(pos > total) //Never go beyond this
         stilts->Set(ControlMode::Position, pos);
     
     printf("\nStilts = %i",pos);
-    if(pos <= -29700)
+    if(pos <= total) //-29700
         return true;
     return false;
 }

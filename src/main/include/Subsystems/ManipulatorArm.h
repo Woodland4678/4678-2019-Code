@@ -43,7 +43,6 @@ private:
 	std::shared_ptr<frc::DigitalInput> cargoSensor;
 	std::shared_ptr<frc::DigitalInput> hatchSensor;
 	
-
 	ArmSegment *m_Segs[4];
 	ArmMotion *m_Moves[5];
 	bool m_Skip[4][5];

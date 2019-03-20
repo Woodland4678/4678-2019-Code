@@ -1152,125 +1152,84 @@ int Lidar::climbDistance() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool Lidar::findLoadStation() // Search lines to see if we can find something that looks like the loading station.
 	{
-	if(m_scoreCnt == 15) {
-		m_scoreCase = 1;
-	}
-
+	filterData(false,45,45,50,2000);
 	bool found = false;
+	int state = 0;
+	int prev = 0;
 
-	switch(m_scoreCase)
+	int inc_1 = 0;
+	int inc_2 = 0;
+	int dec_1 = 0;
+	int dec_2 = 0;
+
+	m_ScoringFinal.dist = 3000;
+	m_ScoringFinal.angle = 360;
+
+	for(int i=5;i<filteredCount;i+=5)
 		{
-		case 0:{
-			// Convert polar to rectangular for data in the range specified here.
-			filterData(true, 45.0, 45.0, 50.0, 2000.0);
-			FindLines();
-			
-			tpPoint target;
-			double angle = 360;
-			double distance = 3000;
-
-			//Need to decide what line to start with
-
-			for(int i=0;i<(linecnt+1);i++) 
-				{
-				if((lines[i].length <= 150)||(lines[i].length > 500))
-					continue;
-				printf("\nNew Line: %i ",i);
-				for(int x=i+1;((x<(i+4))&&(x < (linecnt+1)));x++)
-					{
-					double diff = fabs(lines[i].angle - lines[x].angle);
-					if(diff > 30){
-						printf("| Bad Angle %i",x);
-						continue;
-					}
-					else 
-						{
-						double m = (lines[x].start.y-lines[i].end.y)/(lines[x].start.x-lines[i].end.x);
-						double deg = 180 * atan(m) / M_PI;
-						diff = fabs(lines[i].angle - deg);
-						printf("| Angle %i, %f ",x,diff);
-						if(diff < 30)
-							{
-							double dist = sqrt(((lines[x].start.x-lines[i].end.x)*(lines[x].start.x-lines[i].end.x))+((lines[x].start.y-lines[i].end.y)*(lines[x].start.y-lines[i].end.y)));
-							printf("| Point %f",dist);
-							if((dist > 100)&&(dist < 300)) //We have found one!
-								{
-								tpPoint pnt;
-								pnt.x = (lines[x].start.x+lines[i].end.x) / 2;
-								pnt.y = (lines[x].start.y+lines[i].end.y) / 2;
-								if(pnt.x == 0)
-									pnt.x = 1;
-								deg = 180 * atan(((double)pnt.y / (double)pnt.x)) / M_PI;
-								double d = sqrt(((pnt.x)*(pnt.x))+((pnt.y)*(pnt.y)));
-								//printf("Score Found at (%i,%i) Angle = %f\n",pnt.x,pnt.y,deg);
-								printf("| Check %f , %f",angle, deg);
-								if((fabs(fabs(deg)-90) < fabs(fabs(angle) - 90)))
-									{
-									//printf("\nHere");
-									distance = d;
-									angle = deg;
-									target.x = pnt.x;
-									target.y = pnt.y;
-									//LidarViewer::Get()->addPoint(pnt.x,pnt.y);
-									found = true;
-									}
-								i = x-1;
-								break;
-								}
-							}
-						}
-					}
-				}
-			if(found) 
-				{
-				m_scoreArray[m_scoreCnt].x = target.x;
-				m_scoreArray[m_scoreCnt].y = target.y;
-				m_scoreArray[m_scoreCnt].tstamp = 0;
-				m_scoreCnt++;
-				}
-			}
-			break;
-		case 1:
+		switch(state)
 			{
-			m_scoreCase = 0;
-			int largest = 0, lar_idx = 0;
-			for(int i = 0;i<m_scoreCnt;i++)
-				{
-				for(int n = 0;n<m_scoreCnt;n++)
+			case 0: //Looking for increase in distance
+				if((lidFiltered[i].dist - lidFiltered[prev].dist) >= 25)
 					{
-					if(i == n)
-						continue;
-					int diff_X = fabs(m_scoreArray[i].x - m_scoreArray[n].x);
-					int diff_Y = fabs(m_scoreArray[i].y - m_scoreArray[n].y);
-					if((diff_X < 30)&&(diff_Y < 30))
-						m_scoreArray[i].tstamp++;
-					if(largest < m_scoreArray[i].tstamp)
-						{
-						largest = m_scoreArray[i].tstamp;
-						lar_idx = i;
-						}
+					inc_1 = i;
+					inc_2 = prev;
+					state = 1;
 					}
-				}
-			m_scoreCnt = 0;
-			/*double ang1 = 180 * atan((double)m_scoreArray[lar_idx].x / (double)m_scoreArray[lar_idx].y) / M_PI;
-			double ang2 = 360;
-			if((m_PrevScoringFinal.x != 0)&&((m_PrevScoringFinal.y != 0)))
+				break;
+			case 1: //Looking for decrease in distance
+				if((lidFiltered[prev].dist - lidFiltered[i].dist) >= 25)
+					{
+					dec_1 = i;
+					dec_2 = prev;
+					state = 2;
+					}
+				break;
+			case 2: //found both locate target
 				{
-				ang2 = 180 * atan((double)m_PrevScoringFinal.x / (double)m_PrevScoringFinal.y) / M_PI;
-				}
-			
-			if(fabs(ang1) < fabs(ang2))
-				{*/
-				m_ScoringFinal.x = m_scoreArray[lar_idx].x;
-				m_ScoringFinal.y = m_scoreArray[lar_idx].y;
-			//	}
+				//Locate the corners now that we have narrowed it down
+				int cor_1 = 0;
+				double dist = 0;
+				for(int n = inc_2;n<(inc_1);n++)
+					{
+					double val = fabs(lidFiltered[n].dist - lidFiltered[n+1].dist);
+					if(val > dist) 
+						{
+						dist = val;
+						cor_1 = n;
+						}
 
-			//m_PrevScoringFinal.x = m_ScoringFinal.x;
-			//m_PrevScoringFinal.y = m_ScoringFinal.y;
-			LidarViewer::Get()->addPoint(m_ScoringFinal.x,m_ScoringFinal.y);
-			return true;
+					}
+
+				int cor_2 = 0;
+				dist = 0;
+				for(int n = dec_2;n<(dec_1);n++)
+					{
+					double val = fabs(lidFiltered[n].dist - lidFiltered[n+1].dist);
+					if(val > dist) 
+						{
+						dist = val;
+						cor_2 = n;
+						}
+
+					}
+				//calculate the center
+				double ang = (lidFiltered[cor_1].angle + lidFiltered[cor_2].angle) / 2;
+				dist = (lidFiltered[cor_1].dist + lidFiltered[cor_2].dist) / 2;
+				//printf("\nFound: %f | %f", ang, dist);
+
+				if(fabs(180 - ang) < fabs(180 - m_ScoringFinal.angle)) {
+					m_ScoringFinal.dist = dist;
+					m_ScoringFinal.angle = ang;
+					found = true;
+				}
+				state = 0;
+				}
+				//break;
 			}
-			break;
+		prev = i;
 		}
-	return false;
+	if(found)
+		LidarViewer::Get()->addPoint(m_ScoringFinal.dist,m_ScoringFinal.angle);
+	return found;
 	}

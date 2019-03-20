@@ -70,7 +70,7 @@ OI::OI() {
     driverBtn4_Y_LineUpToRocketFar.reset(new frc::JoystickButton(driver.get(), 4));
     driverBtn4_Y_LineUpToRocketFar->WhenPressed(new LineUpToRocket(2));
     driverBtn3_B_LineUpToRocketMiddle.reset(new frc::JoystickButton(driver.get(), 3));
-    driverBtn3_B_LineUpToRocketMiddle->WhenPressed(new LineUpToRocket(1));
+    driverBtn3_B_LineUpToRocketMiddle->WhenPressed(new LineUpToBay());
     driverBtn2_A_LineUpToRocketClose.reset(new frc::JoystickButton(driver.get(), 2));
     driverBtn2_A_LineUpToRocketClose->WhenPressed(new LineUpToRocket(0));
 

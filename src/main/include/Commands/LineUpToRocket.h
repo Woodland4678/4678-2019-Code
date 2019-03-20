@@ -46,6 +46,7 @@ private:
 	int cnt = 0;
 
 	int m_case = 0;
+	int m_SubCase = 0;
 	double angle;
 	double distance = 0;
 	double distEnd = 0;

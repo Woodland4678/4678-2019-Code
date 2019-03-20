@@ -43,7 +43,7 @@ public:
 
 	int readTalonSRXEncoder();
 	int readABSEncoder();
-	bool moveTo(int step);
+	bool moveTo(int step, int total);
 	void reset();
 	void testMovement();
 	bool moveInches(int inches, double inchesPerSecond);

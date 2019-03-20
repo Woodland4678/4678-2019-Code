@@ -179,7 +179,7 @@ void LidarViewer::CameraStreamThread() {
 
     for (int i = 0; i < m_numScoring; i++) {
       const int x = centerX + m_scoring[i].x * zoom - 1;
-      const int y = centerY + (-m_scoring[i].y) * zoom - 1;
+      const int y = centerY + (m_scoring[i].y) * zoom - 1;
       if (x <= cameraWidth && x >= 0 && y <= cameraHeight && y >= 0) {
         cv::rectangle(frame, cv::Rect(x, y, 5, 5), blue, 1);
       }
@@ -219,12 +219,14 @@ void  LidarViewer::setPoints(int numPoints, lidattp* lidarPts){
   //printf("LidarViewer::setPoints, numPoints =%d\n", numPoints);
 }
 
-void  LidarViewer::addPoint(int x, int y){
+void  LidarViewer::addPoint(double x, double y){
   if (m_numScoring >= 6)
     m_numScoring = 0;
 
-  m_scoring[m_numScoring].x = x;
-  m_scoring[m_numScoring].y = y;
+  double rad = M_PI * (y) / 180;
+ 
+	m_scoring[m_numScoring].x = -(((x) * std::sin(rad)));
+	m_scoring[m_numScoring].y = (((x) * std::cos(rad)));
 
   m_numScoring++;
 }
