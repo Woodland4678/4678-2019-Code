@@ -41,6 +41,7 @@ private:
 	int autoState = 0;
 	int autoStateSecondHatch = 0;
 	int cnt = 0;
+	bool armMovement0 = false;
 	bool armMovement1 = false;
 	bool armMovement2 = false;
 	bool armMovement3 = false;

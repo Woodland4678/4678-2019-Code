@@ -56,18 +56,22 @@ void Drivetrain::configMotors() {
     leftMaster->SetSmartCurrentLimit(80,80,80);
 }
 
-void Drivetrain::setToCoast() {
+void Drivetrain::setToCoast() { //set at the end of auto as this is the setup for driving
+	rightMaster->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake); //in coast (or driver mode) the master should be on brake
 	rightSlaveOne->SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 	rightSlaveTwo->SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 
+	leftMaster->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake); //same as above comment
 	leftSlaveOne->SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 	leftSlaveTwo->SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
 }
 
-void Drivetrain::setToBrake() {
+void Drivetrain::setToBrake() { //called at the beginning of autonomous
+	rightMaster->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	rightSlaveOne->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	rightSlaveTwo->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 
+	leftMaster->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	leftSlaveOne->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 	leftSlaveTwo->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 }

@@ -56,7 +56,7 @@ void Climb::Execute() {
                 m_ClimbCase = 1;
             break;
         case 1: //Move arm down on the platform
-            done2 = Robot::manipulatorArm->moveToXY(33.0,30.0,-93.0,0,20.0);
+            done2 = Robot::manipulatorArm->moveToXY(33.0,27.0,-93.0,0,20.0);
             if(done2){
                 m_ClimbCase = 2;
                 done2 = false;
@@ -66,7 +66,7 @@ void Climb::Execute() {
             break;
         case 2://Move the robot up
             if(!done2)
-                done2 = Robot::manipulatorArm->moveToXY(33.0,9.5,-93.0,0,18.0);
+                done2 = Robot::manipulatorArm->moveToXY(33.0,7.0,-93.0,0,18.0);
             if(!done3)
                 done3 = Robot::climber->moveTo(550);
             if(done2 && done3)
