@@ -280,6 +280,11 @@ double ArmSegment::getPotAccuracy() {
 	return fabs(ePot - pot);
 }
 
+double ArmSegment::getOffsetVal() {
+	return m_Offset;
+	}
+
+
 bool ArmSegment::calibrate() {
 	switch(m_calCase)
 		{

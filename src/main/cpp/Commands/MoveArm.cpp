@@ -54,6 +54,7 @@ void MoveArm::Initialize() {
 		}
 }
 
+#define ARMSPEED 35.0
 // Called repeatedly when this Command is scheduled to run
 void MoveArm::Execute() {
 	
@@ -79,42 +80,42 @@ void MoveArm::Execute() {
 			wristAbsAngle = -10.0; // This is for cargo.
 			if(Robot::manipulatorArm->isHatchMode())
 				wristAbsAngle = -190.0;
-			done = Robot::manipulatorArm->moveToXY(7.0,24.5,wristAbsAngle,0,20.0); // Move to X,Y co-ords
+			done = Robot::manipulatorArm->moveToXY(7.0,24.5,wristAbsAngle,0,ARMSPEED); // Move to X,Y co-ords
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 2: //Rocket Low, Cargo ship place hatch.
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(25.5,19.5,-190.0,0,20.0); //25.5,17,-190.0,0,20.0
+				done = Robot::manipulatorArm->moveToXY(25.5,19.5,-190.0,0,ARMSPEED); //25.5,17,-190.0,0,20.0
 			else	//This is the same as the carry position
-				done = Robot::manipulatorArm->moveToXY(7.0,26.0,-10.0,0,20.0); //25.5,27.5,10.0,0,20.0
+				done = Robot::manipulatorArm->moveToXY(7.0,26.0,-10.0,0,ARMSPEED); //25.5,27.5,10.0,0,20.0
 			//done = Robot::manipulatorArm->moveToXY(25.5,19,20.0);
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 3: //Rocket Medium
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(12.0,46.0,-188,0,20.0); //16.0,46.0,-190,0,20.0
+				done = Robot::manipulatorArm->moveToXY(12.0,46.0,-188,0,ARMSPEED); //16.0,46.0,-190,0,20.0
 			else
-				done = Robot::manipulatorArm->moveToXY(6.0,51.0,-1.0,0,20.0); //16.0,55.0,10.0,0,20.0
+				done = Robot::manipulatorArm->moveToXY(6.0,51.0,-1.0,0,ARMSPEED); //16.0,55.0,10.0,0,20.0
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 4: //Rocket High
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(12.0,75.0,-183,0,20.0); //10.0,74.0,-190,0,20.0
+				done = Robot::manipulatorArm->moveToXY(12.0,75.0,-183,0,ARMSPEED); //10.0,74.0,-190,0,20.0
 			else
 				{
-				done = Robot::manipulatorArm->moveToXY(15.0,78.0,17.5,0,20.0); //16.0,75.0,40.0,0,20.0
+				done = Robot::manipulatorArm->moveToXY(10.0,78.0,17.5,0,ARMSPEED); //16.0,75.0,40.0,0,20.0
 				}
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 5: //Fine Motion
-			done = Robot::manipulatorArm->moveToXY(22.0,75.0,-100,0,20.0);			
+			done = Robot::manipulatorArm->moveToXY(22.0,75.0,-100,0,ARMSPEED);			
 			break;
 		case 6:	//Pick up - Cargo Ground Intake.
 			if(!Robot::manipulatorArm->ifHatch()){
 				// Set AbsTargetAngle to -28.41 (Rel is 38.83)
 				if (!done2) // Stay high to ensure we don't high robot.
 					{
-					done2 = Robot::manipulatorArm->moveToXY(25.68,20.5,-34,0,20.0); 
+					done2 = Robot::manipulatorArm->moveToXY(25.0,20.5,-34,0,ARMSPEED); 
 					if (done2)
 						{
 						Robot::manipulatorArm->setInCargoPosition();
@@ -124,7 +125,7 @@ void MoveArm::Execute() {
 					}
 				else
 					{
-					done = Robot::manipulatorArm->moveToXY(25.68,15,-53.41,0,20.0);
+					done = Robot::manipulatorArm->moveToXY(25.0,15,-53.41,0,ARMSPEED);
 					if (done)
 						{
 						Robot::manipulatorArm->setInCargoPosition();
@@ -138,11 +139,11 @@ void MoveArm::Execute() {
 		case 7: //Human Station Hatch
 			if (Robot::manipulatorArm->ifCargo() == false) {
 				if (!done2) // Stay high to ensure we don't hit robot.
-					done2 = Robot::manipulatorArm->moveToXY(28.68,27,-190,0,20.0); 
+					done2 = Robot::manipulatorArm->moveToXY(25.0,27,-190,0,ARMSPEED); 
 				else
 					{
 					Robot::manipulatorArm->setInHatchPosition();
-					done = Robot::manipulatorArm->moveToXY(28.5,18.0,-191.0,0,20.0);
+					done = Robot::manipulatorArm->moveToXY(25.0,18.0,-191.0,0,ARMSPEED);
 					}
 				Robot::manipulatorArm->m_CurrentPosition = 5;
 			}
@@ -152,7 +153,7 @@ void MoveArm::Execute() {
 			break;
 		case 8: //Human Station Cargo
 			if(!Robot::manipulatorArm->ifHatch()){
-				done = Robot::manipulatorArm->moveToXY(9.0,41.0,4.0,0,20.0);//16.0,44.0,10.0,0,20.0
+				done = Robot::manipulatorArm->moveToXY(9.0,41.0,4.0,0,ARMSPEED);//16.0,44.0,10.0,0,20.0
 				if (done)
 					{
 					Robot::manipulatorArm->setInCargoPosition();
@@ -172,35 +173,44 @@ void MoveArm::Execute() {
 			break;
 		case 10: //Cargo Ship
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(25.5,19.0,-190,0,20.0);
+				done = Robot::manipulatorArm->moveToXY(25.5,19.0,-190,0,ARMSPEED);
 			else
-				done = Robot::manipulatorArm->moveToXY(18.0,46.0,-33,0,20.0); //18.0,42.0,-10,0,20.0
+				done = Robot::manipulatorArm->moveToXY(18.0,46.0,-33,0,ARMSPEED); //18.0,42.0,-10,0,20.0
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 11:
 			if(!done2){
-				done2 = Robot::manipulatorArm->moveToXY(16.0,46.0,-190,0,20.0);
+				done2 = Robot::manipulatorArm->moveToXY(6.0,46.0,-190,0,ARMSPEED);
 				Robot::manipulatorArm->InitCalibrate();
+				calibDelay = 50; // 1 second delay to allow stuff to settle before doing calibrate.
+				// Show offset values before calibrate, then after to see how to harmonize things.
+				printf("Offsets 1: %f,%f,%f,%f\n\r",Robot::manipulatorArm->getOffset(0),Robot::manipulatorArm->getOffset(1),Robot::manipulatorArm->getOffset(2),Robot::manipulatorArm->getOffset(3));
 			}
 			else 
 				{
 				//printf("\nHere");
-				done = Robot::manipulatorArm->Calibrate();
-				if(done){
-					printf("\nhere");
-					m_btn = 0;
-				}
+				if (calibDelay != 0) // This gives us a 1 second delay.
+					calibDelay--;
+				else
+					{
+					done = Robot::manipulatorArm->Calibrate();
+					if(done){
+						printf("Offsets 1: %f,%f,%f,%f\n\r",Robot::manipulatorArm->getOffset(0),Robot::manipulatorArm->getOffset(1),Robot::manipulatorArm->getOffset(2),Robot::manipulatorArm->getOffset(3));
+						printf("\nhere");
+						m_btn = 0;
+						}
+					}
 				}
 			break;
 		case 12: //
 			if(!done2)
-				done2 = Robot::manipulatorArm->moveToXY(5,35,-190,0,20.0);
+				done2 = Robot::manipulatorArm->moveToXY(5,35,-190,0,ARMSPEED);
 			else {
 				if(!done3)
-					done3 = Robot::manipulatorArm->moveToXY(5,35,-248,0,20.0);
+					done3 = Robot::manipulatorArm->moveToXY(5,35,-248,0,ARMSPEED);
 				else {
 					if(!done)
-						done = Robot::manipulatorArm->moveToXY(5,19,-248,0,20.0);
+						done = Robot::manipulatorArm->moveToXY(5,19,-248,0,ARMSPEED);
 				}
 			}
 			break;

@@ -44,6 +44,8 @@ private:
 	bool done2 = false;
 	bool done3 = false;
 
+	int calibDelay;
+
 };
 
 #endif

@@ -119,6 +119,7 @@ public:
 	bool Calibrate();
 
 	void disableWrist();
+	double getOffset(int axis);
 
 
 	//Intakes

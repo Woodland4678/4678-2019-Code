@@ -143,6 +143,7 @@ public:
 	double getAngleAccuracy();
 	double getPotAccuracy();
 	bool calibrate();
+	double getOffsetVal();
 	
 	void setBrakeMode();
 	void setCoastMode();
