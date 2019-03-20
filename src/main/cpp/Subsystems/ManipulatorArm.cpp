@@ -326,7 +326,7 @@ void ManipulatorArm::Periodic() {
 	frc::SmartDashboard::PutNumber("Wrist Hatch X", m_VectorHatchX);
 	frc::SmartDashboard::PutNumber("Wrist Hatch Y", m_VectorHatchY);
 
-	if (m_inCalibration)
+	if ((m_inCalibration)&&(DriverStation::GetInstance().IsDisabled())) // Only do when disabled
 		{ // In calibration mode, expect a special power-up sequence to ensure accurate axes positioning.
 		// It turns out you can actually put the motor controllers in and out of 
 		// brake mode while the robot is disabled.  Cool!
@@ -945,7 +945,7 @@ bool ManipulatorArm::Calibrate() {
 		doneE = m_Segs[1]->calibrate();
 	if (!doneW)
 		doneW = m_Segs[2]->calibrate();
-	doneA = true; // *** REMOVE WHEN WAIST CALIBRATE BY SWITCHES IMPLEMENTED
+	doneA = true; // *** REMOVE WHEN WAIST CALIBRATE BY SWITCHES IMPLEMENTED ***
 	if (!doneA)
 		doneA = m_Segs[3]->calibrate();
 
@@ -1197,7 +1197,7 @@ void ManipulatorArm::fineMotion() {
 			}
 		if (m_StartX < 1.0) // Don't allow us to cross into -X territory.
 			m_StartX = 1.0;
-		if (m_StartX > 46.0 - 14.0){ // Limit foward reach for now to just 46 - 10
+		if (m_StartX > 46.0 - 18.0){ // Limit foward reach for now to just 46 - 10
 			m_StartX = prev_StartX; // Eventually the -10 will be replaced by wrist calculation.
 			m_FineLimitHit = true;
 		}
@@ -1215,7 +1215,9 @@ void ManipulatorArm::fineMotion() {
 			// If we're not yet in that range but waist target is in that range, wait for
 			// waist to finish moving before we carry on with X,Y
 			// Otherwise, we have a fault/error condition and this MoveXY needs to end.
-			if ((m_TargetWaist < -31.0)||(m_TargetWaist > 36.5))
+			// For getting back up again, found that we can remove x & y limits for
+			// waist fully at +65 or -65.
+			if (((m_TargetWaist < -31.0)&&(m_TargetWaist != -65.0))||((m_TargetWaist > 36.5)&&(m_TargetWaist != 65.0)))
 				{
 				moveallowed = false; // delay kinematics move till waist allows for it.					
 				}
@@ -1257,7 +1259,7 @@ void ManipulatorArm::fineMotion() {
 			{ // Move Waist - limit based on shoulder angle, possibly on elbow angle too.  When fully retracted, need to stay at 0.
 			if (m_Segs[1]->getRelAngle() < 116.0)
 				{
-				m_TargetWaist += JoyW / 2.0;
+				m_TargetWaist += JoyW / 1.0;
 				if (m_InvKinShoulderAngle < 115.0) // waist is limited to full range +/-65.0 when shoulder < 115.0
 					{
 					waistLow = -65.0;
@@ -1306,4 +1308,12 @@ double ManipulatorArm::getEndEffectorX() {
 }
 double ManipulatorArm::getEndEffectorY() {
 	return m_Segs[2]->getEndY();
+}
+
+double ManipulatorArm::getOffset(int seg) {
+	if ((seg >= 0)&&(seg <= 3))
+		return m_Segs[seg]->getOffsetVal();
+	else
+		return 0;
+	
 }

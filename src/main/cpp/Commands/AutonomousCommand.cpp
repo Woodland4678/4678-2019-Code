@@ -53,22 +53,27 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 	}
 	Robot::drivetrain->resetGoToDistanceState();
 	autoState = 0;
+	autoStateSecondHatch = 0;
 	Robot::drivetrain->setToBrake();
 	armMovement1 = false;
 	if (autoSide == 0 && autoMode == 1) { //Left side, level 1 auto to cargo ship
-		leftCmStraightBack = -150;
-		rightCmStraightBack = -150;
+		leftCmStraightBack = -130;
+		rightCmStraightBack = -130;
+
+		leftArc = -405;
+		rightArc = -360;
 
 		straightBackRampUpDistance = 100;
 
-		amountToTurn = 12 + initialGyroValue;
+		amountToTurn = -90 + initialGyroValue;
 	} else if (autoSide == 0 && autoMode == 2) { //left Side level 2 auto to cargo ship
 		leftCmStraightBack = -220;
 		rightCmStraightBack = -220;
 
 		straightBackRampUpDistance = 125;
-		leftArc = -425;
-		rightArc = -355;
+		leftArc = -405;
+		rightArc = -360;
+		amountToTurn = -89;
 	}
 
 	else if (autoSide == 1 && autoMode == 1) { //Right Side level 1 auto to cargo ship
@@ -81,8 +86,9 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		leftCmStraightBack = -220;
 		rightCmStraightBack = -220;
 		straightBackRampUpDistance = 125;
-		leftArc = -355;
-		rightArc = -425;
+		leftArc = -347;
+		rightArc = -392;
+		amountToTurn = 90;
 	} else { //any other mode finish auto mode (not sure if this goes to teleop control or not)
 		End();
 		done = true;
@@ -93,8 +99,14 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 
 // Called repeatedly when this Command is scheduled to run
 void AutonomousCommand::Execute() {
+	printf("RUNNING AUTO");
 	switch(autoState) {
 		case 0: //gets off the HAB
+		if (!armMovement0) {
+			armMovement0 = Robot::manipulatorArm->moveToXY(5,19,-248,0,20.0);
+		}
+			
+			
 			if (Robot::drivetrain->goToDistance(rightCmStraightBack, leftCmStraightBack,0.35,straightBackRampUpDistance,30,0.15,0.3)) { //-69, //-315, -315 //-435,-435
 				autoState++;
 				Robot::manipulatorArm->m_CurrentPosition = 0;
@@ -104,6 +116,9 @@ void AutonomousCommand::Execute() {
 
 		break;
 		case 1: //arcs to the cargo ship side
+			if (!armMovement0) {
+				armMovement0 = Robot::manipulatorArm->moveToXY(5,19,-248,0,20.0);
+			}
 			if (Robot::drivetrain->goToDistance(rightArc, leftArc,0.65,100,50,0.3,0.4)) {
 				autoState++;
 				Robot::manipulatorArm->m_CurrentPosition = 0;
@@ -124,7 +139,7 @@ void AutonomousCommand::Execute() {
 				armMovement1 = Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0);
 			}
 			
-			if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), -90 + initialGyroValue, 0.015,0,0)) {
+			if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn + initialGyroValue, 0.015,0,0)) {
 				autoState++;
 				cnt = 0;
 			} 
@@ -230,8 +245,9 @@ bool AutonomousCommand::getSecondHatch() {
 		case 6:
 			return true;
 		break;
-		return false;
+
 	}
+	return false;
 }
 
 bool AutonomousCommand::driverControl() {
@@ -322,6 +338,7 @@ bool AutonomousCommand::IsFinished() {
 void AutonomousCommand::End() {
 	Robot::drivetrain->setLeftMotor(0);
 	Robot::drivetrain->setRightMotor(0);
+	Robot::drivetrain->setToCoast();
 }
 
 // Called when another command which requires one or more of the same
@@ -329,6 +346,7 @@ void AutonomousCommand::End() {
 void AutonomousCommand::Interrupted() {
 	Robot::drivetrain->setLeftMotor(0);
 	Robot::drivetrain->setRightMotor(0);
+	Robot::drivetrain->setToCoast();
 }
 
 
