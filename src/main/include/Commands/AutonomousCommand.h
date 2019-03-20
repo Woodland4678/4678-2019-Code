@@ -33,25 +33,30 @@ public:
 	bool IsFinished() override;
 	void End() override;
 	void Interrupted() override;
-
+	bool getSecondHatch();
+	bool driverControl();
 private:
 	int autoMode = 0;
 	int autoSide = 0;
 	int autoState = 0;
+	int autoStateSecondHatch = 0;
 	int cnt = 0;
-	bool armMovment1 = false;
+	bool armMovement1 = false;
 	bool armMovement2 = false;
 	bool armMovement3 = false;
-
+	bool done = false;
 	double initialGyroValue = 0;
 
 	double amountToTurn = 0;
 
+	double joyX;
+	double joyY;
+
 	int leftCmStraightBack;
 	int rightCmStraightBack;
 
-	int leftCmArcToCargoShip;
-	int rightCmArcToCargoShip;
+	int leftArc = 0;
+	int rightArc = 0;
 
 	int straightBackRampUpDistance;
 	//enum autoState {driveFoward = 1, turnToCargoShip = 2, scoreHatch = 3, backAfterScore = 4};

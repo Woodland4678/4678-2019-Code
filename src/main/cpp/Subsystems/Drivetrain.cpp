@@ -38,20 +38,22 @@ void Drivetrain::InitDefaultCommand() {
 
 void Drivetrain::Periodic() {
 	frc::SmartDashboard::PutNumber("GYRO: ", Robot::ahrs->GetAngle());
+	frc::SmartDashboard::PutNumber("Right Distance ", (Robot::drivetrain->getRightEncoder() / 0.2183));
+    frc::SmartDashboard::PutNumber("Left Distance ", (Robot::drivetrain->getLeftEncoder() / 0.2183));
 
 }
 
 void Drivetrain::configMotors() {
     leftSlaveOne->Follow(*leftMaster);
-    leftSlaveOne->SetSmartCurrentLimit(40,40,40);
+    leftSlaveOne->SetSmartCurrentLimit(80,80,80);
     leftSlaveTwo->Follow(*leftMaster);
-    leftSlaveTwo->SetSmartCurrentLimit(40,40,40);
+    leftSlaveTwo->SetSmartCurrentLimit(80,80,80);
     rightSlaveOne->Follow(*rightMaster);
-    rightSlaveOne->SetSmartCurrentLimit(40,40,40);
+    rightSlaveOne->SetSmartCurrentLimit(80,80,80);
     rightSlaveTwo->Follow(*rightMaster);
-    rightSlaveTwo->SetSmartCurrentLimit(40,40,40);
-    rightMaster->SetSmartCurrentLimit(40,40,40);
-    leftMaster->SetSmartCurrentLimit(40,40,40);
+    rightSlaveTwo->SetSmartCurrentLimit(80,80,80);
+    rightMaster->SetSmartCurrentLimit(80,80,80);
+    leftMaster->SetSmartCurrentLimit(80,80,80);
 }
 
 void Drivetrain::setToCoast() {
@@ -236,7 +238,7 @@ double  Drivetrain::percentDone()  const  {
     return (leftPercentThere > rightPercentThere) ? leftPercentThere : rightPercentThere;
 }
 
-
+int countGoToDist = 0;
 bool Drivetrain::goToDistance(double rightCentimeters, double leftCentimeters, double power, int rampUpDistance,
 			int rampDownDistance, double startingPower, double endingPower) {
 		//SmartDashboard.putNumber("Left Wheels Position", getLeftEncoder());
@@ -399,7 +401,8 @@ bool Drivetrain::goToDistance(double rightCentimeters, double leftCentimeters, d
 			// System.out.println("Drivetrain goToDistance final encoder values
 			// are "+ getRightEncoder() + ", " + getLeftEncoder());
 			return true;
-		}
+			
+		} 
 		//System.out.println(" return false here...");
 
 		return false;
@@ -430,7 +433,7 @@ bool Drivetrain::GyroTurn(double current, double turnAmount, double p, double i,
 		totalValue = 0.8;
 	if(totalValue < -0.8)
 		totalValue = -0.8;
-	totalValue *= 0.7;
+	totalValue *= 0.75;
 	setRightMotor(-totalValue);
 	setLeftMotor(totalValue);
 

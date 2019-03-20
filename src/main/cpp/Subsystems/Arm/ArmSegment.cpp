@@ -128,6 +128,15 @@ void ArmSegment::disableMotor() {
 		setVoltageLimit(true, 2);
 }
 
+void ArmSegment::setBrakeMode() {
+	if (!m_Talon)
+		m_ControllerREV->SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+}
+void ArmSegment::setCoastMode() {
+	if (!m_Talon)
+		m_ControllerREV->SetIdleMode(rev::CANSparkMax::IdleMode::kCoast);
+}
+
 //Calculations
 double ArmSegment::m_calculateAbsAngle() {
 	double ang = getRelAngle();
