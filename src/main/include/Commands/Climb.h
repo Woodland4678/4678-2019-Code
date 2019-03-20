@@ -45,6 +45,8 @@ private:
 	bool done2 = false;
 	bool done3 = false;
 	bool done4 = false;
+	bool done5 = false;
+	bool done6 = false;
 
 	int m_ClimbCase = 0;
 	int dist;

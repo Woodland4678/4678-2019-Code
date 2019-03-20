@@ -436,7 +436,7 @@ bool Drivetrain::GyroTurn(double current, double turnAmount, double p, double i,
 
 
 	past = current;
-	if (std::abs(error) < 1.5) {
+	if ((std::abs(error) < 1.5)||((fabs(totalValue) < 0.1)&&(fabs(error) < 8))) {
 		counter++;
 	} else {
 		counter = 0;

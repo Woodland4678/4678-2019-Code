@@ -26,17 +26,147 @@ LineUpToRocket::LineUpToRocket(int side): frc::Command() {
 
 // Called just before this Command runs the first time
 void LineUpToRocket::Initialize() {
-
+    m_case = 0;
+    Robot::lidar->m_PrevScoringFinal.x = 0;
+    Robot::lidar->m_PrevScoringFinal.y = 0;
+    Robot::lidar->m_scoreCase = 0;
+    move1 = false;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToRocket::Execute() {
-    
+    if((!Robot::oi->getdriver()->GetRawButton(2))&&(!Robot::oi->getdriver()->GetRawButton(3))&&(!Robot::oi->getdriver()->GetRawButton(4)))
+        {
+        m_case = 10;
+        return;
+        }
+    frc::SmartDashboard::PutNumber("Case Scoring",m_case);
+    switch (m_case) {
+        case  0:
+            Robot::manipulatorArm->m_CurrentPosition = 0;
+            if(Robot::manipulatorArm->ifHatch()){
+                move1 = Robot::manipulatorArm->moveToXY(25.5,19.0,-190,0,20.0); //Hatch scoring position
+                mode = 0;
+            }
+            else if (Robot::manipulatorArm->ifCargo()){
+                move1 = Robot::manipulatorArm->moveToXY(18.0,48.0,-33,0,20.0); //Cargo Scoring Cargoship
+                mode = 1;
+            }
+            else 
+                {
+                if(Robot::manipulatorArm->isHatchMode()){
+                    move1 = Robot::manipulatorArm->moveToXY(28.5,21.0,-190.0,0,20.0); //Hatch Pickup
+                    mode = 2;
+                }
+                else
+                    {
+                    move1 = Robot::manipulatorArm->moveToXY(9.0,41.0,4.0,0,20.0); //Cargo Pickup
+                    mode = 3;
+                    if(move1)
+                        {
+                        Robot::manipulatorArm->setInCargoPosition();
+                        // Start intake rollers.  Move to any other position will stop them.
+                        Robot::manipulatorArm->intakeWheelsSpin(-0.5); // Wheel running.
+                        }
+                    Robot::manipulatorArm->m_CurrentPosition = 5;
+                    }
+                }
+            if(move1)
+                m_case = 1;
+            break;
+        case 1:
+            Robot::lidar->readLidar();
+            m_case++;
+            break;
+        case 2:
+            if(Robot::lidar->readComplete())
+                m_case++;
+            break; 
+        case 3:
+            if(Robot::lidar->findLoadStation())
+                m_case = 4;
+            else
+                m_case = 1;
+            break;
+        case 4:
+            {
+            angle = 180 * atan((double)Robot::lidar->m_ScoringFinal.x / (double)Robot::lidar->m_ScoringFinal.y) / M_PI;
+            distance = sqrt(((double)Robot::lidar->m_ScoringFinal.x*(double)Robot::lidar->m_ScoringFinal.x)+((double)Robot::lidar->m_ScoringFinal.y*(double)Robot::lidar->m_ScoringFinal.y));
+            if((angle < 5)&&(angle > 0))
+                m_case = 6;
+            else{
+                m_case = 5;
+                if(angle < 0)
+                    angle = Robot::ahrs->GetAngle() + (angle-20);
+                else
+                    angle = Robot::ahrs->GetAngle() + angle;
+            }
+            }
+            break;
+        case 5:
+            if(Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), angle, 0.012, 0, 0)){
+                Robot::drivetrain->setLeftMotor(0);
+                Robot::drivetrain->setRightMotor(0);
+                m_case = 1; //re-detect it
+                printf("\nHere");
+            }
+            break;
+        case 6:
+            {
+            //We have a distance to the nearest scoring spto and we are lined up
+            //  distance is based on the lidar not the waist
+            distWaist = distance + 26.6;
+            //Now we need to take into account the end effect is on the arm
+            distEnd = distWaist - (Robot::manipulatorArm->getEndEffectorY() * 25.4) - 150;
+            printf("\n%f | %f | %f | %f",distEnd, (Robot::manipulatorArm->getEndEffectorY() * 25.4), distWaist, distance);
+            //Bow we can move forward
+            m_case = 7;
+            }
+            break;
+        case 7:
+            if (Robot::drivetrain->goToDistance(distEnd/10,distEnd/10, 0.2, 10,10,0.2,0.2)){
+                m_case = 8;
+                cnt = 0;
+                Robot::drivetrain->setLeftMotor(0);
+                Robot::drivetrain->setRightMotor(0);
+                if(mode == 0)
+                    Robot::manipulatorArm->releaseHatch();
+                else if(mode == 1)
+                    Robot::manipulatorArm->intakeWheelsSpin(1);
+            }
+            break;
+        case 8:
+            {
+            if((mode == 1) || (mode == 0)) {
+                cnt++;
+                if(cnt == 10)
+                    m_case = 9;
+            }
+            else 
+                {
+                if(Robot::manipulatorArm->ifHatch() || Robot::manipulatorArm->ifCargo())
+                    {
+                    m_case = 9;
+                    }
+                }
+            }
+            break;
+        case 9:
+            if (Robot::drivetrain->goToDistance(-(distEnd/10),-(distEnd/10), 0.2, 10,10,0.2,0.2)){
+                m_case = 10;
+                if(mode == 0)
+                    Robot::manipulatorArm->grabHatch();
+                else if(mode == 1)
+                    Robot::manipulatorArm->intakeWheelsSpin(0);
+            }
+            break;
+    }
+
 }
 
 // Make this return true when this Command no longer needs to run execute()
 bool LineUpToRocket::IsFinished() {
-    return true;
+    return ((m_case == 10) ? true : false);
 }
 
 // Called once after isFinished returns true

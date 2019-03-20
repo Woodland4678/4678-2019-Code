@@ -51,7 +51,7 @@ void Climb::Execute() {
 
     switch (m_ClimbCase) {
         case 0: //Move arm up above the platform
-            done2 = Robot::manipulatorArm->moveToXY(25.0,40.0,-90.0,0,20.0);
+            done2 = Robot::manipulatorArm->moveToXY(25.0,41.0,-90.0,0,20.0);
             if(done2)
                 m_ClimbCase = 1;
             break;
@@ -66,9 +66,9 @@ void Climb::Execute() {
             break;
         case 2://Move the robot up
             if(!done2)
-                done2 = Robot::manipulatorArm->moveToXY(33.0,9,-93.0,0,10.0);
+                done2 = Robot::manipulatorArm->moveToXY(33.0,9.5,-93.0,0,18.0);
             if(!done3)
-                done3 = Robot::climber->moveTo(400);
+                done3 = Robot::climber->moveTo(550);
             if(done2 && done3)
                 m_ClimbCase = 3;
             break;
@@ -97,7 +97,6 @@ void Climb::Execute() {
             break;
         case 6:
             //The middle wheel is now on
-            printf("STOP!\n");
             Robot::drivetrain->setRightMotor(0);
             Robot::drivetrain->setLeftMotor(0);
             Robot::manipulatorArm->intakeWheelsSpin(0);
@@ -105,7 +104,35 @@ void Climb::Execute() {
             m_ClimbCase = 7;
             break;
         case 7:
-            
+            if(!done5)
+                done5 = Robot::manipulatorArm->moveToXY(33.0,25,-93.0,0,20.0);
+            else
+                done6 = Robot::manipulatorArm->moveToXY(20.0,25,-93.0,0,10.0);
+            if(done6)
+                m_ClimbCase = 8;
+            break;
+        case 8:
+            if(Robot::climber->readTalonSRXEncoder() < 400) {
+                Robot::drivetrain->setRightMotor(0.08);
+                Robot::drivetrain->setLeftMotor(0.08);
+                Robot::lidar->readLidar();
+                m_ClimbCase = 9;
+            }
+            break;
+         case 9:
+            if(Robot::lidar->readComplete())
+                m_ClimbCase = 10;
+            break;
+        case 10:
+            dist = Robot::lidar->climbDistance();
+            printf("\nDist = %i",dist);
+            if(dist < 500){
+                Robot::drivetrain->setRightMotor(0);
+                Robot::drivetrain->setLeftMotor(0);
+                done = true;
+            }
+            else
+                m_ClimbCase = 8;
             break;
     }
 

@@ -1104,3 +1104,10 @@ void ManipulatorArm::fineMotion() {
 void ManipulatorArm::disableWrist(){
 	m_Segs[2]->disableMotor();
 }
+
+double ManipulatorArm::getEndEffectorX() {
+	return m_Segs[2]->getEndX();
+}
+double ManipulatorArm::getEndEffectorY() {
+	return m_Segs[2]->getEndY();
+}

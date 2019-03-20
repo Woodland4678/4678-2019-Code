@@ -34,6 +34,7 @@
 #include <iostream>
 //#include <fstream>
 #include "../../include/Subsystems/Lidar.h"
+#include "../../include/Subsystems/LidarViewer.h"
 #include "../../include/Robot.h"
 #include "frc/SerialPort.h"
 //#include "../RobotMap.h"
@@ -322,7 +323,7 @@ void Lidar::Periodic() {
 											{
 											for(acnt = 0;acnt < samplecount;acnt++) // copy entire array.
 												{
-												lidat[acnt].angle = tmpdat[acnt].angle;
+												lidat[acnt].angle = tmpdat[acnt].angle - (6 * 64);
 												lidat[acnt].dist = tmpdat[acnt].dist;
 												lidat[acnt].tstamp = tmpdat[acnt].tstamp;
 												//printf("%d,%d,%d\n",lidat[acnt].angle,lidat[acnt].dist,lidat[acnt].tstamp);
@@ -351,16 +352,16 @@ void Lidar::Periodic() {
 											dist1 = (payload[caboff] >> 2) + ((int)payload[caboff+1] << 6); // distance value
 											// Documentation on angle data is not correct.  [caboff] may be msbit, may be lsbits.  Not sure.
 											// going with the assumption that they're bits 4 and 5 and that [caboff + 4] is bits 0-3
-											// Note that these are signed 5 bit values. 0b11111 = -1, 0x10000 = -16.
+											// Note that these are signed 6 bit values. 0b11111 = -1, 0x10000 = -16.
 											// May need to have a look at the value to make sure we have the bits figured out correctly.
 											//
 											delta1 = ((payload[caboff+1] & 0x03) << 4) + (payload[caboff+4] & 0x0F); // 5 bits of angle delta
-											if (delta1 >= 16)
-												delta1-=32; // these are negative values 0b11111 (31) is actually -1.
+											if (delta1 >= 32)
+												delta1-=64; // these are negative values 0b11111 (31) is actually -1.
 											dist2 = (payload[caboff + 2] >> 2) + ((int)payload[caboff+3] << 6); // distance value
 											delta2 = ((payload[caboff+3] & 0x03) << 4) + ((payload[caboff+4] & 0xF0) >> 4); // 5 bits of angle delta
-											if (delta2 >= 16)
-												delta2-=32;
+											if (delta2 >= 32)
+												delta2-=64;
 											// have distance and delta angle.  These delta's are corrections to the
 											// angle that would be calculated using direct interpolation between the stangle of this
 											// set of 32 readings and the stangle of the next 32 readings. By doing (stangle[1] - stangle[2]) / 32
@@ -504,6 +505,8 @@ void Lidar::readLidar()
 
 bool Lidar::readComplete()
 	{
+	if(glob_lidar_ready)
+		LidarViewer::Get()->setPoints(glob_lidar_count,lidat);
 	return glob_lidar_ready;
 	}
 
@@ -515,7 +518,7 @@ void Lidar::convertToXY()
 		if(!lidat[i].dist)
 			continue;
 		double rad = M_PI * ((double)lidat[i].angle / 64.0) / 180;
-		lidatXY[j].x = ((((double)lidat[i].dist) * std::sin(rad)));
+		lidatXY[j].x = -((((double)lidat[i].dist) * std::sin(rad)));
 		lidatXY[j].y = -((((double)lidat[i].dist) * std::cos(rad)));
 		//printf(" %i,%i",lidatXY[j].x,lidatXY[j].y);
 		j++;
@@ -550,7 +553,7 @@ void Lidar::filterData(bool convertXY, double leftLimit, double rightLimit, int 
 
 		if (convertXY) {
 			double rad = M_PI * (lidat[i].angle / 64.0) / 180;
-			lidatXY[n].x = (std::round((lidat[i].dist) * std::sin(rad)));
+			lidatXY[n].x = -(std::round((lidat[i].dist) * std::sin(rad)));
 			lidatXY[n].y = -(std::round((lidat[i].dist) * std::cos(rad)));
 			}
 
@@ -711,6 +714,8 @@ void Lidar::FindLines(){
 		}
 	//NumLines++;
 	linecnt = NumLines;
+
+	LidarViewer::Get()->setLines(linecnt,lines);
 
 	//TODO: Remove this debug stuff!
 	for(int i = 0; i<(linecnt+1); i++){
@@ -1145,67 +1150,127 @@ int Lidar::climbDistance() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
-void Lidar::checkLinesForHatches(){ //checks to see if any viewed lines resemble the walls of a rockets hatch walls so that the waist can rotate toward the hatches
-	for(int x=0;x<linecnt;x++){
-		if(std::abs(lines[x].length-183)<13){
-			if(std::abs(lines[x+1].length-183)<13){
-				//rocket found!
-				midPointX = (lines[x].start.x + lines[x+1].end.x)/2 - 10.625;
-				midPointY = (lines[x].start.y + lines[x+1].end.y)/2;
-				waistAngleRocketHatch = std::tan(midPointY/midPointX);
-				waistAngleHypotenuse = std::sqrt(midPointX*midPointX + midPointY*midPointY);
-
-
-			}
-		}
+bool Lidar::findLoadStation() // Search lines to see if we can find something that looks like the loading station.
+	{
+	if(m_scoreCnt == 15) {
+		m_scoreCase = 1;
 	}
-}
 
-bool Lidar::getHatchPlacement(){
-	switch(hatchPlacementCase){
-		case 0:
-			readLidar();
-			hatchPlacementCase++;
-			break;
-		
-		case 1: 
-			if(readComplete()){
-				cubeFindCase++;
-			} 
-			break;
-		
-		case 2:
-			filterData(true, 120,120, 50, 1000);
+	bool found = false;
+
+	switch(m_scoreCase)
+		{
+		case 0:{
+			// Convert polar to rectangular for data in the range specified here.
+			filterData(true, 45.0, 45.0, 50.0, 2000.0);
 			FindLines();
-			checkLinesForHatches();
-			break;
-	}
-}
+			
+			tpPoint target;
+			double angle = 360;
+			double distance = 3000;
 
-/*
-not completed
-void Lidar::checkLinesForHatchWalls(){ //checks lines for hatch walls to drive to
-	switch(driveToHatchWallCase){
-		case 0:
-			readLidar();
-			driveToHatchWallCase++;
+			//Need to decide what line to start with
+
+			for(int i=0;i<(linecnt+1);i++) 
+				{
+				if((lines[i].length <= 150)||(lines[i].length > 500))
+					continue;
+				printf("\nNew Line: %i ",i);
+				for(int x=i+1;((x<(i+4))&&(x < (linecnt+1)));x++)
+					{
+					double diff = fabs(lines[i].angle - lines[x].angle);
+					if(diff > 30){
+						printf("| Bad Angle %i",x);
+						continue;
+					}
+					else 
+						{
+						double m = (lines[x].start.y-lines[i].end.y)/(lines[x].start.x-lines[i].end.x);
+						double deg = 180 * atan(m) / M_PI;
+						diff = fabs(lines[i].angle - deg);
+						printf("| Angle %i, %f ",x,diff);
+						if(diff < 30)
+							{
+							double dist = sqrt(((lines[x].start.x-lines[i].end.x)*(lines[x].start.x-lines[i].end.x))+((lines[x].start.y-lines[i].end.y)*(lines[x].start.y-lines[i].end.y)));
+							printf("| Point %f",dist);
+							if((dist > 100)&&(dist < 300)) //We have found one!
+								{
+								tpPoint pnt;
+								pnt.x = (lines[x].start.x+lines[i].end.x) / 2;
+								pnt.y = (lines[x].start.y+lines[i].end.y) / 2;
+								if(pnt.x == 0)
+									pnt.x = 1;
+								deg = 180 * atan(((double)pnt.y / (double)pnt.x)) / M_PI;
+								double d = sqrt(((pnt.x)*(pnt.x))+((pnt.y)*(pnt.y)));
+								//printf("Score Found at (%i,%i) Angle = %f\n",pnt.x,pnt.y,deg);
+								printf("| Check %f , %f",angle, deg);
+								if((fabs(fabs(deg)-90) < fabs(fabs(angle) - 90)))
+									{
+									//printf("\nHere");
+									distance = d;
+									angle = deg;
+									target.x = pnt.x;
+									target.y = pnt.y;
+									//LidarViewer::Get()->addPoint(pnt.x,pnt.y);
+									found = true;
+									}
+								i = x-1;
+								break;
+								}
+							}
+						}
+					}
+				}
+			if(found) 
+				{
+				m_scoreArray[m_scoreCnt].x = target.x;
+				m_scoreArray[m_scoreCnt].y = target.y;
+				m_scoreArray[m_scoreCnt].tstamp = 0;
+				m_scoreCnt++;
+				}
+			}
 			break;
 		case 1:
-			if(readComplete()){
-				driveToHatchWallCase++;
+			{
+			m_scoreCase = 0;
+			int largest = 0, lar_idx = 0;
+			for(int i = 0;i<m_scoreCnt;i++)
+				{
+				for(int n = 0;n<m_scoreCnt;n++)
+					{
+					if(i == n)
+						continue;
+					int diff_X = fabs(m_scoreArray[i].x - m_scoreArray[n].x);
+					int diff_Y = fabs(m_scoreArray[i].y - m_scoreArray[n].y);
+					if((diff_X < 30)&&(diff_Y < 30))
+						m_scoreArray[i].tstamp++;
+					if(largest < m_scoreArray[i].tstamp)
+						{
+						largest = m_scoreArray[i].tstamp;
+						lar_idx = i;
+						}
+					}
+				}
+			m_scoreCnt = 0;
+			/*double ang1 = 180 * atan((double)m_scoreArray[lar_idx].x / (double)m_scoreArray[lar_idx].y) / M_PI;
+			double ang2 = 360;
+			if((m_PrevScoringFinal.x != 0)&&((m_PrevScoringFinal.y != 0)))
+				{
+				ang2 = 180 * atan((double)m_PrevScoringFinal.x / (double)m_PrevScoringFinal.y) / M_PI;
+				}
+			
+			if(fabs(ang1) < fabs(ang2))
+				{*/
+				m_ScoringFinal.x = m_scoreArray[lar_idx].x;
+				m_ScoringFinal.y = m_scoreArray[lar_idx].y;
+			//	}
+
+			//m_PrevScoringFinal.x = m_ScoringFinal.x;
+			//m_PrevScoringFinal.y = m_ScoringFinal.y;
+			LidarViewer::Get()->addPoint(m_ScoringFinal.x,m_ScoringFinal.y);
+			return true;
 			}
 			break;
-		case 2:
-			filterData(true, 120,120,50,1000);
-			FindLines();
-		
-
-
- 	}
-
-}
-
-
-*/
+		}
+	return false;
+	}
