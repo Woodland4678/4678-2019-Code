@@ -45,15 +45,15 @@ void Drivetrain::Periodic() {
 
 void Drivetrain::configMotors() {
     leftSlaveOne->Follow(*leftMaster);
-    leftSlaveOne->SetSmartCurrentLimit(40,40,40);
+    leftSlaveOne->SetSmartCurrentLimit(80,80,80);
     leftSlaveTwo->Follow(*leftMaster);
-    leftSlaveTwo->SetSmartCurrentLimit(40,40,40);
+    leftSlaveTwo->SetSmartCurrentLimit(80,80,80);
     rightSlaveOne->Follow(*rightMaster);
-    rightSlaveOne->SetSmartCurrentLimit(40,40,40);
+    rightSlaveOne->SetSmartCurrentLimit(80,80,80);
     rightSlaveTwo->Follow(*rightMaster);
-    rightSlaveTwo->SetSmartCurrentLimit(40,40,40);
-    rightMaster->SetSmartCurrentLimit(40,40,40);
-    leftMaster->SetSmartCurrentLimit(40,40,40);
+    rightSlaveTwo->SetSmartCurrentLimit(80,80,80);
+    rightMaster->SetSmartCurrentLimit(80,80,80);
+    leftMaster->SetSmartCurrentLimit(80,80,80);
 }
 
 void Drivetrain::setToCoast() {
@@ -394,21 +394,15 @@ bool Drivetrain::goToDistance(double rightCentimeters, double leftCentimeters, d
 		// the method is called, it will record the starting encoder values
 		// again
 		if (rightPercentThere >= 1 && leftPercentThere >= 1) {
-			countGoToDist++;
-			if (countGoToDist > 10) {
-				setLeftMotor(0);
-				setRightMotor(0);
-				goToDistanceState = 0;
-				// System.out.println("Drivetrain goToDistance at target");
-				// System.out.println("Drivetrain goToDistance final encoder values
-				// are "+ getRightEncoder() + ", " + getLeftEncoder());
-				countGoToDist = 0;
-				return true;
-			}
+			setLeftMotor(0);
+			setRightMotor(0);
+			goToDistanceState = 0;
+			// System.out.println("Drivetrain goToDistance at target");
+			// System.out.println("Drivetrain goToDistance final encoder values
+			// are "+ getRightEncoder() + ", " + getLeftEncoder());
+			return true;
 			
-		} else {
-			countGoToDist = 0;
-		}
+		} 
 		//System.out.println(" return false here...");
 
 		return false;

@@ -144,6 +144,9 @@ public:
 	double getPotAccuracy();
 	bool calibrate();
 	
+	void setBrakeMode();
+	void setCoastMode();
+
 	double m_Offset = 0;
 	
 };

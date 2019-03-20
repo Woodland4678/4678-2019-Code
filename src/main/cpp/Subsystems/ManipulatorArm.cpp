@@ -164,6 +164,9 @@ bool ManipulatorArm::Init(){
 	addPosition(123,-140,-203); //17 - Frame 2
 	addPosition(123,-156,-203); //18 - Frame 3
 
+	m_inCalibration = true; // At power up, start with calibration mode.
+	m_CalibrationState = 0; // Begin at state 0 for calibration process.
+
     //frc::SmartDashboard::PutNumber("Elbow Slope", m_Segs[2]->getConversionSlope());
     //frc::SmartDashboard::PutNumber("Elbow Intercept", m_Segs[2]->getConversionIntercept());
 }
@@ -322,6 +325,172 @@ void ManipulatorArm::Periodic() {
 	frc::SmartDashboard::PutNumber("Wrist Bottom Y", m_VectorBottomY);
 	frc::SmartDashboard::PutNumber("Wrist Hatch X", m_VectorHatchX);
 	frc::SmartDashboard::PutNumber("Wrist Hatch Y", m_VectorHatchY);
+
+	if (m_inCalibration)
+		{ // In calibration mode, expect a special power-up sequence to ensure accurate axes positioning.
+		// It turns out you can actually put the motor controllers in and out of 
+		// brake mode while the robot is disabled.  Cool!
+		// On power up, the motors go to coast mode, allowing the setup crew
+		// to easily put the arm into a position with the shoulder up a bit
+		// the elbow up a bit and the wrist about level.
+		// Once in a raised position, we'll expect the setup person to 
+		// swing the wrist up and down, then hold it about level
+		// Then we switch the axes into brake mode and present a 
+		// delay during which time, we expect the setup person to release the
+		// arm.  The wrist will rotate somewhat quickly since there is not
+		// much braking power in the bag motor.  We'll want to wait till the wrist
+		// motion has slowed before recording the wrist calibration.
+		// Note that the wrist must be up high enough that it does not contact
+		// the arm before it essentially stops moving (with the chain somewhat tight)
+		// 
+		// This seems to be working quite well.  We have still observed problems
+		// with the wrist positioning.  Need to come up with additional
+		// calibration verification / adjustment for the wrist.  
+		// Using the absolute encoder of the wrist is likely a good
+		// way to go.  Need to display Pot and Encoder values
+		// for the wrist.  Absolute Encoder is before the chain backlash
+		// and it's an exact mesh with the quadrature encoder.
+		//
+		if (m_CalCnt != 0) // If timer needs to count down,
+			m_CalCnt--; // Count down.
+		switch (m_CalibrationState)
+			{
+			case 0:
+				printf("Calibration State 0 - waiting about 3 seconds\n\r");
+				m_CalCnt = 150;
+				m_CalibrationState++;
+				break;
+			case 1:  // Go to coast mode
+				if (m_CalCnt == 0)
+					{
+					printf("Calibration State 1 - Setting arm motors to coast\n\r");
+					m_Segs[0]->setCoastMode();
+					m_Segs[1]->setCoastMode();
+					m_Segs[3]->setCoastMode();
+					// m_CalCnt = 500; // For now, just swap beteen brake and coast every second.
+					m_CalibrationState++;
+					m_Wristbits = 0; // Clear the indicator bits used to detect wrist sequence.
+					}
+				break;
+			case 2: // Wait for arm to be lifted and wrist (Claw) moved up and down to about level to
+				// signal that we're ready to go to brake mode and begin the calibration process.
+				// At this point, we could also calibrate the waist using the limit switches
+				// by moving the waist slowly before activating the arm calibrate.
+				// Let's go with a shoulder angle of 
+				// Elbow angle of 
+				// Then watch for wrist to go to at least ... and then back to ...
+				// When fully collapsed, angles are W=0, S=171, E=-172, Wr=-209
+				// At Calibrate point, W=0, S < 119, E >-130, Wr goes -180, -270, -180
+				// Then switch to brake mode.  Calibration begins when Wr goes > -135 or so.
+				// Will need to do some testing while watching (or logging) angles.
+				if ((m_Segs[0]->getRelAngle() < 150)&&(m_Segs[1]->getRelAngle() > -130)&&(m_Segs[3]->getRelAngle() > -5.0)&&(m_Segs[3]->getRelAngle() < 5.0))
+					{ // Init Calibration is possible.  Watch the wrist.
+					if (m_Segs[2]->getRelAngle() < - 255)
+						m_Wristbits |= 1; // Set bit 0.  Wrist has gone to claw straight up.
+					if (m_Wristbits & 1) // If we've gone to claw up, see if we go to claw level
+						if (m_Segs[2]->getRelAngle() > -190)
+							m_CalibrationState++; // Ready for brake mode.
+ 					}
+				else // When outside of the angles for Waist, Shoulder, Elbow
+					{
+					m_Wristbits = 0; // Clear any wrist bit indications.
+					}
+				break;
+			case 3:  
+				printf("Calibration State 3 - Setting arm motors to brake\n\r");
+				m_Segs[0]->setBrakeMode();
+				m_Segs[1]->setBrakeMode();
+				m_Segs[3]->setBrakeMode();
+				// Prepared for calibration.  We now want to log some data.
+				m_CalibrationState++;
+				m_CalCnt = 250; // Wait 5 seconds before considering calibrate.
+				m_CalCnt2 = 0;
+				break;
+			case 4:
+				// Do clean reading of potentiometers and set angle
+				// when wrist is close to stopped.  Then watch elbow and shoulder
+				// to determine that the setup person is pulling up on them
+				// (shoulder starts to go lower, elbow also goes lower)
+				// When sagging, we expect the numbers to increase slowly.
+				//
+				deltaWR = fabs(m_Segs[2]->getRelAngle() - prevWr);
+				prevWr = m_Segs[2]->getRelAngle();
+				//printf("%f,%f,%f,%f,%f,%f\n\r",m_Segs[3]->getRelAngle(),m_Segs[0]->getRelAngle(),m_Segs[1]->getRelAngle(),m_Segs[2]->getRelAngle(),deltaWR,prevWr);
+				if (m_CalCnt == 0) // After a brief wait (5 seconds)
+					{
+					if (deltaWR < 0.001)
+						{
+						m_CalCnt2++;
+						if (m_CalCnt2 > 25) // After no more wrist motion
+							{ // Now is the time to do the calibration.
+							InitCalibrate(); // Clear calibration stuff.
+							m_CalibrationState++;
+							}
+						}
+					else
+						{
+						m_CalCnt2 = 0;
+						}					
+					}
+
+				break;
+			case 5: // Time to calibrate.  Smooth out pot readings,
+				// for about 8 readings and then do the calibration stuff.
+				// smooth pot with removal of high and low, average remaining 6.
+				// 
+				if (Calibrate()) // Needs to be called several times till we get true
+					m_CalibrationState++;
+				break;
+			case 6: // Calibration complete.  Indicate to setup guy that this is
+				// complete by putting the waist back into coast mode (purple)
+				m_Segs[3]->setCoastMode();
+				m_ShRef = m_Segs[0]->getRelAngle(); // Need reference angle to detect lifting.
+				m_CalibrationState++;
+				break;
+			case 7: // Watching for lift to set arm to home position.
+				if (m_ShRef < m_Segs[0]->getRelAngle()) // Keep tracking as angle goes higher.
+					m_ShRef = m_Segs[0]->getRelAngle(); // we want the highest m_ShRef readings.
+				if (m_Segs[0]->getRelAngle() < m_ShRef - 2.0) // When setup person pulls shoulder up 2.0 degrees,
+					{
+					// 
+					m_Segs[0]->setCoastMode();
+					m_Segs[1]->setCoastMode();
+					m_CalCnt2 = 0; // Use this to detect in position for 10 seconds.
+					m_CalCnt = 50*30; // 30 second time-out happens here.
+					m_CalibrationState++;	
+					}
+				break;
+			case 8: // Wait till in start-up position, then re-engage brakes
+				// Waist 0, Shoulder 123, Elbow -156, Wrist -203
+				if ((m_Segs[0]->getRelAngle() > 115)&&(m_Segs[0]->getRelAngle() < 130)&&
+					(m_Segs[1]->getRelAngle() < -150)&&(m_Segs[1]->getRelAngle() > - 175)&&
+					(m_Segs[2]->getRelAngle() < -190)&&(m_Segs[2]->getRelAngle() > - 220))
+					{
+					m_CalCnt2++;
+					if (m_CalCnt2 > 500)
+						{
+						printf("Calibration Succeeded - Going to Brake Mode\n\r");
+						m_CalibrationState++;
+						}
+					}
+				if ((m_CalCnt == 0)&&(m_CalibrationState == 8))
+					{
+					printf("Calibration Time-Out Returning to brake mode\n\r");
+					printf("%f,%f,%f,%f\n\r",m_Segs[3]->getRelAngle(),m_Segs[0]->getRelAngle(),m_Segs[1]->getRelAngle(),m_Segs[2]->getRelAngle());
+					m_CalibrationState++; // Time-Out re-engage brakes
+					}
+				break;
+			case 9:
+				m_Segs[0]->setBrakeMode();
+				m_Segs[1]->setBrakeMode();
+				m_Segs[3]->setBrakeMode();
+				m_CalibrationState++;
+				break;
+			case 10:
+				break; // Startup Calibration Complete.  Just sit here
+				//forever.
+			}
+		}
 }
 
     // BEGIN AUTOGENERATED CODE, SOURCE=ROBOTBUILDER ID=CMDPIDGETTERS
@@ -776,8 +945,10 @@ bool ManipulatorArm::Calibrate() {
 		doneE = m_Segs[1]->calibrate();
 	if (!doneW)
 		doneW = m_Segs[2]->calibrate();
+	doneA = true; // *** REMOVE WHEN WAIST CALIBRATE BY SWITCHES IMPLEMENTED
 	if (!doneA)
 		doneA = m_Segs[3]->calibrate();
+
 
 	if(doneS && doneE && doneW && doneA) {
 		m_StartX = m_Segs[1]->getEndX();
