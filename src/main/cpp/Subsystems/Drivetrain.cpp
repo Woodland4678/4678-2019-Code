@@ -458,3 +458,146 @@ bool Drivetrain::GyroTurn(double current, double turnAmount, double p, double i,
 	}
 	return false;
 }
+
+
+void Drivetrain::initAutoScore() {
+	as_m_case = 0;
+	as_move1 = false;
+	as_m_SubCase = 0;
+	as_mode = 0; 
+}
+
+bool Drivetrain::autoScore() {
+	switch (as_m_case) {
+        case  0:
+            Robot::manipulatorArm->m_CurrentPosition = 0;
+            if(Robot::manipulatorArm->ifHatch()){
+                as_move1 = Robot::manipulatorArm->moveToXY(25.5,19.0,-190,0,20.0); //Hatch scoring position
+                as_mode = 0;
+            }
+            else if (Robot::manipulatorArm->ifCargo()){
+                as_move1 = Robot::manipulatorArm->moveToXY(18.0,48.0,-33,0,20.0); //Cargo Scoring Cargoship
+                as_mode = 1;
+            }
+            else 
+                {
+                if(Robot::manipulatorArm->isHatchMode()){
+                    as_move1 = Robot::manipulatorArm->moveToXY(28.5,20.0,-190.0,0,20.0); //Hatch Pickup
+                    as_mode = 2;
+                }
+                else
+                    {
+                    as_move1 = Robot::manipulatorArm->moveToXY(9.0,41.0,4.0,0,20.0); //Cargo Pickup
+                    as_mode = 3;
+                    if(as_move1)
+                        {
+                        Robot::manipulatorArm->setInCargoPosition();
+                        // Start intake rollers.  Move to any other position will stop them.
+                        Robot::manipulatorArm->intakeWheelsSpin(-0.5); // Wheel running.
+                        }
+                    Robot::manipulatorArm->m_CurrentPosition = 5;
+                    }
+                }
+            if(as_move1)
+                as_m_case = 1;
+            break;
+        case 1:
+            Robot::lidar->readLidar();
+            as_m_case++;
+            break;
+        case 2:
+            if(Robot::lidar->readComplete())
+                as_m_case++;
+            break; 
+        case 3:
+            if(Robot::lidar->findLoadStation())
+                {
+                if(as_m_SubCase == 0)
+                    as_m_case = 4;
+                else
+                    as_m_case = 6;
+                }
+            else
+                as_m_case = 1;
+            break;
+        case 4:
+            {
+            as_angle = Robot::lidar->m_ScoringFinal.angle - 180;
+            as_distance = Robot::lidar->m_ScoringFinal.dist;
+            //printf("\n%f | %f",angle,distance);
+            if((GyroTurn(0, as_angle, 0.008, 0, 0))||(fabs(as_angle) < 5))
+                as_m_case = 5;
+            else
+                as_m_case = 1;
+                
+            }
+            break;
+        case 5:
+            {
+            //We have a distance to the nearest scoring spto and we are lined up
+            //  distance is based on the lidar not the waist
+            as_distWaist = as_distance + 26.6;
+            //Now we need to take into account the end effect is on the arm
+            if(as_mode == 1)
+                as_distEnd = as_distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) + 300;
+            else
+                as_distEnd = as_distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) - 250;
+            //printf("\n%f | %f | %f | %f",distEnd, (Robot::manipulatorArm->getEndEffectorX() * 25.4), distWaist, distance);
+            //Bow we can move forward
+            as_m_SubCase = 1;
+            as_m_case = 6;
+            }
+            break;
+        case 6:
+            as_angle = 180 - Robot::lidar->m_ScoringFinal.angle;
+            as_distance = Robot::lidar->m_ScoringFinal.dist;
+            //As we drive to this point the angle will change to make up for that turn the waist
+            if((as_angle > -67)&&(as_angle < 67)){
+                if(as_mode == 0)
+                    Robot::manipulatorArm->moveWaist(as_angle);
+                else
+                    Robot::manipulatorArm->moveWaist(as_angle + 3);
+            }
+
+            if (goToDistance(as_distEnd/10,as_distEnd/10, 0.3, 20,10,0.2,0.2)){
+                as_m_case = 7;
+                as_cnt = 0;
+                setLeftMotor(0);
+                setRightMotor(0);
+                if(as_mode == 0)
+                    Robot::manipulatorArm->releaseHatch();
+                else if(as_mode == 1)
+                    Robot::manipulatorArm->intakeWheelsSpin(1);
+            }
+            else
+                as_m_case = 1;
+            break;
+        case 7:
+            {
+            if((as_mode == 1) || (as_mode == 0)) {
+                as_cnt++;
+                if(as_cnt == 20)
+                    as_m_case = 8;
+            }
+            else 
+                {
+                if(Robot::manipulatorArm->ifHatch() || Robot::manipulatorArm->ifCargo())
+                    {
+                    as_m_case = 8;
+                    }
+                }
+            }
+            break;
+        case 8:
+            if (goToDistance(-(as_distEnd/10),-(as_distEnd/10), 0.5, 10,10,0.2,0.2)){
+                as_m_case = 0;
+                if(as_mode == 0)
+                    Robot::manipulatorArm->grabHatch();
+                else if(as_mode == 1)
+                    Robot::manipulatorArm->intakeWheelsSpin(0);
+				return true;
+            }
+            break;
+    }
+	return false;
+}

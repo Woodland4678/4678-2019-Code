@@ -26,164 +26,30 @@ LineUpToRocket::LineUpToRocket(int side): frc::Command() {
 
 // Called just before this Command runs the first time
 void LineUpToRocket::Initialize() {
-    m_case = 0;
-    m_SubCase = 0;
-    move1 = false;
+    Robot::drivetrain->initAutoScore();
+    done = false;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToRocket::Execute() {
     if((!Robot::oi->getdriver()->GetRawButton(2))&&(!Robot::oi->getdriver()->GetRawButton(3))&&(!Robot::oi->getdriver()->GetRawButton(4)))
         {
-        m_case = 10;
+        done = true;
         return;
         }
-    frc::SmartDashboard::PutNumber("Case Scoring",m_case);
-    switch (m_case) {
-        case  0:
-            Robot::manipulatorArm->m_CurrentPosition = 0;
-            if(Robot::manipulatorArm->ifHatch()){
-                move1 = Robot::manipulatorArm->moveToXY(25.5,19.0,-190,0,20.0); //Hatch scoring position
-                mode = 0;
-            }
-            else if (Robot::manipulatorArm->ifCargo()){
-                move1 = Robot::manipulatorArm->moveToXY(18.0,48.0,-33,0,20.0); //Cargo Scoring Cargoship
-                mode = 1;
-            }
-            else 
-                {
-                if(Robot::manipulatorArm->isHatchMode()){
-                    move1 = Robot::manipulatorArm->moveToXY(28.5,20.0,-190.0,0,20.0); //Hatch Pickup
-                    mode = 2;
-                }
-                else
-                    {
-                    move1 = Robot::manipulatorArm->moveToXY(9.0,41.0,4.0,0,20.0); //Cargo Pickup
-                    mode = 3;
-                    if(move1)
-                        {
-                        Robot::manipulatorArm->setInCargoPosition();
-                        // Start intake rollers.  Move to any other position will stop them.
-                        Robot::manipulatorArm->intakeWheelsSpin(-0.5); // Wheel running.
-                        }
-                    Robot::manipulatorArm->m_CurrentPosition = 5;
-                    }
-                }
-            if(move1)
-                m_case = 1;
-            break;
-        case 1:
-            Robot::lidar->readLidar();
-            m_case++;
-            break;
-        case 2:
-            if(Robot::lidar->readComplete())
-                m_case++;
-            break; 
-        case 3:
-            if(Robot::lidar->findLoadStation())
-                {
-                if(m_SubCase == 0)
-                    m_case = 4;
-                else
-                    m_case = 6;
-                }
-            else
-                m_case = 1;
-            break;
-        case 4:
-            {
-            angle = Robot::lidar->m_ScoringFinal.angle - 180;
-            distance = Robot::lidar->m_ScoringFinal.dist;
-            printf("\n%f | %f",angle,distance);
-            if((Robot::drivetrain->GyroTurn(0, angle, 0.008, 0, 0))||(fabs(angle) < 5))
-                m_case = 5;
-            else
-                m_case = 1;
-                
-            }
-            break;
-        case 5:
-            {
-            //We have a distance to the nearest scoring spto and we are lined up
-            //  distance is based on the lidar not the waist
-            distWaist = distance + 26.6;
-            //Now we need to take into account the end effect is on the arm
-            if(mode == 1)
-                distEnd = distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) + 300;
-            else
-                distEnd = distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) - 250;
-            printf("\n%f | %f | %f | %f",distEnd, (Robot::manipulatorArm->getEndEffectorX() * 25.4), distWaist, distance);
-            //Bow we can move forward
-            m_SubCase = 1;
-            m_case = 6;
-            }
-            break;
-        case 6:
-            angle = 180 - Robot::lidar->m_ScoringFinal.angle;
-            distance = Robot::lidar->m_ScoringFinal.dist;
-            //As we drive to this point the angle will change to make up for that turn the waist
-            if((angle > -67)&&(angle < 67)){
-                if(mode == 0)
-                    Robot::manipulatorArm->moveWaist(angle);
-                else
-                    Robot::manipulatorArm->moveWaist(angle + 3);
-            }
-
-            if (Robot::drivetrain->goToDistance(distEnd/10,distEnd/10, 0.3, 20,10,0.2,0.2)){
-                m_case = 7;
-                cnt = 0;
-                Robot::drivetrain->setLeftMotor(0);
-                Robot::drivetrain->setRightMotor(0);
-                Robot::climber->m_autoScore = true;
-                if(mode == 0)
-                    Robot::manipulatorArm->releaseHatch();
-                else if(mode == 1)
-                    Robot::manipulatorArm->intakeWheelsSpin(1);
-            }
-            else
-                m_case = 1;
-            break;
-        case 7:
-            {
-            if((mode == 1) || (mode == 0)) {
-                cnt++;
-                if(cnt == 20)
-                    m_case = 8;
-            }
-            else 
-                {
-                if(Robot::manipulatorArm->ifHatch() || Robot::manipulatorArm->ifCargo())
-                    {
-                    m_case = 8;
-                    }
-                }
-            }
-            break;
-        case 8:
-            Robot::climber->m_autoScore = false;
-            if (Robot::drivetrain->goToDistance(-(distEnd/10),-(distEnd/10), 0.5, 10,10,0.2,0.2)){
-                m_case = 10;
-                if(mode == 0)
-                    Robot::manipulatorArm->grabHatch();
-                else if(mode == 1)
-                    Robot::manipulatorArm->intakeWheelsSpin(0);
-            }
-            break;
-    }
+    
+    done = Robot::drivetrain->autoScore();
 
 }
 
 // Make this return true when this Command no longer needs to run execute()
 bool LineUpToRocket::IsFinished() {
-    return ((m_case == 10) ? true : false);
+    return done;
 }
 
 // Called once after isFinished returns true
 void LineUpToRocket::End() {
-    mode = 0;
-    m_SubCase = 0;
-    m_case = 0;
+
 }
 
 // Called when another command which requires one or more of the same
