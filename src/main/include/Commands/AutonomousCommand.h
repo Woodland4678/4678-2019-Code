@@ -40,6 +40,7 @@ private:
 	int autoSide = 0;
 	int autoState = 0;
 	int autoStateSecondHatch = 0;
+	double secondHatchTurnAmount = 0;
 	int cnt = 0;
 	bool armMovement0 = false;
 	bool armMovement1 = false;
