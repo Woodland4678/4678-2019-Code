@@ -50,7 +50,7 @@ public:
 	void setToBrake();
 
 	void initAutoScore();
-	bool autoScore();
+	bool autoScore(bool autoBack = false);
 	
 	//void test(double power);
 

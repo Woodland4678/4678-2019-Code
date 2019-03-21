@@ -467,7 +467,7 @@ void Drivetrain::initAutoScore() {
 	as_mode = 0; 
 }
 
-bool Drivetrain::autoScore() {
+bool Drivetrain::autoScore(bool autoBack) {
 	switch (as_m_case) {
         case  0:
             Robot::manipulatorArm->m_CurrentPosition = 0;
@@ -589,6 +589,8 @@ bool Drivetrain::autoScore() {
             }
             break;
         case 8:
+			if(autoBack)
+				as_distEnd = 50;
             if (goToDistance(-(as_distEnd/10),-(as_distEnd/10), 0.5, 10,10,0.2,0.2)){
                 as_m_case = 0;
                 if(as_mode == 0)
