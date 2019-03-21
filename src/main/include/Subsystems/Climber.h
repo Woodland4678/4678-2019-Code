@@ -52,6 +52,8 @@ public:
 	int m_climbCase = 0;
 	int m_target = 0;
 
+	bool m_autoScore = false;
+
 };
 
 #endif

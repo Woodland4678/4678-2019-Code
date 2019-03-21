@@ -135,6 +135,7 @@ void LineUpToRocket::Execute() {
                 cnt = 0;
                 Robot::drivetrain->setLeftMotor(0);
                 Robot::drivetrain->setRightMotor(0);
+                Robot::climber->m_autoScore = true;
                 if(mode == 0)
                     Robot::manipulatorArm->releaseHatch();
                 else if(mode == 1)
@@ -160,6 +161,7 @@ void LineUpToRocket::Execute() {
             }
             break;
         case 8:
+            Robot::climber->m_autoScore = false;
             if (Robot::drivetrain->goToDistance(-(distEnd/10),-(distEnd/10), 0.5, 10,10,0.2,0.2)){
                 m_case = 10;
                 if(mode == 0)

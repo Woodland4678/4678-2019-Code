@@ -66,6 +66,7 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		straightBackRampUpDistance = 100;
 
 		amountToTurn = -90 + initialGyroValue;
+		secondHatchTurnAmount = 8 + initialGyroValue;
 	} else if (autoSide == 0 && autoMode == 2) { //left Side level 2 auto to cargo ship
 		leftCmStraightBack = -220;
 		rightCmStraightBack = -220;
