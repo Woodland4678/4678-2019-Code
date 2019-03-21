@@ -31,6 +31,11 @@ Climber::Climber() : frc::Subsystem("Climber") {
     stilts->ConfigSelectedFeedbackSensor(FeedbackDevice::QuadEncoder, 0, 0);
     stilts->SetStatusFramePeriod(StatusFrame::Status_1_General_, 10, 0);
 
+    rachetServo.reset(new frc::Servo(1));
+    AddChild("Servo", rachetServo);
+
+    rachetDetection.reset(new frc::DigitalInput(2));
+
 
     int pos = readABSEncoder() % 4096;
     if(pos < 0)
@@ -137,4 +142,27 @@ void Climber::reset() {
 
 void Climber::testMovement(){
     //stilts->Set(ControlMode::Velocity, 0.5);
+}
+
+bool Climber::lock() {
+    rachetServo->Set(1);
+    return true;
+}
+
+bool Climber::unlock() {
+    switch(m_lockCase) {
+        case 0:
+            rachetServo->Set(1);
+            m_lockCase = 1;
+            break;
+        case 1:
+            if(rachetDetection->Get())
+                m_lockCase = 2;
+            break;
+        case 2:
+            stilts->Set(ControlMode::Position, readTalonSRXEncoder() - 200);
+            return true;
+            break;
+    }
+    return false;
 }
