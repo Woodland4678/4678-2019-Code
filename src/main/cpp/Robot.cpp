@@ -64,6 +64,7 @@ void Robot::DisabledPeriodic() {
 }
 
 void Robot::AutonomousInit() {
+	lidar->startLidar();
 	autonomousCommand = chooser.GetSelected();
 	if (autonomousCommand != nullptr)
 		autonomousCommand->Start();
@@ -84,7 +85,7 @@ void Robot::TeleopInit() {
 
 	atshoulder = 119.0;
 	atelbow = -145.0;
-
+	climber->lock();
 	if (autonomousCommand != nullptr)
 		autonomousCommand->Cancel();
 }
@@ -98,7 +99,7 @@ void Robot::TeleopPeriodic() {
 	double JoyY = oi->getdriver()->GetRawAxis(3);
 
     // Deadzone check
-    if (JoyY < 0.05 && JoyY > -0.05) {
+    if (JoyY < 0.06 && JoyY > -0.06) {
         JoyY = 0.0;
     }
 	else {

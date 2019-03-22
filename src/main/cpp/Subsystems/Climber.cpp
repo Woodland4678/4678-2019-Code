@@ -21,7 +21,7 @@ Climber::Climber() : frc::Subsystem("Climber") {
 
     stilts.reset(new WPI_TalonSRX(7));
     stilts->EnableCurrentLimit(false);
-    stilts->ConfigVoltageCompSaturation(12, 0);
+    stilts->ConfigVoltageCompSaturation(12, 0); //12
     stilts->EnableVoltageCompensation(true);
     stilts->SetSensorPhase(true);
     stilts->Config_kP(0, 1, 0);
@@ -71,7 +71,7 @@ void Climber::InitDefaultCommand() {
 
 void Climber::Periodic() {
     // Put code here to be run every loop
-    frc::SmartDashboard::PutNumber("Position Quad ", readTalonSRXEncoder());
+    frc::SmartDashboard::PutNumber("Climb Button", rachetDetection->Get());
     frc::SmartDashboard::PutNumber("Position ABS ", readABSEncoder());
     frc::SmartDashboard::PutNumber("Climber Amps ", stilts->GetOutputCurrent());
     frc::SmartDashboard::PutNumber("Climber Volts ", stilts->GetBusVoltage());
@@ -146,22 +146,32 @@ void Climber::testMovement(){
 
 bool Climber::lock() {
     rachetServo->Set(1);
-    return true;
+    if(rachetDetection->Get())
+        return true;
+    return false;
 }
 
 bool Climber::unlock() {
     switch(m_lockCase) {
         case 0:
-            rachetServo->Set(1);
+            rachetServo->Set(0.7);
             m_lockCase = 1;
+            m_cnt = 0;
             break;
         case 1:
-            if(rachetDetection->Get())
+            m_cnt++;
+            if(m_cnt < 20)
                 m_lockCase = 2;
             break;
         case 2:
             stilts->Set(ControlMode::Position, readTalonSRXEncoder() - 200);
-            return true;
+            m_lockCase = 3;
+            break;
+        case 3:
+            if(!rachetDetection->Get()){
+                m_lockCase = 0;
+                return true;
+            }
             break;
     }
     return false;

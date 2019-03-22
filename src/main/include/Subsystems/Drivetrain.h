@@ -54,6 +54,8 @@ public:
 	
 	//void test(double power);
 
+	double getLeftSpeed();
+
 
 	void joystickDriveCalculator();
 	double const deadRadiusSquared = 0.05*0.05;		// this is the radius of the deadzone squared

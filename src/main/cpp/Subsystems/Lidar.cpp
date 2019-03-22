@@ -1152,7 +1152,7 @@ int Lidar::climbDistance() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool Lidar::findLoadStation() // Search lines to see if we can find something that looks like the loading station.
 	{
-	filterData(false,45,45,50,2000);
+	filterData(false,30,30,50,2000);
 	bool found = false;
 	int state = 0;
 	int prev = 0;
@@ -1213,23 +1213,42 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 						}
 
 					}
-				//calculate the center
-				double ang = (lidFiltered[cor_1].angle + lidFiltered[cor_2].angle) / 2;
-				dist = (lidFiltered[cor_1].dist + lidFiltered[cor_2].dist) / 2;
-				//printf("\nFound: %f | %f", ang, dist);
+				double rad = M_PI * ((double)lidFiltered[cor_1].angle) / 180;
+				int pnt1X = -((((double)lidFiltered[cor_1].dist) * std::sin(rad)));
+				int pnt1Y = ((((double)lidFiltered[cor_1].dist) * std::cos(rad)));
 
-				if(fabs(180 - ang) < fabs(180 - m_ScoringFinal.angle)) {
-					m_ScoringFinal.dist = dist;
-					m_ScoringFinal.angle = ang;
-					found = true;
-				}
+				rad = M_PI * ((double)lidFiltered[cor_2].angle) / 180;
+				int pnt2X = -((((double)lidFiltered[cor_2].dist) * std::sin(rad)));
+				int pnt2Y = ((((double)lidFiltered[cor_2].dist) * std::cos(rad)));
+
+				int totalDist = sqrt((pnt1X - pnt2X)*(pnt1X - pnt2X) + (pnt1Y - pnt2Y)*(pnt1Y - pnt2Y));
+
+				if((totalDist > 150)&&(totalDist < 350))
+					{
+					//calculate the center
+					double ang = (lidFiltered[cor_1].angle + lidFiltered[cor_2].angle) / 2;
+					dist = (lidFiltered[cor_1].dist + lidFiltered[cor_2].dist) / 2;
+					//printf("\nFound: %f | %f", ang, dist);
+
+					if(fabs(180 - ang) < fabs(180 - m_ScoringFinal.angle)) {
+						m_ScoringFinal.dist = dist;
+						m_ScoringFinal.angle = ang;
+						found = true;
+					}
+					}
 				state = 0;
 				}
 				//break;
 			}
 		prev = i;
 		}
-	if(found)
+	if(found) {
+		if(logfile.is_open())
+			{
+			sprintf(buf,"H,%i,%f\n",m_ScoringFinal.dist,m_ScoringFinal.angle);
+			logfile.write(buf,strlen(buf));
+			}
 		LidarViewer::Get()->addPoint(m_ScoringFinal.dist,m_ScoringFinal.angle);
+	}
 	return found;
 	}

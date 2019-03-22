@@ -72,13 +72,13 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		rightCmStraightBack = -220;
 
 		straightBackRampUpDistance = 125;
-		leftArc = -405;
-		rightArc = -360;
+		leftArc = -360;
+		rightArc = -315;
 		amountToTurn = -89 + initialGyroValue;
 		secondHatchAmountToTurn = 8 + initialGyroValue;
 	}
 
-	else if (autoSide == 1 && autoMode == 1) { //Right Side level 1 auto to cargo ship
+	else if (autoSide == 2 && autoMode == 1) { //Right Side level 1 auto to cargo ship
 		leftCmStraightBack = -130;
 		rightCmStraightBack = -130;
 		leftArc = -347;
@@ -86,12 +86,12 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		straightBackRampUpDistance = 70;
 		amountToTurn = 88 + initialGyroValue;
 		secondHatchAmountToTurn = -8 + initialGyroValue;
-	} else if (autoSide == 1 && autoMode == 2) { //right side level 2 auto to cargo ship
+	} else if (autoSide == 2 && autoMode == 2) { //right side level 2 auto to cargo ship
 		leftCmStraightBack = -220;
 		rightCmStraightBack = -220;
 		straightBackRampUpDistance = 125;
-		leftArc = -347;
-		rightArc = -392;
+		leftArc = -320;
+		rightArc = -360;
 		amountToTurn = 88 + initialGyroValue;
 		secondHatchAmountToTurn = -8 + initialGyroValue;
 	} else { //any other mode finish auto mode (not sure if this goes to teleop control or not)
@@ -105,7 +105,7 @@ void AutonomousCommand::Execute() {
 	switch(autoState) {
 		case 0: //gets off the HAB
 		if (!armMovement0) {
-			armMovement0 = Robot::manipulatorArm->moveToXY(5,19,-248,0,20.0);
+			armMovement0 = Robot::manipulatorArm->moveToXY(8,21,-230,0,30);
 		}
 			if (Robot::drivetrain->goToDistance(rightCmStraightBack, leftCmStraightBack,0.35,straightBackRampUpDistance,30,0.15,0.3)) { //-69, //-315, -315 //-435,-435
 				autoState++;
@@ -117,7 +117,7 @@ void AutonomousCommand::Execute() {
 		break;
 		case 1: //arcs to the cargo ship side
 			if (!armMovement0) {
-				armMovement0 = Robot::manipulatorArm->moveToXY(5,19,-248,0,20.0);
+				armMovement0 = Robot::manipulatorArm->moveToXY(8,21,-230,0,30);
 			}
 			if (Robot::drivetrain->goToDistance(rightArc, leftArc,0.75,100,50,0.3,0.4)) {
 				autoState++;
@@ -136,7 +136,7 @@ void AutonomousCommand::Execute() {
 		break;
 		case 3: //gyro turn toward the cargo ship
 			if (!armMovement1) {
-				armMovement1 = Robot::manipulatorArm->moveToXY(25.5,21,-190.0,0,20.0);
+				armMovement1 = Robot::manipulatorArm->moveToXY(25.5,19.0,-182,0,30);
 			}
 			if ((Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn, 0.015,0,0)) && (armMovement1)) {
 				autoState++;
@@ -148,9 +148,12 @@ void AutonomousCommand::Execute() {
 			// if (driverControl()) {
 			// 	autoState++;
 			// }
-			if (Robot::drivetrain->autoScore(true)) {
-				autoState++;
-			}
+
+			done = true;
+			End();
+			// if (Robot::drivetrain->autoScore(true)) {
+			// 	autoState++;
+			// }
 		break;
 		case 5:
 			if (getSecondHatch()) {
@@ -203,7 +206,7 @@ bool AutonomousCommand::getSecondHatch() {
 		// break;
 		case 0:
 			if (!armMovement2) {
-				armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
+				armMovement2 = Robot::manipulatorArm->moveToXY(7.0,29,-203.0,0,30);
 			} else {
 				autoStateSecondHatch++;
 			}

@@ -37,12 +37,11 @@ void LineUpToRocket::Execute() {
         done = true;
         return;
         }
-    if(Robot::oi->getdriver()->GetRawButton(2))
-        done = Robot::climber->lock();
-    else
-        done = Robot::climber->unlock();
-    //done = Robot::drivetrain->autoScore();
-
+    //if(Robot::oi->getdriver()->GetRawButton(2))
+    //    done = Robot::climber->lock();
+    //else
+    //    done = Robot::climber->unlock();
+    done = Robot::drivetrain->autoScore();
 }
 
 // Make this return true when this Command no longer needs to run execute()

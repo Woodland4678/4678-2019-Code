@@ -49,6 +49,7 @@ private:
 	bool done6 = false;
 
 	int m_ClimbCase = 0;
+	int m_timer = 0;
 	int dist;
 
 };

@@ -40,20 +40,23 @@ void Drivetrain::Periodic() {
 	frc::SmartDashboard::PutNumber("GYRO: ", Robot::ahrs->GetAngle());
 	frc::SmartDashboard::PutNumber("Right Distance ", (Robot::drivetrain->getRightEncoder() / 0.2183));
     frc::SmartDashboard::PutNumber("Left Distance ", (Robot::drivetrain->getLeftEncoder() / 0.2183));
+    frc::SmartDashboard::PutNumber("Left Speed ", (Robot::drivetrain->getLeftSpeed()));
+
+    
 
 }
 
 void Drivetrain::configMotors() {
     leftSlaveOne->Follow(*leftMaster);
-    leftSlaveOne->SetSmartCurrentLimit(80,80,80);
+    leftSlaveOne->SetSmartCurrentLimit(40,40,40);
     leftSlaveTwo->Follow(*leftMaster);
-    leftSlaveTwo->SetSmartCurrentLimit(80,80,80);
+    leftSlaveTwo->SetSmartCurrentLimit(40,40,40);
     rightSlaveOne->Follow(*rightMaster);
-    rightSlaveOne->SetSmartCurrentLimit(80,80,80);
+    rightSlaveOne->SetSmartCurrentLimit(40,40,40);
     rightSlaveTwo->Follow(*rightMaster);
-    rightSlaveTwo->SetSmartCurrentLimit(80,80,80);
-    rightMaster->SetSmartCurrentLimit(80,80,80);
-    leftMaster->SetSmartCurrentLimit(80,80,80);
+    rightSlaveTwo->SetSmartCurrentLimit(40,40,40);
+    rightMaster->SetSmartCurrentLimit(40,40,40);
+    leftMaster->SetSmartCurrentLimit(40,40,40);
 }
 
 void Drivetrain::setToCoast() { //set at the end of auto as this is the setup for driving
@@ -472,7 +475,7 @@ bool Drivetrain::autoScore(bool autoBack) {
         case  0:
             Robot::manipulatorArm->m_CurrentPosition = 0;
             if(Robot::manipulatorArm->ifHatch()){
-                as_move1 = Robot::manipulatorArm->moveToXY(25.5,19.0,-190,0,20.0); //Hatch scoring position
+                as_move1 = Robot::manipulatorArm->moveToXY(25.5,21.0,-182.0,0,20.0); //Hatch scoring position
                 as_mode = 0;
             }
             else if (Robot::manipulatorArm->ifCargo()){
@@ -482,7 +485,7 @@ bool Drivetrain::autoScore(bool autoBack) {
             else 
                 {
                 if(Robot::manipulatorArm->isHatchMode()){
-                    as_move1 = Robot::manipulatorArm->moveToXY(28.5,20.0,-190.0,0,20.0); //Hatch Pickup
+                    as_move1 = Robot::manipulatorArm->moveToXY(25.5,21.0,-182.0,0,20.0); //Hatch Pickup
                     as_mode = 2;
                 }
                 else
@@ -553,8 +556,8 @@ bool Drivetrain::autoScore(bool autoBack) {
             as_distance = Robot::lidar->m_ScoringFinal.dist;
             //As we drive to this point the angle will change to make up for that turn the waist
             if((as_angle > -67)&&(as_angle < 67)){
-                if(as_mode == 0)
-                    Robot::manipulatorArm->moveWaist(as_angle);
+                if((as_mode == 0)||(as_mode == 2))
+                    Robot::manipulatorArm->moveWaist(as_angle - 4);
                 else
                     Robot::manipulatorArm->moveWaist(as_angle + 3);
             }
@@ -591,15 +594,19 @@ bool Drivetrain::autoScore(bool autoBack) {
         case 8:
 			if(autoBack)
 				as_distEnd = 50;
-            if (goToDistance(-(as_distEnd/10),-(as_distEnd/10), 0.5, 10,10,0.2,0.2)){
+            if (goToDistance(-(as_distEnd/10),-(as_distEnd/10), 0.5, 10,10,0.25,0.25)){
                 as_m_case = 0;
-                if(as_mode == 0)
-                    Robot::manipulatorArm->grabHatch();
-                else if(as_mode == 1)
-                    Robot::manipulatorArm->intakeWheelsSpin(0);
+                Robot::manipulatorArm->grabHatch();
+                Robot::manipulatorArm->intakeWheelsSpin(0);
 				return true;
             }
             break;
     }
 	return false;
 }
+double Drivetrain::getLeftSpeed() {
+    return leftMaster->GetEncoder().GetVelocity();
+}
+// double drivetrain::getLeftSpeed() {
+//     return leftMaster->GetVelocity();
+// }
