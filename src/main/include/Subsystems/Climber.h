@@ -38,6 +38,7 @@ private:
 	int m_cyclecnt = 0;
 
 	int m_lockCase = 0;
+	int m_cnt = 0;
 public:
 	Climber();
 	void InitDefaultCommand() override;

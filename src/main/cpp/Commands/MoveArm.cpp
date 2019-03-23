@@ -79,13 +79,13 @@ void MoveArm::Execute() {
 		case 1: //Carry
 			wristAbsAngle = -10.0; // This is for cargo.
 			if(Robot::manipulatorArm->isHatchMode())
-				wristAbsAngle = -190.0;
-			done = Robot::manipulatorArm->moveToXY(7.0,24.5,wristAbsAngle,0,ARMSPEED); // Move to X,Y co-ords
+				wristAbsAngle = -203.0;
+			done = Robot::manipulatorArm->moveToXY(7.0,29,wristAbsAngle,0,ARMSPEED); // Move to X,Y co-ords
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 2: //Rocket Low, Cargo ship place hatch.
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(25.5,19.5,-190.0,0,ARMSPEED); //25.5,17,-190.0,0,20.0
+				done = Robot::manipulatorArm->moveToXY(25.5,21.0,-182.0,0,ARMSPEED); //25.5,17,-190.0,0,20.0  25.0,21.0,-182.0
 			else	//This is the same as the carry position
 				done = Robot::manipulatorArm->moveToXY(7.0,26.0,-10.0,0,ARMSPEED); //25.5,27.5,10.0,0,20.0
 			//done = Robot::manipulatorArm->moveToXY(25.5,19,20.0);
@@ -93,17 +93,17 @@ void MoveArm::Execute() {
 			break;
 		case 3: //Rocket Medium
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(12.0,46.0,-188,0,ARMSPEED); //16.0,46.0,-190,0,20.0
+				done = Robot::manipulatorArm->moveToXY(12.0,48.0,-182,0,ARMSPEED); //16.0,46.0,-190,0,20.0
 			else
-				done = Robot::manipulatorArm->moveToXY(6.0,51.0,-1.0,0,ARMSPEED); //16.0,55.0,10.0,0,20.0
+				done = Robot::manipulatorArm->moveToXY(6.0,55.5,-1.0,0,ARMSPEED); //16.0,55.0,10.0,0,20.0
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 4: //Rocket High
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(12.0,75.0,-183,0,ARMSPEED); //10.0,74.0,-190,0,20.0
+				done = Robot::manipulatorArm->moveToXY(6.0,75.0,-174,0,ARMSPEED); //10.0,74.0,-190,0,20.0
 			else
 				{
-				done = Robot::manipulatorArm->moveToXY(10.0,78.0,17.5,0,ARMSPEED); //16.0,75.0,40.0,0,20.0
+				done = Robot::manipulatorArm->moveToXY(4,78.0,20.5,0,ARMSPEED); //16.0,75.0,40.0,0,20.0
 				}
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
@@ -115,7 +115,7 @@ void MoveArm::Execute() {
 				// Set AbsTargetAngle to -28.41 (Rel is 38.83)
 				if (!done2) // Stay high to ensure we don't high robot.
 					{
-					done2 = Robot::manipulatorArm->moveToXY(25.0,20.5,-34,0,ARMSPEED); 
+					done2 = Robot::manipulatorArm->moveToXY(23.0,25.0,-34,0,ARMSPEED); 
 					if (done2)
 						{
 						Robot::manipulatorArm->setInCargoPosition();
@@ -143,7 +143,7 @@ void MoveArm::Execute() {
 				else
 					{
 					Robot::manipulatorArm->setInHatchPosition();
-					done = Robot::manipulatorArm->moveToXY(25.0,18.0,-191.0,0,ARMSPEED);
+					done = Robot::manipulatorArm->moveToXY(25.0,21.0,-182.0,0,ARMSPEED); //25	18   -191
 					}
 				Robot::manipulatorArm->m_CurrentPosition = 5;
 			}
@@ -173,9 +173,9 @@ void MoveArm::Execute() {
 			break;
 		case 10: //Cargo Ship
 			if(Robot::manipulatorArm->isHatchMode())
-				done = Robot::manipulatorArm->moveToXY(25.5,19.0,-190,0,ARMSPEED);
+				done = Robot::manipulatorArm->moveToXY(25.5,19.0,-182,0,ARMSPEED);
 			else
-				done = Robot::manipulatorArm->moveToXY(18.0,46.0,-33,0,ARMSPEED); //18.0,42.0,-10,0,20.0
+				done = Robot::manipulatorArm->moveToXY(18.0,48.0,-33,0,ARMSPEED); //18.0,42.0,-10,0,20.0
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 11:
@@ -204,13 +204,13 @@ void MoveArm::Execute() {
 			break;
 		case 12: //
 			if(!done2)
-				done2 = Robot::manipulatorArm->moveToXY(5,35,-190,0,ARMSPEED);
+				done2 = Robot::manipulatorArm->moveToXY(7,35,-190,0,ARMSPEED);
 			else {
 				if(!done3)
-					done3 = Robot::manipulatorArm->moveToXY(5,35,-248,0,ARMSPEED);
+					done3 = Robot::manipulatorArm->moveToXY(7,35,-248,0,ARMSPEED);
 				else {
 					if(!done)
-						done = Robot::manipulatorArm->moveToXY(5,19,-248,0,ARMSPEED);
+						done = Robot::manipulatorArm->moveToXY(7,19,-248,0,ARMSPEED);
 				}
 			}
 			break;

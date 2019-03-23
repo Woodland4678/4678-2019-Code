@@ -1152,7 +1152,7 @@ int Lidar::climbDistance() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool Lidar::findLoadStation() // Search lines to see if we can find something that looks like the loading station.
 	{
-	filterData(false,45,45,50,2000);
+	filterData(false,30,30,50,2000);
 	bool found = false;
 	int state = 0;
 	int prev = 0;
@@ -1213,7 +1213,6 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 						}
 
 					}
-				
 				double rad = M_PI * ((double)lidFiltered[cor_1].angle) / 180;
 				int pnt1X = -((((double)lidFiltered[cor_1].dist) * std::sin(rad)));
 				int pnt1Y = ((((double)lidFiltered[cor_1].dist) * std::cos(rad)));
@@ -1224,7 +1223,7 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 
 				int totalDist = sqrt((pnt1X - pnt2X)*(pnt1X - pnt2X) + (pnt1Y - pnt2Y)*(pnt1Y - pnt2Y));
 
-				if((totalDist > 100)&&(totalDist) < 200))
+				if((totalDist > 150)&&(totalDist < 350))
 					{
 					//calculate the center
 					double ang = (lidFiltered[cor_1].angle + lidFiltered[cor_2].angle) / 2;
@@ -1243,8 +1242,14 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 			}
 		prev = i;
 		}
-	if(found)
+	if(found) {
+		if(logfile.is_open())
+			{
+			sprintf(buf,"H,%i,%f\n",m_ScoringFinal.dist,m_ScoringFinal.angle);
+			logfile.write(buf,strlen(buf));
+			}
 		LidarViewer::Get()->addPoint(m_ScoringFinal.dist,m_ScoringFinal.angle);
+	}
 	return found;
 	}
 

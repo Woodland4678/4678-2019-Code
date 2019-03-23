@@ -49,6 +49,11 @@ void Climb::Execute() {
 
     //Determine height
     if(m_climbLevel < 2){
+        /*m_ClimbCase = 0;
+        if(Robot::oi->getdriver()->GetRawButton(9))
+            m_climbLevel = 3;
+        else
+            m_climbLevel = 4;*/
         switch (m_ClimbCase) {
             case 0:
                 Robot::lidar->readLidar();
@@ -71,20 +76,21 @@ void Climb::Execute() {
         }
     }
     else {
+        m_timer++;
         switch (m_ClimbCase) {
             case 0: //Move arm up above the platform
                 if(m_climbLevel == 3)
-                    done2 = Robot::manipulatorArm->moveToXY(25.0,41.0,-90.0,0,20.0);
+                    done2 = Robot::manipulatorArm->moveToXY(25.0,44.0,-90.0,0,20.0); //41
                 else
-                    done2 = Robot::manipulatorArm->moveToXY(25.0,27.0,-90.0,0,20.0);
+                    done2 = Robot::manipulatorArm->moveToXY(25.0,30.0,-90.0,0,20.0); //27
                 if(done2)
                     m_ClimbCase = 1;
                 break;
             case 1: //Move arm down on the platform
                 if(m_climbLevel == 3)
-                    done2 = Robot::manipulatorArm->moveToXY(33.0,27.0,-93.0,0,20.0);
+                    done2 = Robot::manipulatorArm->moveToXY(33.0,30.0,-93.0,0,20.0); //27
                 else
-                    done2 = Robot::manipulatorArm->moveToXY(28.0,14.0,-93.0,0,20.0); //28, 14
+                    done2 = Robot::manipulatorArm->moveToXY(33.0,17.0,-93.0,0,20.0); //14, 14
                 if(done2){
                     m_ClimbCase = 2;
                     done2 = false;
@@ -94,7 +100,7 @@ void Climb::Execute() {
                 break;
             case 2://Move the robot up
                 if(!done2)
-                    done2 = Robot::manipulatorArm->moveToXY(33.0,7.0,-93.0,0,18.0);
+                    done2 = Robot::manipulatorArm->moveToXY(33.0,10.0,-93.0,0,18.0);//7
                 if(!done3){
                     if(m_climbLevel == 3)
                         done3 = Robot::climber->moveTo(550,-29700);
@@ -103,6 +109,7 @@ void Climb::Execute() {
                 }
                 if(done2 && done3)
                     m_ClimbCase = 3;
+                m_timer = 0;
                 break;
             case 3://Move forward using intakes
                 //Use lidar to detect how far away we are
@@ -115,7 +122,7 @@ void Climb::Execute() {
                 break;
             case 5:
                 dist = Robot::lidar->climbDistance();
-                printf("Dist = %i",dist);
+                printf("Dist = %i | Timer = %i\n",dist,m_timer);
                 m_ClimbCase = 3;
                 if(m_climbLevel == 4){
                     if(dist < 1500){ //Time to spin up wheel
@@ -125,20 +132,25 @@ void Climb::Execute() {
                     }
                     if(dist > 720) //Spin intakes
                         Robot::manipulatorArm->intakeWheelsSpin(-1);
-                    if(dist < 650)
-                        m_ClimbCase = 6;
+                    if((dist < 650)&&(m_timer > 100))
+                        m_ClimbCase = 11;
                 }
                 else{
                     if(dist < 1500){ //Time to spin up wheel
-                        Robot::drivetrain->setRightMotor(0.2);
-                        Robot::drivetrain->setLeftMotor(0.2);
+                        Robot::drivetrain->setRightMotor(0.1);
+                        Robot::drivetrain->setLeftMotor(0.1);
                         //Robot::manipulatorArm->intakeWheelsSpin(0);
                     }
                     if(dist > 1000) //Spin intakes
                         Robot::manipulatorArm->intakeWheelsSpin(-1);
-                    if(dist < 900)
-                        m_ClimbCase = 6;
+                    if((dist < 900)&&(m_timer > 100))
+                        m_ClimbCase = 11;
                 }
+                
+                break;
+            case 11:
+                if(Robot::climber->unlock())
+                    m_ClimbCase = 6;
                 break;
             case 6:
                 //The middle wheel is now on
@@ -150,9 +162,9 @@ void Climb::Execute() {
                 break;
             case 7:
                 if(!done5)
-                    done5 = Robot::manipulatorArm->moveToXY(33.0,25,-93.0,0,20.0);
+                    done5 = Robot::manipulatorArm->moveToXY(33.0,27,-93.0,0,20.0);//24
                 else
-                    done6 = Robot::manipulatorArm->moveToXY(20.0,25,-93.0,0,10.0);
+                    done6 = Robot::manipulatorArm->moveToXY(20.0,27,-93.0,0,10.0);//24
                 if(done6)
                     m_ClimbCase = 8;
                 break;
