@@ -1213,16 +1213,30 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 						}
 
 					}
-				//calculate the center
-				double ang = (lidFiltered[cor_1].angle + lidFiltered[cor_2].angle) / 2;
-				dist = (lidFiltered[cor_1].dist + lidFiltered[cor_2].dist) / 2;
-				//printf("\nFound: %f | %f", ang, dist);
+				
+				double rad = M_PI * ((double)lidFiltered[cor_1].angle) / 180;
+				int pnt1X = -((((double)lidFiltered[cor_1].dist) * std::sin(rad)));
+				int pnt1Y = ((((double)lidFiltered[cor_1].dist) * std::cos(rad)));
 
-				if(fabs(180 - ang) < fabs(180 - m_ScoringFinal.angle)) {
-					m_ScoringFinal.dist = dist;
-					m_ScoringFinal.angle = ang;
-					found = true;
-				}
+				rad = M_PI * ((double)lidFiltered[cor_2].angle) / 180;
+				int pnt2X = -((((double)lidFiltered[cor_2].dist) * std::sin(rad)));
+				int pnt2Y = ((((double)lidFiltered[cor_2].dist) * std::cos(rad)));
+
+				int totalDist = sqrt((pnt1X - pnt2X)*(pnt1X - pnt2X) + (pnt1Y - pnt2Y)*(pnt1Y - pnt2Y));
+
+				if((totalDist > 100)&&(totalDist) < 200))
+					{
+					//calculate the center
+					double ang = (lidFiltered[cor_1].angle + lidFiltered[cor_2].angle) / 2;
+					dist = (lidFiltered[cor_1].dist + lidFiltered[cor_2].dist) / 2;
+					//printf("\nFound: %f | %f", ang, dist);
+
+					if(fabs(180 - ang) < fabs(180 - m_ScoringFinal.angle)) {
+						m_ScoringFinal.dist = dist;
+						m_ScoringFinal.angle = ang;
+						found = true;
+					}
+					}
 				state = 0;
 				}
 				//break;
@@ -1232,4 +1246,56 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 	if(found)
 		LidarViewer::Get()->addPoint(m_ScoringFinal.dist,m_ScoringFinal.angle);
 	return found;
+	}
+
+double Lidar::run_regression(int startIndex, int endIndex){
+		double meanX = 0.0;
+		double sumX = 0.0;
+		double sumX_sq = 0.0;
+		double Sxx = 0.0;
+
+		double meanY = 0.0;
+		double sumY = 0.0;
+		double sumY_sq = 0.0;
+		double Syy = 0.0;
+		
+		double sumXY = 0.0;
+		double Sxy = 0.0;
+
+		double rad = 0.0;
+		double pntX = 0.0;
+		double pntY = 0.0;
+
+		double numPoints = 0;
+		
+	    for (int i=startIndex;i<endIndex+1;i++){
+			//Convert to x,y
+			rad = M_PI * ((double)lidFiltered[i].angle) / 180;
+			pntX = -((((double)lidFiltered[i].dist) * std::sin(rad)));
+			pntY = ((((double)lidFiltered[i].dist) * std::cos(rad)));
+			
+	    	sumX = sumX + pntX;
+	    	sumX_sq = sumX_sq + (pntX * pntX);
+		    
+	    	sumY = sumY + pntY;
+	    	sumY_sq = sumY_sq + (pntY * pntY);
+	    	
+	    	sumXY = sumXY + pntX * pntY;
+
+			numPoints++;
+	    }
+	    
+	    meanX = sumX / numPoints;
+	    Sxx = (sumX_sq / numPoints) - (meanX * meanX);
+	    
+	    meanY = sumY / numPoints;
+	    Syy = (sumY_sq / numPoints) - (meanY * meanY);
+	    
+	    Sxy = (sumXY / numPoints) - (meanX * meanY);
+	    
+	    r_B = Sxy / Sxx;
+	    r_A = meanY - (r_B * meanX); 
+	    r_r = Sxy / (sqrt(Sxx)*sqrt(Syy));
+
+		return r_r;
 	}
