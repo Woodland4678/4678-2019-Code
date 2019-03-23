@@ -475,7 +475,7 @@ bool Drivetrain::autoScore(bool autoBack) {
         case  0:
             Robot::manipulatorArm->m_CurrentPosition = 0;
             if(Robot::manipulatorArm->ifHatch()){
-                as_move1 = Robot::manipulatorArm->moveToXY(25.5,21.0,-182.0,0,20.0); //Hatch scoring position
+                as_move1 = Robot::manipulatorArm->moveToXY(25.5,24.0,-182.0,0,20.0); //Hatch scoring position
                 as_mode = 0;
             }
             else if (Robot::manipulatorArm->ifCargo()){
@@ -485,7 +485,7 @@ bool Drivetrain::autoScore(bool autoBack) {
             else 
                 {
                 if(Robot::manipulatorArm->isHatchMode()){
-                    as_move1 = Robot::manipulatorArm->moveToXY(25.5,21.0,-182.0,0,20.0); //Hatch Pickup
+                    as_move1 = Robot::manipulatorArm->moveToXY(25.5,23.0,-182.0,0,20.0); //Hatch Pickup
                     as_mode = 2;
                 }
                 else
@@ -501,8 +501,19 @@ bool Drivetrain::autoScore(bool autoBack) {
                     Robot::manipulatorArm->m_CurrentPosition = 5;
                     }
                 }
-            if(as_move1)
+            if(as_move1){
                 as_m_case = 1;
+				as_initGyro = Robot::ahrs->GetAngle();
+				
+				as_initGyro = 0;
+				as_currentGyro = 0;
+				as_PrevGyro = 0;
+				as_PrevAngle = as_angle;
+				as_PrevDistance = as_distance;
+				as_PrevGyro = as_currentGyro;
+
+				as_currentGyro = as_initGyro;
+			}
             break;
         case 1:
             Robot::lidar->readLidar();
@@ -527,6 +538,26 @@ bool Drivetrain::autoScore(bool autoBack) {
             {
             as_angle = Robot::lidar->m_ScoringFinal.angle - 180;
             as_distance = Robot::lidar->m_ScoringFinal.dist;
+			as_currentGyro = Robot::ahrs->GetAngle();
+			if(as_PrevDistance != 0){
+				double diffAng = fabs(as_angle - as_PrevAngle);
+				double diffGyro = fabs(as_currentGyro - as_PrevGyro);
+				double diff = fabs(diffAng - diffGyro);
+				printf("\n%f | %f | %f",diffAng, diffGyro, diff);
+				if(diff > 10) {
+					if(as_distance > as_PrevDistance) {
+						//if(fabs(as_angle-180) > fabs(as_PrevAngle-180)) {
+					
+						//Bad target - too far off
+						as_m_case = 1;
+						break;
+						//}
+					}
+				}
+			}
+			as_PrevAngle = as_angle;
+			as_PrevDistance = as_distance;
+			as_PrevGyro = as_currentGyro;
             //printf("\n%f | %f",angle,distance);
             if((GyroTurn(0, as_angle, 0.008, 0, 0))||(fabs(as_angle) < 5))
                 as_m_case = 5;
@@ -534,6 +565,7 @@ bool Drivetrain::autoScore(bool autoBack) {
                 as_m_case = 1;
                 
             }
+			
             break;
         case 5:
             {
@@ -542,9 +574,9 @@ bool Drivetrain::autoScore(bool autoBack) {
             as_distWaist = as_distance + 26.6;
             //Now we need to take into account the end effect is on the arm
             if(as_mode == 1)
-                as_distEnd = as_distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) + 300;
+                as_distEnd = as_distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) + 100;
             else
-                as_distEnd = as_distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) - 250;
+                as_distEnd = as_distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) - 350;
             //printf("\n%f | %f | %f | %f",distEnd, (Robot::manipulatorArm->getEndEffectorX() * 25.4), distWaist, distance);
             //Bow we can move forward
             as_m_SubCase = 1;
@@ -557,12 +589,12 @@ bool Drivetrain::autoScore(bool autoBack) {
             //As we drive to this point the angle will change to make up for that turn the waist
             if((as_angle > -67)&&(as_angle < 67)){
                 if((as_mode == 0)||(as_mode == 2))
-                    Robot::manipulatorArm->moveWaist(as_angle - 4);
+                    Robot::manipulatorArm->moveWaist(as_angle - 2);
                 else
                     Robot::manipulatorArm->moveWaist(as_angle + 3);
             }
 
-            if (goToDistance(as_distEnd/10,as_distEnd/10, 0.3, 20,10,0.2,0.2)){
+            if (goToDistance(as_distEnd/10,as_distEnd/10, 0.25, 20,15,0.2,0.1)){
                 as_m_case = 7;
                 as_cnt = 0;
                 setLeftMotor(0);

@@ -30,26 +30,26 @@ void IntakeControl::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void IntakeControl::Execute() {
-    double JoyY(Robot::oi->getdriver()->GetRawAxis(3));
+    // double JoyY(Robot::oi->getdriver()->GetRawAxis(3));
 
-    // Deadzone check
-    if (JoyY < 0.05 && JoyY > -0.05) {
-        JoyY = 0.0;
-    }
+    // // Deadzone check
+    // if (JoyY < 0.05 && JoyY > -0.05) {
+    //     JoyY = 0.0;
+    // }
 
-    // If direction is pull-in, set indicator that cargo claw is holding cargo.  This
-    // is really only relevant in the floor pick up and human station positions.
-    // setting a bool in ManipulatorArm to track this.
-    if ((Robot::manipulatorArm->getInCargoPosition()) && (JoyY > 0.01))
-        Robot::manipulatorArm->setIntakeMode(2); // Mode 2, we have cargo.
-    if (JoyY <-0.01) // Cargo ejected
-        Robot::manipulatorArm->setIntakeMode(0); // Mode 0, we just spit out the cargo.
+    // // If direction is pull-in, set indicator that cargo claw is holding cargo.  This
+    // // is really only relevant in the floor pick up and human station positions.
+    // // setting a bool in ManipulatorArm to track this.
+    // if ((Robot::manipulatorArm->getInCargoPosition()) && (JoyY > 0.01))
+    //     Robot::manipulatorArm->setIntakeMode(2); // Mode 2, we have cargo.
+    // if (JoyY <-0.01) // Cargo ejected
+    //     Robot::manipulatorArm->setIntakeMode(0); // Mode 0, we just spit out the cargo.
 
 
-    // If direction is push-out, set indicator that cargo claw is no longer holding cargo.
-    Robot::manipulatorArm->intakeWheelsSpin(-JoyY);
+    // // If direction is push-out, set indicator that cargo claw is no longer holding cargo.
+    // Robot::manipulatorArm->intakeWheelsSpin(-JoyY);
 
-    m_finished = !Robot::oi->getdriver()->GetRawButton(6);
+    // m_finished = !Robot::oi->getdriver()->GetRawButton(6);
 
 	// frc::SmartDashboard::PutNumber("Button Pressed = ", m_finished);
     // frc::SmartDashboard::PutNumber("JoyY = ", JoyY);
@@ -57,7 +57,7 @@ void IntakeControl::Execute() {
 
 // Make this return true when this Command no longer needs to run execute()
 bool IntakeControl::IsFinished() {
-    return m_finished;
+    return true;
 }
 
 // Called once after isFinished returns true

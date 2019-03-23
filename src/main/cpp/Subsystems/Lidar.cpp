@@ -1225,12 +1225,23 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 
 				if((totalDist > 150)&&(totalDist < 350))
 					{
+					//frc::SmartDashboard::PutNumber("r_Back",run_regression(cor_1, cor_2-1));
+					//frc::SmartDashboard::PutNumber("r_Side1",run_regression(cor_1, (cor_1-10)));
+					//frc::SmartDashboard::PutNumber("r_Side2",run_regression(cor_2+1, (cor_2+10)));
+
+					//lines[0].start.x = pnt1X;
+					//lines[0].start.y = pnt1Y;
+					//lines[0].end.x = pnt2X;
+					//lines[0].end.y = pnt2Y;
+
+					//LidarViewer::Get()->setLines(0,lines); //Note: Function adds 1 to the number provided
+
 					//calculate the center
 					double ang = (lidFiltered[cor_1].angle + lidFiltered[cor_2].angle) / 2;
 					dist = (lidFiltered[cor_1].dist + lidFiltered[cor_2].dist) / 2;
 					//printf("\nFound: %f | %f", ang, dist);
 
-					if(fabs(180 - ang) < fabs(180 - m_ScoringFinal.angle)) {
+					if((fabs(180 - ang) < fabs(180 - m_ScoringFinal.angle))||(dist < m_ScoringFinal.dist)) {
 						m_ScoringFinal.dist = dist;
 						m_ScoringFinal.angle = ang;
 						found = true;

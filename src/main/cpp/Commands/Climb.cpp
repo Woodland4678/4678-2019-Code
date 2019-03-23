@@ -132,7 +132,7 @@ void Climb::Execute() {
                     }
                     if(dist > 720) //Spin intakes
                         Robot::manipulatorArm->intakeWheelsSpin(-1);
-                    if((dist < 650)&&(m_timer > 100))
+                    if((dist < 650)&&(m_timer > 125))
                         m_ClimbCase = 11;
                 }
                 else{
@@ -143,7 +143,7 @@ void Climb::Execute() {
                     }
                     if(dist > 1000) //Spin intakes
                         Robot::manipulatorArm->intakeWheelsSpin(-1);
-                    if((dist < 900)&&(m_timer > 100))
+                    if((dist < 900)&&(m_timer > 125))
                         m_ClimbCase = 11;
                 }
                 

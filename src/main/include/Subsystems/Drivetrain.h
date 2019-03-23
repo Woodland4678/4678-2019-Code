@@ -93,6 +93,11 @@ public:
 	double as_distance = 0;
 	double as_distEnd = 0;
 	double as_distWaist = 0;
+	double as_PrevAngle = 0;
+	double as_PrevDistance = 0;
+	double as_initGyro = 0;
+	double as_currentGyro = 0;
+	double as_PrevGyro = 0;
 };
 
 #endif
