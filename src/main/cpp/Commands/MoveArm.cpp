@@ -125,7 +125,7 @@ void MoveArm::Execute() {
 					}
 				else
 					{
-					done = Robot::manipulatorArm->moveToXY(25.0,15,-53.41,0,ARMSPEED);
+					done = Robot::manipulatorArm->moveToXY(25.0,16.5,-53.41,0,ARMSPEED);
 					if (done)
 						{
 						Robot::manipulatorArm->setInCargoPosition();
