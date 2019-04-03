@@ -659,7 +659,7 @@ void Lidar::FindLines(){
 			//	line then this current point must be and outlier
 			for(m=n+1;m<(OUTLIERCHECK + n + 1);m++)
 				{
-				if(m > xyCount)
+				if(m >= xyCount)
 					{
 					newline = false;
 					break;

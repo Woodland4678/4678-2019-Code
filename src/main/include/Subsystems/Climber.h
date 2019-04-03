@@ -61,7 +61,8 @@ public:
 	bool m_Climbing = false;
 	int m_climbCase = 0;
 	int m_target = 0;
-
+	
+	bool m_climbed = false;
 	bool m_autoScore = false;
 
 };
