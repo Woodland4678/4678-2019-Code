@@ -78,6 +78,7 @@ void LidarViewer::CameraStreamThread() {
     m_numLidarPts = 0;
     m_numCartPts = 0;
     m_numLines  = 0;
+    m_numScoring = 0;
 
     const double now = frc::Timer::GetFPGATimestamp();
 
@@ -181,7 +182,7 @@ void LidarViewer::CameraStreamThread() {
       const int x = centerX + m_scoring[i].x * zoom - 1;
       const int y = centerY + (m_scoring[i].y) * zoom - 1;
       if (x <= cameraWidth && x >= 0 && y <= cameraHeight && y >= 0) {
-        cv::rectangle(frame, cv::Rect(x, y, 5, 5), blue, 1);
+        cv::rectangle(frame, cv::Rect(x, y, 5, 5), green, 1);
       }
     }
 
@@ -219,14 +220,24 @@ void  LidarViewer::setPoints(int numPoints, lidattp* lidarPts){
   //printf("LidarViewer::setPoints, numPoints =%d\n", numPoints);
 }
 
-void  LidarViewer::addPoint(double x, double y){
+void  LidarViewer::addPoint(double dist, double angle){
   if (m_numScoring >= 6)
     m_numScoring = 0;
 
-  double rad = M_PI * (y) / 180;
+  double rad = M_PI * (angle) / 180;
  
-	m_scoring[m_numScoring].x = -(((x) * std::sin(rad)));
-	m_scoring[m_numScoring].y = (((x) * std::cos(rad)));
+	m_scoring[m_numScoring].x = -(((dist) * std::sin(rad)));
+	m_scoring[m_numScoring].y = (((dist) * std::cos(rad)));
+
+  m_numScoring++;
+}
+
+void LidarViewer::addPointXY(int x, int y) {
+  if (m_numScoring >= 1024)
+    m_numScoring = 0;
+ 
+	m_scoring[m_numScoring].x = y;
+	m_scoring[m_numScoring].y = -x;
 
   m_numScoring++;
 }

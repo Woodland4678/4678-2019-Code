@@ -32,16 +32,19 @@ void LineUpToRocket::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToRocket::Execute() {
-    if((!Robot::oi->getdriver()->GetRawButton(2))&&(!Robot::oi->getdriver()->GetRawButton(3))&&(!Robot::oi->getdriver()->GetRawButton(4)))
+    if((Robot::oi->getdriver()->GetRawButton(3)))
         {
         done = true;
         return;
         }
-    //if(Robot::oi->getdriver()->GetRawButton(2))
-    //    done = Robot::climber->lock();
+    
+    if(Robot::oi->getdriver()->GetRawButton(2)){
+        done = Robot::drivetrain->autoScore();
+    }
+   // done = Robot::drivetrain->testPaths();
     //else
     //    done = Robot::climber->unlock();
-    done = Robot::drivetrain->autoScore();
+    
 }
 
 // Make this return true when this Command no longer needs to run execute()
@@ -51,11 +54,12 @@ bool LineUpToRocket::IsFinished() {
 
 // Called once after isFinished returns true
 void LineUpToRocket::End() {
-
+    Robot::manipulatorArm->grabHatch();
+    Robot::manipulatorArm->intakeWheelsSpin(0);
 }
 
 // Called when another command which requires one or more of the same
 // subsystems is scheduled to run
 void LineUpToRocket::Interrupted() {
-
+    
 }

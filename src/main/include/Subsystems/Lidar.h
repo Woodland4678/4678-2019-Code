@@ -16,8 +16,8 @@
 #include "frc/commands/Subsystem.h"
 #include "frc/WPILib.h"
 
-#define MAXANGLERANGE	45
-#define MINANGLERANGE	45
+#define MAXANGLERANGE	30
+#define MINANGLERANGE	30
 #define OUTLIERCHECK	2
 
 
@@ -53,6 +53,18 @@ typedef struct Line_T {
 	tpPoint end;
 	double angle;
 	int length;
+	double dist200;	// Distance to robot lidar (0,0) to mid point of the line -- not calculated in FindLines
+	double slope1; // Slopes using the first and last 3 end points 
+	double slope2; // this will allow us to ignore a slope that is not consistent with
+	double slope3; // the other 2, allowing for fairly accurate determination of angles.
+	int lidatcnt; // How many points make up this line, used for validation (lots of points -> more likely to be valid)
+	tpPoint fieldst; // Field co-ords (if this line qualifies for the calculation -- length >= 150mm)
+	tpPoint fieldnd; // fieldst.x and fieldst.y are both set to 0 if this line doesn't qualify.
+	double lidarAnglest; // Lidar angular reading of start point
+	double lidarAnglend; // Lidar angular reading of end point
+	int lidarDistst; // Lidar distance to start point
+	int lidarDistnd; // Lidar distance to end point.	
+	double fieldangle; // Angle on the field map
 	} tpLine;
 
 typedef struct Cube_T {
@@ -188,8 +200,16 @@ public:
 	int climbDistance();
 
 	//
-	bool findLoadStation();
+	bool findLoadStation(int range);
+	bool findLoadStation_Lines(double ang);
+	double m_ScoreLineAngle;
+	double m_ScoringLineDist;
+	tpPoint m_ScoringLinePoint;
 	polarPoint m_ScoringFinal;
+	tpPoint m_targetScoring;
+	double m_targetAngle;
+	double m_ScoringAngle = 0;
+	double m_ScoringAngle2;
 	int m_scoreCase = 0;
 
 	double run_regression(int startIndex, int endIndex);

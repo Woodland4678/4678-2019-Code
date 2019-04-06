@@ -71,6 +71,8 @@ void Robot::AutonomousInit() {
 }
 
 void Robot::AutonomousPeriodic() {
+	
+
 	frc::Scheduler::GetInstance()->Run();
 }
 

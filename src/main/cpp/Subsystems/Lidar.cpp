@@ -579,6 +579,12 @@ void Lidar::FindLines(){
 	bool newline; //used for determine outliers and whether or not to create a new line
 	int n, m, NumLines = 0;
 	int skipto = 0;
+	int stpntsX[3], stpntsY[3]; // Place to keep 3 line starting points (for slope calc and compare)
+	int stcnt; // Count 0..2 for number of start points we have acquired.
+	int ndpntsX[3], ndpntsY[3]; // Place to keep 3 line ending points (for slope calc and compare)
+	int ndcnt; // Count 0..2 for number of end points we have acquired
+	int lidatcnt; // Keep count of how many lidar points are used by this line.  Need at least 12 to do the endpoint thing for slope comparison.
+	double slope1,slope2,slope3,diff12,diff23,diff13;
 	//Loop through the data
 	for(n = 0; n < xyCount; n++)
 		{
@@ -597,9 +603,22 @@ void Lidar::FindLines(){
 			//set start position
 			lines[0].start.x = lidatXY[n].x;
 			lines[0].start.y = lidatXY[n].y;
+			lines[0].lidarAnglest = lidFiltered[n].angle;
+			lines[0].lidarDistst = lidFiltered[n].dist;
+
+			stcnt = 0; // new line, 0 starting points.
+			stpntsX[stcnt] = lidatXY[n].x; // stpnts get put into [0], then [1], then [2], no shifting.
+			stpntsY[stcnt] = lidatXY[n].y;
+			stcnt++; // We have 1 starting point.
 			//set end position
 			lines[0].end.x = lidatXY[n].x;
 			lines[0].end.y = lidatXY[n].y;
+			lines[0].lidarAnglend = lidFiltered[n].angle;
+			lines[0].lidarDistnd = lidFiltered[n].dist;
+			ndpntsX[2] = lidatXY[n].x; // ndpnts get put into [2] and are shifted down for each new point added.
+			ndpntsY[2] = lidatXY[n].y;
+			ndcnt = 1; // We have 1 ending point.
+			lidatcnt = 1; // This line currently consists of 1 point.
 			//Set current line to 0
 			NumLines = 0;
 			continue; //Go to next point
@@ -618,7 +637,7 @@ void Lidar::FindLines(){
 
 		//Checks if there is a valid angle to compare
 		//	If both start and end points are the same then there is no valid angle
-		//	and the code must add it
+		//	and the code must add the point to the line.
 		if((lines[NumLines].start.x == lines[NumLines].end.x)&&(lines[NumLines].start.y == lines[NumLines].end.y))
 			{
 			//Check if this point is within range
@@ -628,14 +647,45 @@ void Lidar::FindLines(){
 				//Set start position
 				lines[NumLines].start.x = lidatXY[n].x;
 				lines[NumLines].start.y = lidatXY[n].y;
+				lines[NumLines].lidarAnglest = lidFiltered[n].angle;
+				lines[NumLines].lidarDistst = lidFiltered[n].dist;
+
+				stcnt = 0; // new line, 0 starting points.
+				stpntsX[stcnt] = lidatXY[n].x; // stpnts get put into [0], then [1], then [2], no shifting.
+				stpntsY[stcnt] = lidatXY[n].y;
+				stcnt++; // We have 1 starting point.
 				//Set end position
 				lines[NumLines].end.x = lidatXY[n].x;
 				lines[NumLines].end.y = lidatXY[n].y;
+				lines[NumLines].lidarAnglend = lidFiltered[n].angle;
+				lines[NumLines].lidarDistnd = lidFiltered[n].dist;
+
+				ndpntsX[2] = lidatXY[n].x; // ndpnts get put into [2] and are shifted down for each new point added.
+				ndpntsY[2] = lidatXY[n].y;
+				ndcnt = 1; // We have 1 ending point.
+				lidatcnt = 1; // This line currently consists of 1 point.
 				continue;
 				}
 			//This point is in range, set the end point equal to it
+			if (stcnt < 3) // If this is one of the 3 start points, add it to the list
+				{
+				stpntsX[stcnt] = lidatXY[n].x;	
+				stpntsY[stcnt] = lidatXY[n].y;	
+				stcnt++;
+				}
 			lines[NumLines].end.x = lidatXY[n].x;
 			lines[NumLines].end.y = lidatXY[n].y;
+			lines[NumLines].lidarAnglend = lidFiltered[n].angle;
+			lines[NumLines].lidarDistnd = lidFiltered[n].dist;
+			// Shift end point list to keep the last 2, then add this one to the end
+			ndpntsX[0] = ndpntsX[1];
+			ndpntsY[0] = ndpntsY[1];
+			ndpntsX[1] = ndpntsX[2];
+			ndpntsY[1] = ndpntsY[2];
+			ndpntsX[2] = lidatXY[n].x; // Save this new end point 
+			ndpntsY[2] = lidatXY[n].y;
+			lidatcnt++; // Increase the points in this line.
+
 			//Set the angle between this point and the line's end point
 			//	as the line's new direction
 			lines[NumLines].length = totalDist;
@@ -659,7 +709,7 @@ void Lidar::FindLines(){
 			//	line then this current point must be and outlier
 			for(m=n+1;m<(OUTLIERCHECK + n + 1);m++)
 				{
-				if(m > xyCount)
+				if(m >= xyCount)
 					{
 					newline = false;
 					break;
@@ -684,6 +734,26 @@ void Lidar::FindLines(){
 			//Check if a new line needs to be made
 			if (newline)
 				{
+				// Before we increment the NumLines, if we have lidatcnt >= 12, check the 3 start and end points to see
+				// If the slope is good for at least 2 of the 3.  if the slope is off for the first start point or the last end
+				// point, change the end point to make the line more accurate.
+				if (lidatcnt >= 12) // Need at least 12 points for this to be valid.
+					{ // Analysis of the 3 different line slopes to see if we should be ignoring 1 for a more-accurate angle.
+					if (ndpntsX[2] - stpntsX[0] != 0)
+						slope1 = (double)(ndpntsY[2] - stpntsY[0]) / (double)(ndpntsX[2] - stpntsX[0]);
+					else slope1 = 0;
+					if (ndpntsX[1] - stpntsX[1] != 0)
+						slope2 = (double)(ndpntsY[1] - stpntsY[1]) / (double)(ndpntsX[1] - stpntsX[1]);
+					else slope2 = 0;
+					if (ndpntsX[0] - stpntsX[2] != 0)
+						slope3 = (double)(ndpntsY[0] - stpntsY[2]) / (double)(ndpntsX[0] - stpntsX[2]);
+					else slope3 = 0;
+					diff12 = fabs(slope1 - slope2); // These should all be fairly small values
+					diff23 = fabs(slope2 - slope3); // if 1 is larger and 2 are small, we have 
+					diff13 = fabs(slope1 - slope3); // a condition where one should be ignored.
+					//printf("Line (%d,%d) - (%d,%d) slopes %f, %f, %f, diffs %f, %f, %f\n",stpntsX[0],stpntsY[0],ndpntsX[2],ndpntsY[2],slope1,slope2,slope3,diff12,diff23,diff13);
+					}
+
 				//increment the line count
 				NumLines++;
 				//Check that the limit hasn't been reached
@@ -692,17 +762,51 @@ void Lidar::FindLines(){
 				//Set start position for the new line
 				lines[NumLines].start.x = lidatXY[n].x;
 				lines[NumLines].start.y = lidatXY[n].y;
+				lines[NumLines].lidarAnglest = lidFiltered[n].angle;
+				lines[NumLines].lidarDistst = lidFiltered[n].dist;
+
 				//Set end position for the new line
 				lines[NumLines].end.x = lidatXY[n].x;
 				lines[NumLines].end.y = lidatXY[n].y;
+				lines[NumLines].lidarAnglend = lidFiltered[n].angle;
+				lines[NumLines].lidarDistnd = lidFiltered[n].dist;
+
+
+				stcnt = 0; // new line, 0 starting points.
+				stpntsX[stcnt] = lidatXY[n].x; // stpnts get put into [0], then [1], then [2], no shifting.
+				stpntsY[stcnt] = lidatXY[n].y;
+				stcnt++; // We have 1 starting point.
+				//Set end position
+				ndpntsX[2] = lidatXY[n].x; // ndpnts get put into [2] and are shifted down for each new point added.
+				ndpntsY[2] = lidatXY[n].y;
+				ndcnt = 1; // We have 1 ending point.
+				lidatcnt = 1; // This line currently consists of 1 point.
+
 				}
 			continue;//Go to next point
 			}
 
 		//If this code is reached then this point must be in range
 		//	set it as the new end point for the current line
+		if (stcnt < 3) // If this is one of the 3 start points, add it to the list
+			{
+			stpntsX[stcnt] = lidatXY[n].x;	
+			stpntsY[stcnt] = lidatXY[n].y;	
+			stcnt++;
+			}
 		lines[NumLines].end.x = lidatXY[n].x;
 		lines[NumLines].end.y = lidatXY[n].y;
+		lines[NumLines].lidarAnglend = lidFiltered[n].angle;
+		lines[NumLines].lidarDistnd = lidFiltered[n].dist;
+
+		// Shift end point list to keep the last 2, then add this one to the end
+		ndpntsX[0] = ndpntsX[1];
+		ndpntsY[0] = ndpntsY[1];
+		ndpntsX[1] = ndpntsX[2];
+		ndpntsY[1] = ndpntsY[2];
+		ndpntsX[2] = lidatXY[n].x; // Save this new end point 
+		ndpntsY[2] = lidatXY[n].y;
+		lidatcnt++; // Increase the points in this line.
 
 		//The actual direction of this line changes and must be recalculated
 		distX = (lines[NumLines].end.x - lines[NumLines].start.x);
@@ -713,11 +817,12 @@ void Lidar::FindLines(){
 		lines[NumLines].angle = (180 * (asin(distY / totalDist))) / M_PI;
 		}
 	//NumLines++;
-	linecnt = NumLines;
+	linecnt = NumLines; // This will be NumLines+1, Only if final point in lidatXY is actually the end point of a line (rather unlikely)
 
 	LidarViewer::Get()->setLines(linecnt,lines);
 
 	//TODO: Remove this debug stuff!
+	
 	for(int i = 0; i<(linecnt+1); i++){
 		//printf("Line %i: start(%i, %i) end(%i, %i) angle=%f length=%i \n",i, lines[i].start.x,lines[i].start.y, lines[i].end.x,lines[i].end.y,lines[i].angle,lines[i].length);
 		if(logfile.is_open())
@@ -725,8 +830,7 @@ void Lidar::FindLines(){
 			sprintf(buf,"L,%i,%i,%i,%i,%f,%i\n",lines[i].start.x,lines[i].start.y, lines[i].end.x,lines[i].end.y,lines[i].angle,lines[i].length);
 			logfile.write(buf,strlen(buf));
 		}
-	}
-
+	} 
 
 }
 
@@ -1150,9 +1254,9 @@ int Lidar::climbDistance() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool Lidar::findLoadStation() // Search lines to see if we can find something that looks like the loading station.
+bool Lidar::findLoadStation(int range) // Search lines to see if we can find something that looks like the loading station.
 	{
-	filterData(false,30,30,50,2000);
+	filterData(false,range,range,50,2000);
 	bool found = false;
 	int state = 0;
 	int prev = 0;
@@ -1161,6 +1265,10 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 	int inc_2 = 0;
 	int dec_1 = 0;
 	int dec_2 = 0;
+	int pnt1X = 0;
+	int pnt1Y = 0;
+	int pnt2X = 0;
+	int pnt2Y = 0;
 
 	m_ScoringFinal.dist = 3000;
 	m_ScoringFinal.angle = 360;
@@ -1213,35 +1321,51 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 						}
 
 					}
-				double rad = M_PI * ((double)lidFiltered[cor_1].angle) / 180;
-				int pnt1X = -((((double)lidFiltered[cor_1].dist) * std::sin(rad)));
-				int pnt1Y = ((((double)lidFiltered[cor_1].dist) * std::cos(rad)));
+				double rad = M_PI * ((double)lidFiltered[cor_1 - 1].angle) / 180;
+				pnt1X = -((((double)lidFiltered[cor_1 - 1].dist) * std::cos(rad)));
+				pnt1Y = -((((double)lidFiltered[cor_1 - 1].dist) * std::sin(rad)));
 
-				rad = M_PI * ((double)lidFiltered[cor_2].angle) / 180;
-				int pnt2X = -((((double)lidFiltered[cor_2].dist) * std::sin(rad)));
-				int pnt2Y = ((((double)lidFiltered[cor_2].dist) * std::cos(rad)));
+				rad = M_PI * ((double)lidFiltered[cor_2 + 2].angle) / 180;
+				pnt2X = -((((double)lidFiltered[cor_2 + 2].dist) * std::cos(rad)));
+				pnt2Y = -((((double)lidFiltered[cor_2 + 2].dist) * std::sin(rad)));
 
 				int totalDist = sqrt((pnt1X - pnt2X)*(pnt1X - pnt2X) + (pnt1Y - pnt2Y)*(pnt1Y - pnt2Y));
-
-				if((totalDist > 150)&&(totalDist < 350))
+				if((totalDist > 100)&&(totalDist < 400))
 					{
 					//frc::SmartDashboard::PutNumber("r_Back",run_regression(cor_1, cor_2-1));
 					//frc::SmartDashboard::PutNumber("r_Side1",run_regression(cor_1, (cor_1-10)));
 					//frc::SmartDashboard::PutNumber("r_Side2",run_regression(cor_2+1, (cor_2+10)));
 
-					//lines[0].start.x = pnt1X;
-					//lines[0].start.y = pnt1Y;
-					//lines[0].end.x = pnt2X;
-					//lines[0].end.y = pnt2Y;
+					lines[0].start.x = pnt1X;
+					lines[0].start.y = pnt1Y;
+					lines[0].end.x = pnt2X;
+					lines[0].end.y = pnt2Y;
 
-					//LidarViewer::Get()->setLines(0,lines); //Note: Function adds 1 to the number provided
-
+					
 					//calculate the center
 					double ang = (lidFiltered[cor_1].angle + lidFiltered[cor_2].angle) / 2;
 					dist = (lidFiltered[cor_1].dist + lidFiltered[cor_2].dist) / 2;
 					//printf("\nFound: %f | %f", ang, dist);
 
 					if((fabs(180 - ang) < fabs(180 - m_ScoringFinal.angle))||(dist < m_ScoringFinal.dist)) {
+						//calculate target
+						//	vector math. Calculae the direction vector of the midpoint perpenticular to
+						//	the vector between pnt1 and pnt2
+						double dirX = pnt2Y - pnt1Y;
+						double dirY = -(pnt2X - pnt1X);
+						//	Convert to unit vector
+						double mag = sqrt((dirX * dirX)+(dirY * dirY));
+						dirX /= mag;
+						dirY /= mag;
+						//	calculate target position
+						m_targetScoring.x = ((-508) * dirX) + ((pnt2X + pnt1X) / 2);
+						m_targetScoring.y = ((-508) * dirY) + ((pnt2Y + pnt1Y) / 2);
+						m_ScoringAngle2 = atan(((double)m_targetScoring.y) / ((double)m_targetScoring.x)) * 180 / M_PI;
+						m_targetAngle = atan(dirY / dirX) * 180 / M_PI;
+						LidarViewer::Get()->addPointXY(m_targetScoring.x,m_targetScoring.y);
+
+						printf("\nPoints: %i,%i | %i,%i | %f,%f - %f",pnt1X,pnt1Y,pnt2X,pnt2Y,dirX,dirY,mag);
+
 						m_ScoringFinal.dist = dist;
 						m_ScoringFinal.angle = ang;
 						found = true;
@@ -1260,9 +1384,233 @@ bool Lidar::findLoadStation() // Search lines to see if we can find something th
 			logfile.write(buf,strlen(buf));
 			}
 		LidarViewer::Get()->addPoint(m_ScoringFinal.dist,m_ScoringFinal.angle);
+		LidarViewer::Get()->addPointXY(pnt1X,pnt1Y);
+		LidarViewer::Get()->addPointXY(pnt2X,pnt2Y);
+		LidarViewer::Get()->setLines(0,lines); //Note: Function adds 1 to the number provided
+
 	}
 	return found;
 	}
+
+bool Lidar::findLoadStation_Lines(double ang) {
+	int idxmid,idxst,idxnd,i,j,mindist,score,maxscore;
+	int idxmidtp,idxsttp,idxndtp; // temporary index registers.
+	bool found;
+
+	filterData(true,120,120,50,2000);
+	FindLines();
+	//loop through the lines and find the one which intersects the given angle
+	// Probably better if we look through all the lines and find a set that
+	// "looks" like a target (line of length very near 220mm with lines to either side
+	// at pretty much the same angle but about 10cm closer to the robot
+	// Test data often returns these 3 lines in direct sequence of each other.
+	// In reality, there could easily be 1, 2 or even 3 short lines between the
+	// lines we're really looking for.  Ideal target is center of end points of the
+	// 2 lines that are closer to the robot.
+	// not much of a problem using the center of the line that is further from the robot.
+	// For now, lets look for lines that are > 175mm
+
+// Search for line of length 170 to 270 range.  Angle should be in the +45 to -45 range
+// We can maybe narrow this a bit based on our approach information.
+// Then find a line before and after the line (within 3 lines) with an angle
+// that is within +/-5.  Use end points of those 2 lines to get us
+// our target point.  Above, it would be end of line 0, start of
+// line 2 (in both above examples)
+// 
+// Seem to have a bit of trouble choosing the correct 3 lines.  
+// Note that the end points of the chosen line should be about 10cm further from 
+// the lidar unit than then end points of the lines found to be right next to the 
+// line that's further in.  Data below ... Center Candidates are 0,6,8
+// Correct one is probably 6 if we choose to look at the distance to end points
+// instead of center of the line.  Long lines will have a center that is 
+// too far from the lidar unit to register correctly.
+// 
+//Line 0: start(-1394, -747) end(-1420, -726) angle=38.927544 length=33 dist=1587.874365, angst=61.812500, distst=1582, angnd=62.921875, distnd=1595
+//Line 1: start(-741, 501) end(-287, 551) angle=6.284780 length=456 dist=735.440004, angst=124.078125, distst=895, angnd=152.484375, distnd=621
+//Line 2: start(-310, 715) end(-101, 724) angle=2.465759 length=209 dist=747.653663, angst=156.531250, distst=779, angnd=172.078125, distnd=731
+//Line 3: start(-65, 612) end(405, 710) angle=11.778025 length=480 dist=682.510806, angst=173.921875, distst=615, angnd=209.687500, distnd=817
+//Line 4: start(546, 874) end(546, 845) angle=-90.000000 length=29 dist=1017.839378, angst=211.984375, distst=1031, angnd=212.859375, distnd=1006
+//Line 5: start(564, 836) end(1440, 1029) angle=12.424886 length=897 dist=1368.439988, angst=214.000000, distst=1009, angnd=234.437500, distnd=1770
+//Line 6: start(1536, 957) end(1606, 723) angle=-73.345694 length=244 dist=1781.471583, angst=238.078125, distst=1810, angnd=245.750000, distnd=1761
+//Found target. Line indecies are 2,1,3, target point is (581,-176) at a distance of 607.072483
+
+//Line 1: start(-911, 508) end(-745, 530) angle=7.549422 length=167 dist=977.212873, angst=119.125000, distst=1043, angnd=125.421875, distnd=914
+//Line 2: start(-754, 560) end(-755, 614) angle=88.939088 length=54 dist=955.554813, angst=126.578125, distst=939, angnd=129.109375, distnd=973
+//Line 3: start(-735, 622) end(-641, 631) angle=5.469095 length=94 dist=930.172027, angst=130.250000, distst=963, angnd=134.546875, distnd=900
+//Line 4: start(-533, 555) end(-211, 611) angle=9.865807 length=326 dist=691.572845, angst=136.156250, distst=769, angnd=160.937500, distnd=646
+//Line 5: start(-217, 662) end(-211, 700) angle=81.027373 length=38 dist=713.832613, angst=161.843750, distst=697, angnd=163.250000, distnd=731
+//Line 6: start(-196, 701) end(-25, 724) angle=7.660475 length=172 dist=720.447083, angst=164.390625, distst=728, angnd=178.046875, distnd=724
+//Line 7: start(-9, 657) end(12, 637) angle=-43.602819 length=29 dist=647.000773, angst=179.171875, distst=657, angnd=181.062500, distnd=637
+//Line 8: start(25, 638) end(335, 696) angle=10.597335 length=315 dist=690.861057, angst=182.203125, distst=638, angnd=205.703125, distnd=772
+//Line 9: start(404, 788) end(526, 802) angle=6.546291 length=122 dist=921.004886, angst=207.125000, distst=885, angnd=213.234375, distnd=959
+//Line 10: start(531, 776) end(531, 745) angle=-90.000000 length=31 dist=927.125126, angst=214.375000, distst=940, angnd=215.500000, distnd=915
+//Line 11: start(549, 738) end(728, 753) angle=4.790131 length=179 dist=980.851161, angst=216.656250, distst=920, angnd=224.031250, distnd=1048
+//Line 12: start(928, 922) end(1434, 994) angle=8.098395 length=511 dist=1520.698853, angst=225.187500, distst=1308, angnd=235.265625, distnd=1745
+//Found target. Line indecies are 6,4,8, target point is (624,-93) at a distance of 630.892225
+
+// Algorithm selects incorrectly at far end of Cargo ship.
+//Line 0: start(-1534, 894) end(-1391, 904) angle=4.000186 length=143 dist=1716.288146, angst=120.234375, distst=1775, angnd=123.031250, distnd=1659
+//Line 1: start(-995, 684) end(-678, 672) angle=-2.167890 length=317 dist=1076.373541, angst=124.515625, distst=1207, angnd=134.750000, distnd=954
+//Line 2: start(-674, 702) end(-643, 754) angle=59.198554 length=60 dist=981.299139, angst=136.156250, distst=973, angnd=139.562500, distnd=991
+//Line 3: start(-616, 752) end(-566, 744) angle=-9.090277 length=50 dist=953.302156, angst=140.703125, distst=972, angnd=142.734375, distnd=935
+//Line 4: start(-464, 647) end(-110, 619) angle=-4.522454 length=355 dist=695.023741, angst=144.328125, distst=796, angnd=169.937500, distnd=629
+//Line 5: start(-120, 710) end(47, 698) angle=-4.109998 length=167 dist=704.919854, angst=170.375000, distst=720, angnd=183.828125, distnd=700
+//Line 6: start(60, 660) end(75, 604) angle=-75.004921 length=57 dist=635.541501, angst=185.203125, distst=663, angnd=187.062500, distnd=609
+//Line 7: start(87, 604) end(264, 607) angle=0.971022 length=177 dist=629.801556, angst=188.218750, distst=610, angnd=203.468750, distnd=662
+//Line 8: start(360, 735) end(1038, 680) angle=-4.637732 length=680 dist=994.208228, angst=206.078125, distst=818, angnd=236.765625, distnd=1241
+//Found target. Line indecies are 7,5,8, target point is (716,203) at a distance of 744.221069
+// Should have chosen 5 as center (angles 170, 183.8, distances 720, 700), 4 start (a 144.3, 169.9 d 796, 629) and 7 end (a 188.2, 203.5 d 610, 662).
+// end angle of 4 is really close to start angle of 5.  start angle of 7 is reasonably close (within 5 deg) to end angle of 5.
+// distance of 4 end is 629, 5 start is 720.  distance of 5 end is 700, 7 start is 610.  Really close to 10cm each. This is a very strong match.
+// since line 5 is almost exactly 10cm further than lines 4 and 7 end points. Angle are also very close.
+// Adjusting comparison algorithm to look at end points of the lines as well.  Let's use a scoring method and select the highest score.
+// set as our true target.  We'll also need to consider the target that we are the closest to since we won't necessarily be pointed
+// directly at the target that was first selected.  However, it should certainly be the closest one.  Targets with a score above
+// a certain threshold are legitimate targets.  If we have more than 1, use the distance and choose the closest one.
+
+//Line 0: start(-917, 1282) end(-541, 1073) angle=-29.067541 length=430 dist=1680.600190, angst=144.421875, distst=1576, angnd=153.250000, distnd=1202
+//Line 1: start(-401, 836) end(-232, 761) angle=-23.931025 length=184 dist=1040.183157, angst=154.359375, distst=927, angnd=163.031250, distnd=796
+//Line 2: start(-223, 789) end(-177, 832) angle=43.069413 length=62 dist=944.506750, angst=164.218750, distst=820, angnd=167.984375, distnd=851
+//Line 3: start(-158, 825) end(-88, 779) angle=-33.310631 length=83 dist=951.723174, angst=169.140625, distst=840, angnd=173.546875, distnd=784
+//Line 4: start(-64, 652) end(242, 511) angle=-24.739509 length=336 dist=916.293075, angst=174.421875, distst=655, angnd=205.328125, distnd=565
+//Line 5: start(273, 541) end(297, 577) angle=56.309932 length=43 dist=662.818225, angst=206.796875, distst=606, angnd=207.234375, distnd=649
+//Line 6: start(309, 572) end(458, 500) angle=-25.790831 length=165 dist=680.068379, angst=208.406250, distst=650, angnd=222.468750, distnd=678
+//Line 7: start(444, 436) end(429, 405) angle=-64.179008 length=34 dist=621.634137, angst=225.546875, distst=622, angnd=226.687500, distnd=590
+//Line 8: start(448, 405) end(742, 257) angle=-26.720746 length=329 dist=605.476672, angst=227.875000, distst=604, angnd=250.859375, distnd=785
+//Line 9: start(881, 294) end(957, 250) angle=-30.068583 length=87 dist=792.729462, angst=251.562500, distst=929, angnd=255.328125, distnd=989
+//Line 10: start(962, 231) end(936, 169) angle=-67.249024 length=67 dist=1005.200975, angst=256.500000,
+//No Target found for 1, score was -216
+//No Target found for 2, score was 0
+//No Target found for 3, score was 0
+//No Target found for 4, score was 0
+//No Target found for 5, score was 0
+//Found target. Line indecies are 6,4,8, score=159, target point is (536,383) at a distance of 658.775379
+//No Target found for 7, score was 0
+//No Target found for 8, score was 0
+//No Target found for 9, score was 0
+//No Target found for 10, score was 0
+//No Target found for 11, score was -302
+//No Target found for 12, score was 0
+
+	// Step 1, find the line(s) that's are the correct length
+//	for(i = 0; i<(linecnt+1); i++)	
+//		{
+//		// This first time through, let's calculate distance from 0,0 to the mid point of the line
+//		// since that is of interest to us as well.
+//		m_ScoringLinePoint.y = ((lines[i].start.x + lines[i].end.x)/2);
+//		m_ScoringLinePoint.x = ((lines[i].start.y + lines[i].end.y)/2);
+//		m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+//		lines[i].dist200 = m_ScoringLineDist;
+//		if ((lines[i].length >= 150)&&(lines[i].length <= 270)&&(lines[i].angle > -40.0)&&(lines[i].angle < 40.0))
+//			{ // make sure length is good and it's within the +/- 40 degrees.  Lines closer to vertical are no good.
+//			if (lines[i].dist200 < mindist) // if we find a closer one, use that.
+//				{
+//				idxmid = i; // This is the index of the middle line of the correct length.
+//				mindist = lines[i].dist200;
+//				}
+//			}
+//		}
+
+	for(int i = 0; i<(linecnt+1); i++){
+		printf("Line %i: start(%i, %i) end(%i, %i) angle=%f length=%i dist=%f, angst=%f, distst=%d, angnd=%f, distnd=%d\n",i, lines[i].start.x,lines[i].start.y, lines[i].end.x,lines[i].end.y,lines[i].angle,lines[i].length,lines[i].dist200,lines[i].lidarAnglest,lines[i].lidarDistst,lines[i].lidarAnglend,lines[i].lidarDistnd);
+		}
+
+	idxmid = -1; // Assume we don't find the line of the length we're looking for.
+	mindist = 100000; // Go for the closest one.
+	maxscore = 0; // Clear the max score variable.
+	for (i = 0;i<= linecnt;i++) // Consider all lines in the valid angle and length range
+		{
+		m_ScoringLinePoint.y = ((lines[i].start.x + lines[i].end.x)/2);
+		m_ScoringLinePoint.x = ((lines[i].start.y + lines[i].end.y)/2);
+		m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+		lines[i].dist200 = m_ScoringLineDist;
+
+		idxmidtp = i;
+		idxsttp = -1;
+		idxndtp = -1;
+		score = 0;
+		if ((lines[i].length >= 110)&&(lines[i].length <= 270)&&(lines[i].angle > -40.0)&&(lines[i].angle < 40.0))
+			{ // Look for preceeding lines that match the length angle and distance values.  Generate scores based on this.
+			j = i-1; // Begin with previous line.
+			found = false;
+			while((j >= 0)&&(!found)) // Until we find this line, keep looking till we get to the first line.
+				{
+				if ((fabs(lines[j].angle - lines[i].angle) <= 12.5)&&(lines[j].length > 150)) // Angle is good and line is at least 15cm long
+					{
+					score += 100 - abs(lines[i].lidarDistst - lines[j].lidarDistnd - 100); // Closer to 100mm is best.
+					idxsttp = j;
+					found = true;
+					}
+				j--;
+				}
+			j = i + 1;
+			found = false;
+			while((j <= linecnt)&&(!found))
+				{
+				if ((fabs(lines[j].angle - lines[i].angle) < 12.5)&&(lines[j].length > 150)) // Angle is a good enough match and it's at least 15cm long
+					{
+					score += 100 - abs(lines[i].lidarDistnd - lines[j].lidarDistst - 100); // Closer to 100mm is best.
+					idxndtp = j;
+					found = true;
+					}
+				j++;
+				}
+			}
+		if ((score > 50)&&(idxsttp != -1)&&(idxndtp != -1)) // Any scores above 50 are legit.  Score max is 200.
+			{ // If we happen to have more than 1 score over 50, go for the nearest one.
+			if (lines[i].dist200 < mindist)
+				{
+				mindist = lines[i].dist200; // Track lowest distance 
+				maxscore = score; // This is the new high score.				
+				idxmid = idxmidtp;
+				idxst = idxsttp;
+				idxnd = idxndtp;
+				printf("Found target.  Line indecies are %d,%d,%d, score=%d, target point is (%d,%d) at a distance of %f\n",idxmid,idxst,idxnd,score,m_ScoringLinePoint.x,m_ScoringLinePoint.y,m_ScoringLineDist);
+				}
+			else
+				printf("Ignored farther target.  Line indecies are %d,%d,%d, score=%d, target point is (%d,%d) at a distance of %f\n",idxmid,idxst,idxnd,score,m_ScoringLinePoint.x,m_ScoringLinePoint.y,m_ScoringLineDist);
+			}
+		else
+			{
+			printf("No Target found for %i, score was %d\n",i,score);
+			}
+		
+		}
+
+	if ((idxmid != -1)&&(idxst != -1)&&(idxnd != -1)) // If we got all 3, use mid point as the target.
+		{
+		m_ScoringLinePoint.y = ((lines[idxst].end.x + lines[idxnd].start.x)/2);
+		m_ScoringLinePoint.x = ((lines[idxst].end.y + lines[idxnd].start.y)/2);
+		if (m_ScoringLinePoint.x != 0)
+			{
+			m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+			m_ScoreLineAngle = atan((double)m_ScoringLinePoint.y / (double)m_ScoringLinePoint.x) * 180 / M_PI; // Angle from Lidar to Target.
+			// printf("Found target.  Line indecies are %d,%d,%d, target point is (%d,%d) at a distance of %f\n",idxmid,idxst,idxnd,m_ScoringLinePoint.x,m_ScoringLinePoint.y,m_ScoringLineDist);
+			return true; // We've found a target for the waist and arm.  Go for it.
+			}
+		}
+
+
+	/*
+	for(int i = 0; i<(linecnt+1); i++){
+		double angStart = atan(((double)lines[i].start.y) / ((double)lines[i].start.x)) * 180 / M_PI;
+		double angEnd = atan(((double)lines[i].end.y) / ((double)lines[i].end.x)) * 180 / M_PI;
+		if((ang > angStart)&&(ang < angEnd)) {
+			if((lines[i].length < 100) || (lines[i].length > 400))
+				continue; //Line is either too small or too large
+			//This is the line that intersets our given angle
+			m_ScoreLineAngle = ((angStart + angEnd)/2);
+			m_ScoringLinePoint.y = ((lines[i].start.x + lines[i].end.x)/2);
+			m_ScoringLinePoint.x = ((lines[i].start.y + lines[i].end.y)/2);
+			m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+			return true;
+		}
+	}
+	*/
+	//If one is not found then we may want to implement code that will find the loading station
+	//	based on the lines
+	return false;
+}
 
 double Lidar::run_regression(int startIndex, int endIndex){
 		double meanX = 0.0;

@@ -119,6 +119,7 @@ public:
 
 	void disableWrist();
 	double getOffset(int axis);
+	double getWaistAngle();
 
 
 	//Intakes

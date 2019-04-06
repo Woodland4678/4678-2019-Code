@@ -136,7 +136,7 @@ void AutonomousCommand::Execute() {
 		break;
 		case 3: //gyro turn toward the cargo ship
 			if (!armMovement1) {
-				armMovement1 = Robot::manipulatorArm->moveToXY(25.5,19.0,-182,0,30);
+				armMovement1 = Robot::manipulatorArm->moveToXY(25.5,21.0,-182.0,0,30);
 			}
 			if ((Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn, 0.015,0,0)) && (armMovement1)) {
 				autoState++;
