@@ -57,22 +57,22 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 	Robot::drivetrain->setToBrake();
 	armMovement1 = false;
 	if (autoSide == 0 && autoMode == 1) { //Left side, level 1 auto to cargo ship
-		leftCmStraightBack = -130;
-		rightCmStraightBack = -130;
+		leftCmStraightBack = -120;
+		rightCmStraightBack = -120;
 
-		leftArc = -405;
-		rightArc = -360;
+		leftArc = -380;
+		rightArc = -315;
 
-		straightBackRampUpDistance = 70;
+		straightBackRampUpDistance = 30;
 
 		amountToTurn = -88 + initialGyroValue;
 		secondHatchAmountToTurn = 8 + initialGyroValue;
 	} else if (autoSide == 0 && autoMode == 2) { //left Side level 2 auto to cargo ship
-		leftCmStraightBack = -220;
-		rightCmStraightBack = -220;
+		leftCmStraightBack = -200;
+		rightCmStraightBack = -200;
 
 		straightBackRampUpDistance = 125;
-		leftArc = -360;
+		leftArc = -380;
 		rightArc = -315;
 		amountToTurn = -89 + initialGyroValue;
 		secondHatchAmountToTurn = 8 + initialGyroValue;
@@ -149,16 +149,23 @@ void AutonomousCommand::Execute() {
 			// 	autoState++;
 			// }
 
-			done = true;
-			End();
-			// if (Robot::drivetrain->autoScore(true)) {
-			// 	autoState++;
-			// }
-		break;
-		case 5:
-			if (getSecondHatch()) {
+			//done = true;
+			//End();
+			autoScore = Robot::drivetrain->autoScore();
+			if (autoScore == 1) {
 				autoState++;
 			}
+			else if (autoScore == 2 || autoScore == 3) {
+				End();
+				done = true;
+			}
+		break;
+		case 5:
+			done = true;
+			End();
+			// if (getSecondHatch()) {
+			// 	autoState++;
+			// }
 		break;
 		case 6:
 			done = true;

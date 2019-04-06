@@ -46,6 +46,8 @@ private:
 	bool armMovement1 = false;
 	bool armMovement2 = false;
 	bool armMovement3 = false;
+
+	int autoScore = 0;
 	bool done = false;
 	double initialGyroValue = 0;
 
