@@ -143,7 +143,7 @@ void MoveArm::Execute() {
 				else
 					{
 					Robot::manipulatorArm->setInHatchPosition();
-					done = Robot::manipulatorArm->moveToXY(25.0,21.0,-182.0,0,ARMSPEED); //25	18   -191
+					done = Robot::manipulatorArm->moveToXY(25.0,19.0,-174.0,0,ARMSPEED); //25	21   -191
 					}
 				Robot::manipulatorArm->m_CurrentPosition = 5;
 			}

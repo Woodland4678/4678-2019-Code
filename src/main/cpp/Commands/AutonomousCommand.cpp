@@ -177,7 +177,7 @@ void AutonomousCommand::Execute() {
 		break;
 	}
 
-	if (Robot::oi->getdriver()->GetRawButton(9)) { //Override to allow drivers to take control
+	if (Robot::oi->getdriver()->GetPOV() == 90) { //Override to allow drivers to take control
 		done = true;
 		End();
 	}

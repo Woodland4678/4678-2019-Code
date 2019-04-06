@@ -49,12 +49,12 @@ void Climb::Execute() {
 
     //Determine height
     if(m_climbLevel < 2){
-        /*m_ClimbCase = 0;
+        m_ClimbCase = 0;
         if(Robot::oi->getdriver()->GetRawButton(9))
             m_climbLevel = 3;
         else
-            m_climbLevel = 4;*/
-        switch (m_ClimbCase) {
+            m_climbLevel = 4;
+        /*switch (m_ClimbCase) {
             case 0:
                 Robot::lidar->readLidar();
                 m_ClimbCase = 1;
@@ -73,7 +73,7 @@ void Climb::Execute() {
                     m_climbLevel = 4;
                 }
                 break;
-        }
+        }*/
     }
     else {
         m_timer++;
@@ -125,25 +125,25 @@ void Climb::Execute() {
                 printf("Dist = %i | Timer = %i\n",dist,m_timer);
                 m_ClimbCase = 3;
                 if(m_climbLevel == 4){
-                    if(dist < 1500){ //Time to spin up wheel
+                    //if(dist < 1500){ //Time to spin up wheel
                     Robot::drivetrain->setRightMotor(0.2);
                     Robot::drivetrain->setLeftMotor(0.2);
                     //Robot::manipulatorArm->intakeWheelsSpin(0);
-                    }
-                    if(dist > 720) //Spin intakes
+                    //}
+                    //if(dist > 720) //Spin intakes
                         Robot::manipulatorArm->intakeWheelsSpin(-1);
-                    if((dist < 650)&&(m_timer > 125))
+                    if((m_timer > 125))
                         m_ClimbCase = 11;
                 }
                 else{
-                    if(dist < 1500){ //Time to spin up wheel
+                    //if(dist < 1500){ //Time to spin up wheel
                         Robot::drivetrain->setRightMotor(0.1);
                         Robot::drivetrain->setLeftMotor(0.1);
                         //Robot::manipulatorArm->intakeWheelsSpin(0);
-                    }
-                    if(dist > 1000) //Spin intakes
+                    //}
+                    //if(dist > 1000) //Spin intakes
                         Robot::manipulatorArm->intakeWheelsSpin(-1);
-                    if((dist < 900)&&(m_timer > 125))
+                    if((m_timer > 125))
                         m_ClimbCase = 11;
                 }
                 
@@ -187,6 +187,9 @@ void Climb::Execute() {
                     Robot::drivetrain->setRightMotor(0);
                     Robot::drivetrain->setLeftMotor(0);
                     done = true;
+                    //done = Robot::manipulatorArm->moveToXY((7.0,29,-10.0,0,20);
+                    //if(done)
+                    //    Robot::climber->m_climbed = true;
                 }
                 else
                     m_ClimbCase = 8;
