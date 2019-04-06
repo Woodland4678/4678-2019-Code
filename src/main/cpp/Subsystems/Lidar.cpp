@@ -1358,8 +1358,8 @@ bool Lidar::findLoadStation(int range) // Search lines to see if we can find som
 						dirX /= mag;
 						dirY /= mag;
 						//	calculate target position
-						m_targetScoring.x = ((-508) * dirX) + ((pnt2X + pnt1X) / 2);
-						m_targetScoring.y = ((-508) * dirY) + ((pnt2Y + pnt1Y) / 2);
+						m_targetScoring.x = ((-460) * dirX) + ((pnt2X + pnt1X) / 2);
+						m_targetScoring.y = ((-460) * dirY) + ((pnt2Y + pnt1Y) / 2);
 						m_ScoringAngle2 = atan(((double)m_targetScoring.y) / ((double)m_targetScoring.x)) * 180 / M_PI;
 						m_targetAngle = atan(dirY / dirX) * 180 / M_PI;
 						LidarViewer::Get()->addPointXY(m_targetScoring.x,m_targetScoring.y);

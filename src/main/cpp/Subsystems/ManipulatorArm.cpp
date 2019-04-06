@@ -45,7 +45,7 @@
 #define WAIST_ENCODER_1   -127.0
 #define WAIST_ENCODER_2   0.0
 
-#define FLIGHTBOT	1
+//#define FLIGHTBOT	1
 
 #ifdef FLIGHTBOT
 #define SHOULDER_POT_1    2706//2943 //2884

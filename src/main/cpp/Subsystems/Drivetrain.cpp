@@ -499,6 +499,7 @@ enum { // Cases for autoScore
     autoScoreFoundLoadStation,
     autoScoreHavePath,
     autoScorePathComplete,
+    autoScoreScanForWaist,
     autoScoreLidarForWaist,
     autoScoreWaistHasMoved,
     autoScoreReadyForPickPlace,
@@ -553,7 +554,11 @@ enum { // Cases for autoScore
 // d = d1 + d2 + d3 // should be our final position calculation.
 // 
 
-bool Drivetrain::autoScore(bool autoBack) {
+//Returns   0->not finished yet
+//          1->Finished
+//          2->Failed to find target
+//          3->Failed to find target after driving forwards
+int Drivetrain::autoScore(bool autoBack) {
     double waistAngle,distFromWaist;
 
 	switch (as_m_case) {
@@ -601,6 +606,7 @@ bool Drivetrain::autoScore(bool autoBack) {
 				as_PrevGyro = as_currentGyro;
 
 				as_currentGyro = as_initGyro;
+                as_lidarScanCount = 0;
 			}
             break;
         case autoScoreReadLidar1:
@@ -620,13 +626,18 @@ bool Drivetrain::autoScore(bool autoBack) {
         case autoScoreFindLoadStation:
             if(Robot::lidar->findLoadStation(60))
                 as_m_case = autoScoreFoundLoadStation;
-            else  // If not found, go back and keep scanning lidar till we find one.
-                as_m_case = 1;
+            else { // If not found, go back and keep scanning lidar till we find one.
+                as_lidarScanCount++;
+                as_m_case = autoScoreReadLidar1;
+                if(as_lidarScanCount > 3)
+                    return 2;
+            }
             break;
         case autoScoreFoundLoadStation:
             {
+            as_lidarScanCount = 0;
             double max_vel = 3; //m/s
-            double max_acc = 8; //m/s^2
+            double max_acc = 4; //m/s^2
             double cycle_time = 1.0/50.0;
             double wheelbase = 0.545;
             //We have the location
@@ -713,6 +724,7 @@ bool Drivetrain::autoScore(bool autoBack) {
                 else if(tcnt < t3)
                     d[i] = d1+d2+d3 - (0.5 * max_acc * ((t3-tcnt)*(t3-tcnt)));
             }
+            d[i++] = d1+d2+d3;
             mtime = i;
             printf("Elements = %i",i);
             traverseCnt = 0;
@@ -720,143 +732,6 @@ bool Drivetrain::autoScore(bool autoBack) {
             encPrevLeft = getLeftEncoder();
             encPrevRight = getRightEncoder();
             as_prevWaist = Robot::manipulatorArm->getWaistAngle();
-            //---Velocity Method---
-            /*dist /= 1000;
-            double adjusted_max_vel = std::min(max_vel, max_acc * dist);
-            double t_ramp = adjusted_max_vel / max_acc;
-            double x_rampup = 0.5 * max_acc * (t_ramp * t_ramp);
-            double x_rampdown = adjusted_max_vel * t_ramp - 0.5 * max_acc * (t_ramp * t_ramp);
-            double x_curise = dist - x_rampdown - x_rampup;
-            double a_ramp = (adjusted_max_vel / t_ramp) * cycle_time;
-            double a_rampD = -a_ramp;
-
-            printf("\nInfo: ramp = %f, max = %f",a_ramp,adjusted_max_vel);
-
-            //x_curise / adjusted_max_vel = distance / velocity = time
-            mtime = (int)((t_ramp + t_ramp + x_curise / adjusted_max_vel) / cycle_time + 0.5); //number of cycles
-            if(mtime > 400)
-                return true;
-
-            //Waist incremental calculation
-            as_waist_incr = (as_ang - Robot::manipulatorArm->getWaistAngle())/(mtime);
-            
-            segs[0].pos = 0;
-            segs[0].vel = 0;
-            segs[0].acc = 0;
-            segs[0].x = 0;
-            segs[0].y = 0;
-
-            int last = 0;
-            for(int i = 1;i<mtime;i++) {
-                segs[i].vel = segs[last].vel + a_ramp;
-                if(segs[i].vel > adjusted_max_vel){
-                    segs[i].vel = adjusted_max_vel;
-                }
-                 segs[i].pos = (segs[last].vel + segs[i].vel) / 2.0 * cycle_time + segs[last].pos;
-
-                segs[i].x = segs[i].pos;
-                segs[i].y = 0;
-
-                segs[i].acc = a_ramp;
-                last = i;
-            }
-            
-            last = mtime - 1;
-            segs[last].vel = 0;
-            segs[last].acc = 0;
-
-            for(int i = mtime-2; i>=0; i--) {
-                double vel = segs[last].vel + a_ramp;
-                if(vel > adjusted_max_vel)
-                    vel = adjusted_max_vel;
-                if(vel >= segs[i-1].vel)
-                    break;
-                segs[i].vel = vel;
-
-                // segs[i].pos = (segs[last].vel + segs[i].vel) / 2.0 * cycle_time + segs[last].pos;
-                segs[i].pos =  segs[last].pos - (segs[last].vel + segs[i].vel) / 2.0 * cycle_time;
-
-                segs[i].x = segs[i].pos;
-                segs[i].y = 0;
-
-                segs[i].acc = -a_ramp;
-
-                last = i;
-            }
-            
-            traverseCnt = 0;
-            as_m_case = autoScoreHavePath;
-            encPrevLeft = getLeftEncoder();
-            encPrevRight = getRightEncoder();
-            as_prevWaist = Robot::manipulatorArm->getWaistAngle();
-            */
-            //We have the radius of the circle
-            //  radius of the left is r + (wheel base / 2)
-            //  radius of the right is r - (wheel base / 2)
-
-
-            /*m_Path->createNewPath();
-            m_Path->addWayPoint(0.0,0.0,0.0);
-
-            
-            //Convert to cartesian
-            double y = as_distance * sin(as_angle * M_PI / 180);
-            double x = as_distance * cos(as_angle * M_PI / 180);
-            
-            printf("\ntarget 1: %f, %f",x,y);
-
-            //Calculate target and heading
-            double tarX = x - (Robot::manipulatorArm->getEndEffectorX() * 25.4) - 200 + 26.6;
-            double tarY = y + 100;
-
-            printf("\nNew Target = %f, %f",tarX,tarY);
-
-            as_ang = as_angle;//atan(tarY / tarX) * 180 / M_PI;
-            if (as_ang >= 45)
-                as_ang = 45;
-            if(as_ang <= -45)
-                as_ang = -45;
-
-            printf("\nAngle = %f",as_ang);
-            //Path finding
-            m_Path->addWayPoint(tarX / 1000,-(tarY / 1000),as_ang);
-            if (m_Path->makePath()) {
-                encPrevLeft = getLeftEncoder();
-                encPrevRight = getRightEncoder();
-                //as_m_case = 5;
-                m_Path->debug();
-                traverseCnt = 0;
-            }
-            else
-                return true; */
-            
-
-			/*as_currentGyro = Robot::ahrs->GetAngle();
-			if(as_PrevDistance != 0){
-				double diffAng = fabs(as_angle - as_PrevAngle);
-				double diffGyro = fabs(as_currentGyro - as_PrevGyro);
-				double diff = fabs(diffAng - diffGyro);
-				printf("\n%f | %f | %f",diffAng, diffGyro, diff);
-				if(diff > 10) {
-					if(as_distance > as_PrevDistance) {
-						//if(fabs(as_angle-180) > fabs(as_PrevAngle-180)) {
-					
-						//Bad target - too far off
-						as_m_case = 1;
-						break;
-						//}
-					}
-				}
-			}
-			as_PrevAngle = as_angle;
-			as_PrevDistance = as_distance;
-			as_PrevGyro = as_currentGyro;
-            //printf("\n%f | %f",angle,distance);
-            if((GyroTurn(0, as_angle, 0.008, 0, 0))||(fabs(as_angle) < 5))
-                as_m_case = 5;
-            else
-                as_m_case = 1;
-            */    
             }
 			
             break;
@@ -868,6 +743,7 @@ bool Drivetrain::autoScore(bool autoBack) {
                 as_m_case = autoScorePathComplete;
                 Robot::lidar->readLidar(); // Reset lidar indicator so we get a fresh scan.
                 as_lidarScanCount = 0; // Keep track of how many times we try to scan.
+                as_cnt = 0;
                 //return true;
                 //Waist should be here, but just to make sure
                 as_m_SubCase = 1;
@@ -924,13 +800,18 @@ bool Drivetrain::autoScore(bool autoBack) {
             */
             }
             break;
-        case autoScorePathComplete: // Path is complete.  Need to scan lidar for lines that gives us our waist target.
+        case autoScorePathComplete:
+            if(as_cnt > 25)
+                as_m_case = autoScoreScanForWaist;
+            as_cnt++;
+            break;
+        case autoScoreScanForWaist: // Path is complete.  Need to scan lidar for lines that gives us our waist target.
             if(Robot::lidar->readComplete())  // Once this lidar scan is complete, process it.
                 {
                 as_lidarScanCount++;
                 if (as_lidarScanCount > 3)
                     { // Too many re-tries.  Not getting anything.  Time to cancel
-                    return true;
+                    return 3;
                     }
                 else
                     {
@@ -959,7 +840,7 @@ bool Drivetrain::autoScore(bool autoBack) {
                     if ((waistAngle > -65.0)&&(waistAngle <= 65.0)) // Only proceed with valid angles.
                         {
                         printf("\nWaist: tarAng=%f | x=%f | y=%f | TarDist=%f || wDist=%f | wAngle=%f",tarAngle,tarX,tarY,tarDist,distFromWaist,waistAngle);
-                        as_ang = waistAngle + 2.0;
+                        as_ang = waistAngle;// + 2.0;
                         Robot::manipulatorArm->moveWaist(waistAngle);
                         if (fabs(waistAngle) > 15.0) // Build in a delay if we need to turn the waist rather far (more than 15 deg)
                             as_cnt = (fabs(waistAngle) - 15); // Give us 50 counts for every 50 degrees -> 50 degrees per second.
@@ -1023,13 +904,13 @@ bool Drivetrain::autoScore(bool autoBack) {
                 as_m_case = autoScoreInit; // Ready for next time.
                 Robot::manipulatorArm->grabHatch();
                 Robot::manipulatorArm->intakeWheelsSpin(0);
-				return true;
+				return 1;
             }
             break;
         case 99: // Special case used to halt further motion ** Testing Only **
             break;
     }
-	return false;
+	return 0;
 }
 
 double Drivetrain::getLeftSpeed() {
