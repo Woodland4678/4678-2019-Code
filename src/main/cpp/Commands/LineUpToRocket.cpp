@@ -27,23 +27,49 @@ LineUpToRocket::LineUpToRocket(int side): frc::Command() {
 // Called just before this Command runs the first time
 void LineUpToRocket::Initialize() {
     Robot::drivetrain->initAutoScore();
+    m_state = 0;
     done = false;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToRocket::Execute() {
-    if((Robot::oi->getdriver()->GetRawButton(3)))
+    if(!Robot::oi->getdriver()->GetRawButton(3))
         {
         done = true;
         return;
         }
     
-    if(Robot::oi->getdriver()->GetRawButton(2)){
-        done = Robot::drivetrain->autoScore();
+    switch(m_state){
+        case 0:
+            {
+            int pov = Robot::oi->getdriver()->GetPOV();
+            if(pov == 0)
+                m_target = 1; //Rocket Low level autoscore
+            else if(pov == 90)
+                m_target = 2; //Rocket medium level autoscore
+            else if(pov == 180)
+                m_target = 3; //Rocket high level autoscore
+            else if(pov == 270)
+                m_target = 4; //Cargo ground pickup
+            else 
+                done = true;
+            m_state = 1;
+            }
+            break;
+        case 1:
+            switch(m_target) {
+                case 1:
+                case 2:
+                case 3:
+                    done = Robot::drivetrain->autoScore(m_target);
+                    break;
+                case 4:
+                    done = Robot::drivetrain->getNearestBall();
+
+                    break;
+            }
+            break;
     }
-   // done = Robot::drivetrain->testPaths();
-    //else
-    //    done = Robot::climber->unlock();
     
 }
 

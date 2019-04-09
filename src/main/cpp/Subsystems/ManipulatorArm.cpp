@@ -66,15 +66,15 @@
 
 #else
 
-#define SHOULDER_POT_1    2943 //2884
-#define SHOULDER_POT_2    227 //286
+#define SHOULDER_POT_1    2927 //2943 //2884
+#define SHOULDER_POT_2    274//227 //286
 
 #define ELBOW_POT_1    4
-#define ELBOW_POT_2    2481 //2467
+#define ELBOW_POT_2    2600//2481 //2467
 
 //#define WRIST_POT_1    4 // Cargo Intake Straight Out - in dead zone.
-#define WRIST_POT_1    905 // Hatch Clamp at 90 deg, roller part of claw inwards.
-#define WRIST_POT_2    2500 // Hatch Clamp Straight Out.
+#define WRIST_POT_1    1096//905 // Hatch Clamp at 90 deg, roller part of claw inwards.
+#define WRIST_POT_2    2612//2500 // Hatch Clamp Straight Out.
 // 3770 At 90 deg, roller part of cargo claw outwards.
 // 905 At 90 deg the other way.  2500 - 905 = 1595
 // 3770 - 2500 = 1270. 

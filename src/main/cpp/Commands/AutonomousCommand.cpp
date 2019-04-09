@@ -198,7 +198,7 @@ bool AutonomousCommand::scoreFirstHatch() {
 
 			//done = true;
 			//End();
-			autoScore = Robot::drivetrain->autoScore();
+			autoScore = Robot::drivetrain->autoScore(0);
 			if (autoScore == 1) {
 				autoState++;
 				armMovement2 = false;
@@ -289,7 +289,7 @@ bool AutonomousCommand::getSecondHatch() {
 		case 5:
 			cnt++;
 			if (cnt > 10) {
-				autoScore = Robot::drivetrain->autoScore();
+				autoScore = Robot::drivetrain->autoScore(0);
 				if (autoScore == 1) {
 					autoStateSecondHatch++;
 					cnt = 0;

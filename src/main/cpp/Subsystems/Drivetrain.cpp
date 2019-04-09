@@ -10,6 +10,7 @@
 
 
 #include "../../include/Subsystems/Drivetrain.h"
+#include "../../include/Subsystems/lidar.h"
 #include "../../include/Subsystems/PathFinder/Path.h"
 #include "../../include/Commands/DriveRobot.h"
 #include "../../include/Commands/RobotDrive.h"
@@ -489,6 +490,7 @@ void Drivetrain::initAutoScore() {
 	as_move1 = false;
 	as_m_SubCase = 0;
 	as_mode = 0; 
+    mgb_state = 0;
 }
 
 enum { // Cases for autoScore
@@ -504,6 +506,7 @@ enum { // Cases for autoScore
     autoScoreWaistHasMoved,
     autoScoreReadyForPickPlace,
     autoScorePickPlaceComplete,
+    autoScoreRocketFound,
 };
 
 // autoScore - Next Steps:
@@ -558,54 +561,35 @@ enum { // Cases for autoScore
 //          1->Finished
 //          2->Failed to find target
 //          3->Failed to find target after driving forwards
-int Drivetrain::autoScore(bool autoBack) {
-    double waistAngle,distFromWaist;
+//Parameter: autoType
+//          0 -> human player pickup / cargoship dropoff
+//          1 -> Rocket low level
+//          2 -> Rocket medium level
+//          3 -> Rocket high level
+int Drivetrain::autoScore(int autoType) {
+    double dirX,dirY,mag,scoringAngle2,targetAngle;
+    bool srch_result,as_move_result;
+    double tarX,tarY,tarAngle,tarDist;
 
 	switch (as_m_case) {
         case  autoScoreInit:
             Robot::manipulatorArm->m_CurrentPosition = 0;
-            //as_move1 = true;
-            if(Robot::manipulatorArm->ifHatch()){
-//                as_move1 = Robot::manipulatorArm->moveToXY(17.0,26.0,-182.0,0,20.0); //Hatch scoring position
+
+            as_search_mode = 0;
+            if(autoType == 0)
                 as_move1 = Robot::manipulatorArm->moveToXY(17.0,22.0,-182.0,0,20.0); //*** Practice Bot ***
-                as_mode = 0; // We have a hatch.  We want to place it.
+            else {//For rocket we can start in carry
+                as_move1 = true;
+                as_search_mode = 1;
             }
-            //else if (Robot::manipulatorArm->ifCargo()){
-            //    as_move1 = Robot::manipulatorArm->moveToXY(18.0,48.0,-33,0,20.0); //Cargo Scoring Cargoship
-            //    as_mode = 1; // We have a cargo ball.  We want to score it.
-            //}
-            else 
-                {
-                //if(Robot::manipulatorArm->isHatchMode()){
-//                    as_move1 = Robot::manipulatorArm->moveToXY(17.0,26.0,-182.0,0,20.0); //Hatch Pickup
-                    as_move1 = Robot::manipulatorArm->moveToXY(17.0,22.0,-182.0,0,20.0); // *** Practice Bot ***
-                    as_mode = 2; // We do not have a hatch.  We want to retrieve one.
-                //}
-                /*else
-                    {
-                    as_move1 = Robot::manipulatorArm->moveToXY(9.0,41.0,4.0,0,20.0); //Cargo Pickup
-                    as_mode = 3; // We do not have a cargo ball.  We want to get one.
-                    if(as_move1)
-                        {
-                        Robot::manipulatorArm->setInCargoPosition();
-                        // Start intake rollers.  Move to any other position will stop them.
-                        Robot::manipulatorArm->intakeWheelsSpin(-0.5); // Wheel running.
-                        }
-                    Robot::manipulatorArm->m_CurrentPosition = 5;
-                    }*/
-                }
+
+            if(Robot::manipulatorArm->ifHatch())
+                as_mode = 0; // We have a hatch.  We want to place it.
+            else
+                as_mode = 2; // We do not have a hatch.  We want to retrieve one.
+
             if(as_move1){
                 as_m_case = autoScoreReadLidar1; // Move on to case where we read lidar for drivebase approach.
-				as_initGyro = Robot::ahrs->GetAngle();
-				
-				as_initGyro = 0;
-				as_currentGyro = 0;
-				as_PrevGyro = 0;
-				as_PrevAngle = as_angle;
-				as_PrevDistance = as_distance;
-				as_PrevGyro = as_currentGyro;
-
-				as_currentGyro = as_initGyro;
                 as_lidarScanCount = 0;
 			}
             break;
@@ -615,24 +599,17 @@ int Drivetrain::autoScore(bool autoBack) {
             break;
         case autoScoreExamineLidar:
             if(Robot::lidar->readComplete()) {
-                as_m_case = autoScoreFindLoadStation;
-                //if(as_m_SubCase == 0)
-                //    as_m_case++;
-                //else
-                //    as_m_case = 6;
-            }
-                
-            break; 
-        case autoScoreFindLoadStation:
-            if(Robot::lidar->findLoadStation(60))
-                as_m_case = autoScoreFoundLoadStation;
-            else { // If not found, go back and keep scanning lidar till we find one.
-                as_lidarScanCount++;
                 as_m_case = autoScoreReadLidar1;
-                if(as_lidarScanCount > 3)
-                    return 2;
+                if(autoType == 0){
+                    if(Robot::lidar->findLoadStation(60))
+                        as_m_case = autoScoreFoundLoadStation;
+                }
+                else{
+                    if(Robot::lidar->findRocket_Lines())
+                        as_m_case = autoScoreRocketFound;
+                }
             }
-            break;
+            break; 
         case autoScoreFoundLoadStation:
             {
             as_lidarScanCount = 0;
@@ -641,12 +618,21 @@ int Drivetrain::autoScore(bool autoBack) {
             double cycle_time = 1.0/50.0;
             double wheelbase = 0.545;
             //We have the location
-            as_angle = Robot::lidar->m_ScoringFinal.angle - 180;
-            as_distance = Robot::lidar->m_ScoringFinal.dist;
-            as_ang = Robot::lidar->m_targetAngle;
+            if (as_search_mode == 0) // Cargo / human player station.
+                {
+                //as_angle = Robot::lidar->m_ScoringFinal.angle - 180;
+                as_distance = Robot::lidar->m_ScoringFinal.dist;
+                //as_ang = Robot::lidar->m_targetAngle;
 
-            double tarX = Robot::lidar->m_targetScoring.x;
-            double tarY = Robot::lidar->m_targetScoring.y;// + 100;
+                tarX = Robot::lidar->m_targetScoring.x;
+                tarY = Robot::lidar->m_targetScoring.y;// + 100;
+                }
+            else if (as_search_mode == 1) // Rocket - get data from FindRocket.
+                {
+                tarX = targY; // Code below doesn't use angle or distance stuff.
+                tarY = targX; // need to swap X and Y.  Y is lateral, X is distance away.
+                as_distance = sqrt(tarX*tarX + tarY*tarY);
+                }
 
             printf("\nTarX = %f | TarY = %f | ang=%f",tarX,tarY,as_ang);
 
@@ -655,6 +641,11 @@ int Drivetrain::autoScore(bool autoBack) {
             double arc_angle, dist;
             if(tarX != 0) {
                 r = fabs((tarX*tarX) / (2 * tarY) + (tarY / 2));
+                if ((r - fabs(tarY)*1.25 < 0)||(r == fabs(tarY))) // This is an error condition.  fabs(tarY) is expected to be 
+                    { // quite a bit less than r.  If equal bail as well.  Leads to div 0 errors below.
+                    as_m_case = autoScoreReadLidar1; // go back to reading Lidar.  Current reading is a problem.
+                    break;
+                    }
                 //Waist calculation
                 //  Direction vector center of circle to target
                 double dir_angle = atan((tarX) / (r - fabs(tarY))) * 180 / M_PI;
@@ -769,35 +760,6 @@ int Drivetrain::autoScore(bool autoBack) {
                 //encPrevLeft = encLeft;
                 traverseCnt++;
             }
-
-
-            /*if(m_Path->traverse(traverseCnt,encPrevRight,encPrevLeft,&encRight, &encLeft)) {
-                as_m_case = 1;
-                as_m_SubCase = 1;
-                setLeftMotor(0);
-                setRightMotor(0);
-            }
-            else {
-                setLeftPosition(encLeft);
-                setRightPosition(encRight);
-                encPrevRight = encRight;
-                encPrevLeft = encLeft;
-                traverseCnt++;
-            } */
-            /*
-            //We have a distance to the nearest scoring spto and we are lined up
-            //  distance is based on the lidar not the waist
-            as_distWaist = as_distance + 26.6;
-            //Now we need to take into account the end effect is on the arm
-            if(as_mode == 1)
-                as_distEnd = as_distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) + 100;
-            else
-                as_distEnd = as_distWaist - (Robot::manipulatorArm->getEndEffectorX() * 25.4) - 350;
-            //printf("\n%f | %f | %f | %f",distEnd, (Robot::manipulatorArm->getEndEffectorX() * 25.4), distWaist, distance);
-            //Bow we can move forward
-            as_m_SubCase = 1;
-            as_m_case = 6;
-            */
             }
             break;
         case autoScorePathComplete:
@@ -821,7 +783,11 @@ int Drivetrain::autoScore(bool autoBack) {
             break;
         case autoScoreLidarForWaist: {
             //Recalculate waist angle and move it there, to ensure we are pointed the right direction
-            if (!Robot::lidar->findLoadStation_Lines(-as_ang))
+            if (as_search_mode == 0)
+                srch_result = Robot::lidar->findLoadStation_Lines(-as_ang);
+            else
+                srch_result = Robot::lidar->findRocket_Lines(); // We're looking for rockets.
+            if (!srch_result)
                 {
                 //If not found repeat the scan up to 3 times.
                 Robot::lidar->readLidar(); // Reset lidar indicator so we get a fresh scan.
@@ -829,11 +795,27 @@ int Drivetrain::autoScore(bool autoBack) {
                 }
             else // Scan is good.  Figure out how much to turn the waist.
                 {        
-                double tarAngle = Robot::lidar->m_ScoreLineAngle;
-                double tarX = Robot::lidar->m_ScoringLinePoint.x;
-                double tarY = Robot::lidar->m_ScoringLinePoint.y;
-                double tarDist = Robot::lidar->m_ScoringLineDist;
+                if (as_search_mode == 0)
+                    {
+                    tarAngle = Robot::lidar->m_ScoreLineAngle;
+                    tarX = Robot::lidar->m_ScoringLinePoint.x;
+                    tarY = Robot::lidar->m_ScoringLinePoint.y;
+                    tarDist = Robot::lidar->m_ScoringLineDist;
+                    }
+                else // Looking for a rocket.
+                    {
+                    tarX = Robot::lidar->m_ScoringLinePoint.y; // For waist, use m_ScoringLinePoint,
+                    tarY = Robot::lidar->m_ScoringLinePoint.x; // not tarX, tarY.  They're not set to anything.
+                    //tarX = targY; // Code below doesn't use angle or distance stuff.
+                    //tarY = targX; // need to swap X and Y.  Y is lateral, X is distance away.
+                    tarDist = sqrt(tarX*tarX+tarY*tarY);
+                    if (tarX != 0)
+                        tarAngle = atan((double)tarY / (double)tarX) * 180 / M_PI; // Angle from Lidar to Target.
+                    else
+                        tarAngle = 90;                    
+                    }
                 distFromWaist = sqrt((tarDist*tarDist)+(289.3*289.3)-2*(tarDist)*(289.3)*cos((180-tarAngle) * M_PI/180));
+                printf("\nTarX = %f | TarY = %f | ang=%f | distFromWaist=%f\n",tarX,tarY,tarAngle,distFromWaist);
                 if (distFromWaist != 0)
                     {
                     waistAngle = -asin((tarDist*sin((180-tarAngle) * M_PI/180))/(distFromWaist)) * 180 / M_PI;
@@ -869,7 +851,28 @@ int Drivetrain::autoScore(bool autoBack) {
             else // as_cnt is at 0, no need to wait any longer.
             {   
     //            if (Robot::manipulatorArm->moveToXY(25.5,20.0,-182.0,as_ang,20.0)){ //25.5,25.0,-182.0,as_angle,20.0
-                if (Robot::manipulatorArm->moveToXY(23.17,19.5,-195.5,as_ang,20.0)){ // ** Practice Bot **
+                if (as_search_mode == 0) // cargo ship and loading station
+                    as_move_result = Robot::manipulatorArm->moveToXY(23.17,19.5,-195.5,as_ang,20.0);
+                else // Scoring on rocket.  Can be low, med, high based on as_rocket_score_level
+                    { // distFromWaist is typically 823mm = 32.4".  So start 10" back and move to 6" back.
+                    if (distFromWaist / 25.4 < 46.0)
+                        {
+                        if (autoType == 1)
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 12.0,19.5,-185.0,as_ang,20.0);
+                        else if (autoType == 2)
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 14.0,48.0,-195.5,as_ang,20.0);
+                        else if (autoType == 3)
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 16.0,75.0,-195.5,as_ang,20.0);                    
+                        }
+                    else  // trying to reach out way to far.  Cancel this one.
+                        {
+                        as_m_case = autoScoreReadLidar1; // This lidar readings is trying to make arm
+                        break; // move out way too far.  Cancel.
+                        }
+                    }
+                
+
+                if (as_move_result){ // ** Practice Bot **
                     as_m_case = autoScoreReadyForPickPlace;
                     as_cnt = 0;
                     if(as_mode == 0)
@@ -880,7 +883,19 @@ int Drivetrain::autoScore(bool autoBack) {
             }
             break;
         case autoScoreReadyForPickPlace: // Move forward to pick or place the piece.
-            if (Robot::manipulatorArm->moveToXY(27.17,19.5,-195.5,as_ang,20.0)) // ** Practice Bot **
+            if (as_search_mode == 0)
+                as_move_result = Robot::manipulatorArm->moveToXY(27.17,19.5,-195.5,as_ang,20.0);
+            else
+                {
+                if (autoType == 1)
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,19.5,-185.0,as_ang,20.0);
+                else if (autoType == 2)
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,48.0,-195.5,as_ang,20.0);
+                else if (autoType == 3)
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,75.0,-195.5,as_ang,20.0);                    
+                }
+            
+            if (as_move_result) 
                 {
                 if((as_mode == 1) || (as_mode == 0)) {
                     as_cnt++;
@@ -897,15 +912,63 @@ int Drivetrain::autoScore(bool autoBack) {
                 }
             break;
         case autoScorePickPlaceComplete:
-			if(autoBack)
-				as_distEnd = 50;
 //            if (Robot::manipulatorArm->moveToXY(20.0,20.0,-182.0,as_ang,20.0)){
-            if (Robot::manipulatorArm->moveToXY(20.0,20.0,-187.0,as_ang,20.0)){ // *** Practice Bot ***
+            if (as_search_mode == 0)
+                as_move_result = Robot::manipulatorArm->moveToXY(20.0,20.0,-187.0,as_ang,20.0);
+            else
+                {
+                if (autoType == 1)
+                    as_move_result = Robot::manipulatorArm->moveToXY(15.0,20.0,-187.0,as_ang,20.0);
+                else if (autoType == 2)
+                    as_move_result = Robot::manipulatorArm->moveToXY(15.0,48.0,-187.5,as_ang,20.0);
+                else if (autoType == 3)
+                    as_move_result = Robot::manipulatorArm->moveToXY(15.0,75.0,-187.5,as_ang,20.0);                    
+                }
+            
+            if (as_move_result){ // *** Practice Bot ***
                 as_m_case = autoScoreInit; // Ready for next time.
                 Robot::manipulatorArm->grabHatch();
                 Robot::manipulatorArm->intakeWheelsSpin(0);
 				return 1;
             }
+            break;
+        case autoScoreRocketFound: // Rocket has been found.  Calculate target score point.
+            // Target is point 508mm closer to robot than the midpoint of m_RocketTarget
+            //calculate target
+            //	vector math. Calculate the direction vector of the midpoint perpenticular to
+            //	the vector between pnt1 and pnt2
+            // Need to implement code to determine if we're close enough to a target to just
+            // go score instead of moving the drive base at all.
+            // Rocket targets seem to be off by about 2" to the right on both sides.
+            // This could be due to the way that the lidar rotates and how we're picking up
+            // line end points.  How best to adjust for this?
+            // Easiest is to shift the Y value by 50mm or so.  This is ok when straight on but
+            // can mess things up when there's a substantial angle to it.
+            // Could rotate things (32" out from waist, 2" rotation is 3.5 degrees)
+            // This could most-easily be done during the lidar read for rocket target detection
+            // 
+
+            dirX = Robot::lidar->m_RocketTarget.end.y - Robot::lidar->m_RocketTarget.start.y ;//pnt2Y - pnt1Y;
+            dirY = -(Robot::lidar->m_RocketTarget.end.x - Robot::lidar->m_RocketTarget.start.x) ;//pnt2Y - pnt1Y;
+            //	Convert to unit vector
+            mag = sqrt((dirX * dirX)+(dirY * dirY));
+            dirX /= mag;
+            dirY /= mag;
+            //	calculate target position
+            targX = (508 * dirX) + ((Robot::lidar->m_RocketTarget.end.x + Robot::lidar->m_RocketTarget.start.x) / 2);
+            targY = (508 * dirY) + ((Robot::lidar->m_RocketTarget.end.y + Robot::lidar->m_RocketTarget.start.y) / 2);
+            if (targX != 0)
+                scoringAngle2 = atan(((double)targY) / ((double)targX)) * 180 / M_PI;
+            else
+                scoringAngle2 = 90;
+            if (dirX != 0)							
+                targetAngle = atan(dirY / dirX) * 180 / M_PI;
+            else
+                targetAngle = 90;
+            printf("Rocket Move To = (%d,%d)\n",targX,targY);
+            as_search_mode = 1; // Rocket, not cargo.  Return to autoScoreCloseRocket when movment complete.
+            as_rocket_score_level = 2; // 0=low, 1=mid, 2=high
+            as_m_case = autoScoreFoundLoadStation;
             break;
         case 99: // Special case used to halt further motion ** Testing Only **
             break;
@@ -916,48 +979,133 @@ int Drivetrain::autoScore(bool autoBack) {
 double Drivetrain::getLeftSpeed() {
     return leftMaster->GetEncoder().GetVelocity();
 }
-// double drivetrain::getLeftSpeed() {
-//     return leftMaster->GetVelocity();
-// }
 
-bool Drivetrain::testPaths() {
-    bool complete = false;
-    switch(pathCase) {
+bool Drivetrain::getNearestBall() {
+    switch (mgb_state)  {
         case 0:
-            m_Path->createNewPath();
-            m_Path->addWayPoint(0.0,0.0,0.0);
-            m_Path->addWayPoint(1.0,0.5,30.0);
-
-            if (m_Path->makePath()) {
-                traverseCnt = 0;
-                printf("\nHere");
-                encPrevLeft = getLeftEncoder();
-                encPrevRight = getRightEncoder();
-                pathCase = 1;
+            if((Robot::manipulatorArm->ifHatch())||(Robot::manipulatorArm->ifCargo())) {
+                return true;
             }
-            else
-                printf("\nPath Failure");
+            Robot::manipulatorArm->setInCargoPosition();
+            Robot::manipulatorArm->m_CurrentPosition = 5;
+
+            mgb_polarBallPt.angle = 0.0;
+            mgb_polarBallPt.dist  = 0;
+
+            mgb_cartX = 0;
+            mgb_cartY = 0;
+            mgb_angle = 0.0;
+            mgb_scanCnt = 0;
+            //The idea here is to move the arm into a position where the waist can move freely
+            //  and the end effector doesn't interfer with the lidar.
+            mgb_Move1 = Robot::manipulatorArm->moveToXY(18.0,27.5,-60.0,0,35.0); // Move to X,Y co-ords
+            if(mgb_Move1)
+                mgb_state = 1;
             break;
         case 1:
-            m_Path->debug();
+            Robot::lidar->readLidar();
+            mgb_state = 2;
             break;
+
         case 2:
-            if(m_Path->traverse(traverseCnt,encPrevRight,encPrevLeft,&encRight, &encLeft)) {
-                pathCase = 0;
-                //printf("\nDone");
-                complete = true;
+            // Check to see if the lidar scan is complete
+            if (Robot::lidar->readComplete() == true) {
+                mgb_state = 3;
+            }
+            break;
+
+        case 3:
+            // Call the lidar code to find a cargo ball
+            mgb_polarBallPt = Robot::lidar->findCargo();
+
+            // Check if we got anything back
+            if (mgb_polarBallPt.angle == 0.0 && mgb_polarBallPt.dist == 0) {
+                // TODO: should this do another lidar scan or finish?
+                mgb_scanCnt++;
+                mgb_state = 1;//restart scan;
+                if(mgb_scanCnt > 10)
+                    mgb_state = 7;
             }
             else {
-                setLeftPosition(encLeft);
-                setRightPosition(encRight);
-                frc::SmartDashboard::PutNumber("Traverse Right",encRight);
-                frc::SmartDashboard::PutNumber("Traverse Left",encLeft);
-                //printf("\nCount = %i | Encoders = %f | %f",traverseCnt,encRight,encLeft);
-                encPrevRight = encRight;
-                encPrevLeft = encLeft;
-                traverseCnt++;
+                    mgb_state = 4;
+            }
+            break;
+
+        case 4:  {
+            // We have a ball within range of the arm - move the waist and arm to position over the ball
+            const int  k_WaistDistance(183);   // distance between the waist and the lidar
+
+            // Need to make the distance and angle relative to the center of the waist
+            const double  lidar_dist = static_cast<double>(mgb_polarBallPt.dist);
+            const double  lidar_angle = mgb_polarBallPt.angle;
+
+            // calculate the distance from the waist to the ball (using cosine law)
+            const double  waist_distance = sqrt(lidar_dist * lidar_dist + k_WaistDistance * k_WaistDistance - 
+                                            2 * lidar_dist * k_WaistDistance * cos(lidar_angle * M_PI / 180.0));
+
+            // calculate the angle from the waist to the ball (using sine law)
+            const double waist_angle = asin(lidar_dist * sin(lidar_angle * M_PI / 180.0) / lidar_dist) / M_PI * 180.0;
+
+            // Convert to cartesean coordinates for the arm
+            const double  radians = M_PI * waist_angle / 180;
+
+            mgb_cartX = std::round(waist_distance * std::cos(radians));
+            mgb_cartY = -(std::round(waist_distance * std::sin(radians)));
+            mgb_angle = waist_angle;
+            mgb_cartX = mgb_cartX * 0.0393701;//in mm convert to inchs
+            double ang = asin((mgb_cartX * sin(radians))/(20)) * 180/M_PI;
+            printf("Langle=%f | Wangle = %f | Ldist = %f | Wdist = %f | x=%f | y=%f",lidar_angle,mgb_angle,lidar_dist,waist_distance,mgb_cartX,(ang + mgb_angle) / 2);
+
+            if(mgb_cartX > 34){ //Outside 30"
+                return true;
+            }
+
+            Robot::manipulatorArm->moveWaist(mgb_angle);
+
+            mgb_state = 5;
+            mgb_wrist = -80.0;
+            mgb_delayState = 0;
+            if(mgb_angle < 15)
+                mgb_state = 6;
+            
+            if(mgb_cartX < 20){
+                mgb_state = 6;
+                mgb_delayState = 1;
+                mgb_Move1 = false;
+            }
+                
+            gb_cnt = 0;
+            break;
+        }
+        case 5:
+            if(mgb_delayState == 0) {
+                if(gb_cnt > 20)
+                    mgb_state = 6;
+                gb_cnt++;
+            }
+            else if(mgb_delayState == 1){
+                mgb_Move1 = Robot::manipulatorArm->moveToXY(mgb_cartX,27.5,-80,mgb_angle,35.0);
+                if(mgb_Move1)
+                    mgb_state = 6;
+            }
+            break;
+        case 6:
+            //Move the arm and the waist to pickup the ball
+            mgb_Move2 = Robot::manipulatorArm->moveToXY(mgb_cartX,18,mgb_wrist,mgb_angle,35.0); // Move to X,Y co-ords
+            Robot::manipulatorArm->intakeWheelsSpin(-0.7);
+            if(mgb_Move2 && Robot::manipulatorArm->ifCargo())
+                mgb_state = 7;
+            break;
+
+        case 7:
+            Robot::manipulatorArm->intakeWheelsSpin(0.0);
+            Robot::manipulatorArm->m_CurrentPosition = 0;
+            mgb_Move3 = Robot::manipulatorArm->moveToXY(7.0,26.0,-10.0,0,35.0);
+            if(mgb_Move3){
+                mgb_state = 0;
+                return true;
             }
             break;
     }
-    return complete;
+    return false;
 }

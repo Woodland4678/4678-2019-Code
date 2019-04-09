@@ -42,6 +42,8 @@ private:
 
 	int m_side;
 	bool done = false;
+	int m_state = 0;
+	int m_target = 0;
 
 };
 
