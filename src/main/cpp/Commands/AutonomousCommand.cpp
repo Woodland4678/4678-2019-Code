@@ -151,7 +151,7 @@ void AutonomousCommand::Execute() {
 
 			//done = true;
 			//End();
-			autoScore = Robot::drivetrain->autoScore();
+			autoScore = Robot::drivetrain->autoScore(0);
 			if (autoScore == 1) {
 				autoState++;
 			}
@@ -247,7 +247,7 @@ bool AutonomousCommand::getSecondHatch() {
 			}
 		break;
 		case 4:
-			if (Robot::drivetrain->autoScore()) {
+			if (Robot::drivetrain->autoScore(0)) {
 				autoStateSecondHatch++;
 			}
 		break;

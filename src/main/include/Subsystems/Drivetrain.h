@@ -15,6 +15,7 @@
 #include "frc/WPILib.h"
 #include "rev/CANSparkMax.h"
 #include "PathFinder/Path.h"
+#include "lidar.h"
 
 
 class Drivetrain: public frc::Subsystem {
@@ -55,12 +56,9 @@ public:
 	void setToBrake();
 
 	void initAutoScore();
-	int autoScore(bool autoBack = false);
-	
-	//void test(double power);
+	int autoScore(int autoType);
 
 	double getLeftSpeed();
-	bool testPaths();
 
 
 	void joystickDriveCalculator();
@@ -125,6 +123,24 @@ public:
 	double as_waist_incr = 0;
 	double as_prevWaist = 0;
 	int as_lidarScanCount;
+	int	as_search_mode = 0; // Differentiate between rocket and cargo/feeder station.
+    int targX,targY;
+	int as_rocket_score_level = 0; // 0=low, 1=mid, 2=high
+    double waistAngle,distFromWaist;
+
+	bool getNearestBall();
+	polarPoint mgb_polarBallPt;
+	double mgb_cartX = 0.0; 
+	double mgb_cartY = 0.0;
+	double mgb_angle = 0.0;
+	int mgb_state = 0;
+	bool mgb_Move1 = false;
+	bool mgb_Move2 = false;
+	bool mgb_Move3 = false;
+	int mgb_scanCnt = 0;
+	int mgb_delayState = 0;
+	double mgb_wrist = 0;
+	int gb_cnt = 0;
 };
 
 #endif

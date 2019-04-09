@@ -211,6 +211,10 @@ public:
 	double m_ScoringAngle = 0;
 	double m_ScoringAngle2;
 	int m_scoreCase = 0;
+	tpLine m_RocketTarget;
+
+	bool findRocket_Lines();
+
 
 	double run_regression(int startIndex, int endIndex);
 	double r_r = 0.0;

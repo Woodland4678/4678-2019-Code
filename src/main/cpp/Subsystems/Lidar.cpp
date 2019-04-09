@@ -537,6 +537,10 @@ void Lidar::filterData(bool convertXY, double leftLimit, double rightLimit, int 
 
 		//Angle
 		angle = ((double)lidat[i].angle / 64.0);
+		//*** KLUGE ***
+		// if leftLimit and rightLimit == 119, then adjust the angle to correct for finding rocket target.
+		if ((leftLimit == 119.0)&&(rightLimit == 119.0))
+			angle += 7.0; // Should be 3.5 degrees.  Using 8 to make sure we got the direction right.
 
 		if (angle < (180 - leftLimit))
 			continue;
@@ -605,6 +609,7 @@ void Lidar::FindLines(){
 			lines[0].start.y = lidatXY[n].y;
 			lines[0].lidarAnglest = lidFiltered[n].angle;
 			lines[0].lidarDistst = lidFiltered[n].dist;
+			lines[0].length = 0; // Can be used to verify if this is a legit line or not.
 
 			stcnt = 0; // new line, 0 starting points.
 			stpntsX[stcnt] = lidatXY[n].x; // stpnts get put into [0], then [1], then [2], no shifting.
@@ -649,6 +654,7 @@ void Lidar::FindLines(){
 				lines[NumLines].start.y = lidatXY[n].y;
 				lines[NumLines].lidarAnglest = lidFiltered[n].angle;
 				lines[NumLines].lidarDistst = lidFiltered[n].dist;
+				lines[NumLines].length = 0; // Can be used to verify if this is a legit line or not.
 
 				stcnt = 0; // new line, 0 starting points.
 				stpntsX[stcnt] = lidatXY[n].x; // stpnts get put into [0], then [1], then [2], no shifting.
@@ -764,6 +770,7 @@ void Lidar::FindLines(){
 				lines[NumLines].start.y = lidatXY[n].y;
 				lines[NumLines].lidarAnglest = lidFiltered[n].angle;
 				lines[NumLines].lidarDistst = lidFiltered[n].dist;
+				lines[NumLines].length = 0; // Can be used to verify if this is a legit line or not.
 
 				//Set end position for the new line
 				lines[NumLines].end.x = lidatXY[n].x;
@@ -1358,10 +1365,16 @@ bool Lidar::findLoadStation(int range) // Search lines to see if we can find som
 						dirX /= mag;
 						dirY /= mag;
 						//	calculate target position
-						m_targetScoring.x = ((-460) * dirX) + ((pnt2X + pnt1X) / 2);
-						m_targetScoring.y = ((-460) * dirY) + ((pnt2Y + pnt1Y) / 2);
-						m_ScoringAngle2 = atan(((double)m_targetScoring.y) / ((double)m_targetScoring.x)) * 180 / M_PI;
-						m_targetAngle = atan(dirY / dirX) * 180 / M_PI;
+						m_targetScoring.x = ((-508) * dirX) + ((pnt2X + pnt1X) / 2);
+						m_targetScoring.y = ((-508) * dirY) + ((pnt2Y + pnt1Y) / 2);
+						if (m_targetScoring.x != 0)
+							m_ScoringAngle2 = atan(((double)m_targetScoring.y) / ((double)m_targetScoring.x)) * 180 / M_PI;
+						else
+							m_ScoringAngle2 = M_PI;
+						if (dirX != 0)							
+							m_targetAngle = atan(dirY / dirX) * 180 / M_PI;
+						else
+							m_targetAngle = 90;
 						LidarViewer::Get()->addPointXY(m_targetScoring.x,m_targetScoring.y);
 
 						printf("\nPoints: %i,%i | %i,%i | %f,%f - %f",pnt1X,pnt1Y,pnt2X,pnt2Y,dirX,dirY,mag);
@@ -1663,3 +1676,296 @@ double Lidar::run_regression(int startIndex, int endIndex){
 
 		return r_r;
 	}
+
+// Finding Rocket scoring reference point.
+// Approach is to locate the line made by the fin of the rocket (near 90 degrees)
+// Test data (left rocket) resulted in a line at 78.9 degrees
+// Then look for 2 shorter lines  (might be 1 longer line) that are at an angle of about 20 degrees
+// The difference between the fin and the smaller line(s) works out to about 60 degrees difference.
+// On the right, longer line angle 56.14 (len=394), shorter ones 7.98 (len = 72mm) and 3.03 (len = 170mm)
+// on the right, long line will be found last (due to clockwise lidar scanning)
+// There can easily be lines the preceed and follow the long line of the fin on the rocket.
+// With a hatch panel covering the lower opening ...
+// 
+
+// Ideally, the following will work for both far (for drive to) and near for waist positioning.
+//Line 4: start(-1133, 1187) end(-891, 1758) angle=67.031902 length=620 dist=0.000000, angst=136.343750, distst=1641, angnd=153.140625, distnd=1971
+//Line 5: start(-781, 1831) end(-741, 1841) angle=14.036243 length=41 dist=0.000000, angst=156.906250, distst=1990, angnd=158.078125, distnd=1985
+//Line 6: start(-647, 1728) end(-531, 1734) angle=2.960936 length=116 dist=0.000000, angst=159.468750, distst=1845, angnd=162.984375, distnd=1813
+//Line 7: start(-280, 1753) end(-137, 1778) angle=9.916526 length=145 dist=0.000000, angst=170.921875, distst=1775, angnd=175.593750, distnd=1783
+//+ fin = 4, face = 6
+//+ fin = 4, face = 7
+// Verify distance from start of 6 to end of 7 is near 550mm.   Start 6 to end 7 is (647-137),(1778-1728) -> 512.5
+
+//Line 0: start(-1823, -306) end(-1795, -152) angle=79.695154 length=156 dist=1821.731594, angst=80.484375, distst=1848, angnd=85.171875, distnd=1801
+//Line 1: start(-1851, -118) end(-1989, -54) angle=24.880367 length=152 dist=1951.640592, angst=86.343750, distst=1855, angnd=88.453125, distnd=1990
+//Line 2: start(-1532, 413) end(-1504, 472) angle=64.612094 length=65 dist=1578.655441, angst=105.078125, distst=1587, angnd=107.421875, distnd=1576
+//Line 3: start(-1318, 1069) end(-1189, 1074) angle=2.219656 length=129 dist=1646.635965, angst=129.046875, distst=1697, angnd=132.093750, distnd=1602
+//Line 4: start(-1175, 1105) end(-1132, 1203) angle=66.309311 length=107 dist=1784.158065, angst=133.250000, distst=1613, angnd=136.734375, distnd=1652
+//Line 5: start(-968, 1554) end(-887, 1770) angle=69.443955 length=230 dist=1986.769237, angst=148.093750, distst=1831, angnd=153.390625, distnd=1980
+//Line 6: start(-810, 1816) end(-738, 1826) angle=7.907163 length=72 dist=1828.163286, angst=155.953125, distst=1989, angnd=158.000000, distnd=1969
+//Line 7: start(-634, 1708) end(-523, 1719) angle=5.659482 length=111 dist=1775.700707, angst=159.640625, distst=1822, angnd=163.093750, distnd=1797
+//Line 8: start(-278, 1738) end(-138, 1768) angle=12.094757 length=143 dist=-0.000000, angst=170.921875, distst=1760, angnd=175.531250, distnd=1773
+//- fin = 5, face = 3
+//+ fin = 5, face = 6
+//+ fin = 5, face = 7
+//+ fin = 5, face = 8
+// Dist 6 to 7 302.98, 6 to 8=673.71, 7 to 8=499.61 - closest to 550mm. so 6, 7 is good.  It's also true that 7,8 would be close to on the same
+// line but 6 would not sit on that same line.  There should be a way to detect this (if necessary).
+//Line 0: start(-1823, -296) end(-1793, -143) angle=78.906277 length=155 dist=1829.807640, angst=80.765625, distst=1847, angnd=85.437500, distnd=1799
+//Line 1: start(-1918, -65) end(-1989, -45) angle=15.732005 length=73 dist=1927.660759, angst=88.046875, distst=1919, angnd=88.703125, distnd=1990
+//Line 2: start(-1520, 449) end(-1504, 478) angle=61.113418 length=33 dist=1580.892469, angst=106.453125, distst=1585, angnd=107.625000, distnd=1578
+//Line 3: start(-1238, 1081) end(-1186, 1068) angle=-14.036243 length=53 dist=1614.371085, angst=131.125000, distst=1644, angnd=132.015625, distnd=1596
+//Line 4: start(-1168, 1105) end(-1129, 1206) angle=68.886500 length=108 dist=1624.236744, angst=133.421875, distst=1608, angnd=136.906250, distnd=1652
+//Line 5: start(-959, 1552) end(-876, 1768) angle=68.980266 length=231 dist=1901.523863, angst=148.281250, distst=1825, angnd=153.625000, distnd=1973
+//Line 6: start(-803, 1820) end(-726, 1824) angle=2.973731 length=77 dist=1978.529252, angst=156.203125, distst=1989, angnd=158.281250, distnd=1963
+//Line 7: start(-628, 1717) end(-513, 1722) angle=2.489553 length=115 dist=1806.927226, angst=159.921875, distst=1828, angnd=163.421875, distnd=1797
+//Line 8: start(-266, 1743) end(-159, 1752) angle=4.807954 length=107 dist=1756.087982, angst=171.328125, distst=1763, angnd=174.812500, distnd=1759
+//- fin = 5, face = 1
+//+ fin = 5, face = 6
+//+ fin = 5, face = 7
+//+ fin = 5, face = 8
+// 6 to 7 = 306.11, 7 to 8=470.3 6 to 8=647.5
+// If we limit the range to 450 to 560, we will likely be able to pick out 90+% of the correct short lines.
+// 
+// Note:  On the right side, all angles are -ve.  At least we're looking for -45 to -90 for a fin.
+//
+// findRocket_Lines() will return true if it finds a rocket.
+// variables m_targetScoring.x and m_targetScoring.y are set
+// 
+bool Lidar::findRocket_Lines() {
+	int idxmid,idxst,idxnd,i,j,k,j2,k2,mindist,score,maxscore;
+	int idxmidtp,idxsttp,idxndtp; // temporary index registers.
+	bool found;
+	int tstx[8],tsty[8],tndx[8],tndy[8],tidx[8],tcnt; // small array to help find the right line(s) for face of rocket.
+	double tdist,fdist;
+	double anglel,angleh;
+	double dirX,dirY,mag;								
+
+	filterData(true,119,119,50,2000); // *** using 119, 119 will shift the angle to correct for the 3.5 degree
+	// discrepancy we seem to be getting for finding the rocket.  If we're aiming to the right, 
+	// then the actual angle needs to have 3.5 degrees added to it to correct for things.
+	// An angle of 0 will read as 3.5.  Let's try 8 degrees just to be sure.
+	FindLines();
+
+//	for(int i = 0; i<(linecnt+1); i++){
+//		if (lines[i].length != 0)
+////			printf("Line %i: start(%i, %i) end(%i, %i) angle=%f length=%i dist=%f, angst=%f, distst=%d, angnd=%f, distnd=%d\n",i, lines[i].start.x,lines[i].start.y, lines[i].end.x,lines[i].end.y,lines[i].angle,lines[i].length,lines[i].dist200,lines[i].lidarAnglest,lines[i].lidarDistst,lines[i].lidarAnglend,lines[i].lidarDistnd);
+//			printf("Line %i: start(%i, %i) end(%i, %i) angle=%f length=%i\n",i, lines[i].start.x,lines[i].start.y, lines[i].end.x,lines[i].end.y,lines[i].angle,lines[i].length);
+//		}
+
+	idxmid = -1; // Assume we don't find the line of the length we're looking for.
+	mindist = 100000; // Go for the closest one.  Not likely an issue when looking for the rocket.
+	maxscore = 0; // Clear the max score variable.
+	for (i = 0;i<= linecnt;i++) // Consider all lines in the valid angle and length range
+		{
+		m_ScoringLinePoint.y = ((lines[i].start.x + lines[i].end.x)/2);
+		m_ScoringLinePoint.x = ((lines[i].start.y + lines[i].end.y)/2);
+		m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+		lines[i].dist200 = m_ScoringLineDist;
+
+		idxmidtp = i;
+		idxsttp = -1;
+		idxndtp = -1;
+		score = 0;
+		if ((lines[i].length >= 200)&&((lines[i].angle > 22.5)&&(lines[i].angle <= 90.0))||((lines[i].angle > -90.0)&&(lines[i].angle <= -22.5)))
+			{ // This line looks like the fin on the rocket.
+			if (lines[i].angle > 0) // on the left, angle of fin come in as +
+				{
+				anglel = lines[i].angle - 70;
+				angleh = lines[i].angle - 50;
+				}
+			else // on the right, angle of fin is -
+				{
+				anglel = lines[i].angle + 50;
+				angleh = lines[i].angle + 70;
+				}
+			
+			printf("Fin Found %i\n",i);
+			j = i-1; // Begin with previous line to see if we can find the shorter lines about 60 degrees from the fin.
+			found = false; // There will either be 2 short ones (5cm to 200cm) or 1 longer one around 554mm
+			// With a hatch panel in place, there could easily be 2 lines at the right angle with just about any
+			// distance.  The key item here is that their end point(s) should give us the 554mm 
+			//	int tstx[8],tsty[8],tndx[8],tndy[8],tidx[8],tcnt; // small array to help find the right line(s) for face of rocket.
+			tcnt = 0;
+			while(j >= 0) // Find all lines (could be 1, 2 or 3 such lines)  For this case, lets look for 1 or 2.
+				{
+				if ((lines[j].angle > anglel)&&(lines[j].angle < angleh)&&(lines[j].length > 70)) // Angle is good
+					{
+//					printf("- fin %d\n",j);
+					tdist = sqrt((lines[j].end.x - lines[j].start.x)*(lines[j].end.x - lines[j].start.x) + (lines[j].end.y - lines[j].start.y)*(lines[j].end.y - lines[j].start.y));
+					if ((tdist >= 500.0)&&(tdist <= 560.0)) // This single line is likely the target we are looking for.
+						{ // Maybe we can verify with a distance check from the end point of the fin line to the midpoint of this one.
+						// The distance shouldn't be all that far.  In fact, it should be quite consistent and should measure about 420mm.
+						m_ScoringLinePoint.x = (lines[j].start.x + lines[j].end.x) / 2;
+						m_ScoringLinePoint.y = (lines[j].start.y + lines[j].end.y) / 2;
+						m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+						if (m_ScoringLinePoint.x != 0)
+							m_ScoreLineAngle = atan((double)m_ScoringLinePoint.y / (double)m_ScoringLinePoint.x) * 180 / M_PI; // Angle from Lidar to Target.
+						else
+							m_ScoreLineAngle = 90;						
+						fdist = sqrt((lines[i].end.x - m_ScoringLinePoint.x)*(lines[i].end.x - m_ScoringLinePoint.x) + (lines[i].end.y - m_ScoringLinePoint.y)*(lines[i].end.y - m_ScoringLinePoint.y));
+						if ((fdist > 350)&&(fdist < 450)) // if distance from fin end point to center of scoring point is near 420mm, 
+							{
+							// We have our target, no need to look further.
+							// Since this routine is used to locate the target when far and when close
+							// at this time, provide the line start and end points.  Drivetrain.cpp
+							// will need to manage the rest of the calculations.  Find mid point
+							// then find target closer to robot perpendicular to the line.
+							m_RocketTarget.start.x = lines[j].start.x;
+							m_RocketTarget.start.y = lines[j].start.y;
+							m_RocketTarget.end.x = lines[j].end.x;
+							m_RocketTarget.end.y = lines[j].end.y;
+
+/*
+							dirX = lines[j].end.y - lines[j].start.y;
+							dirY = -(lines[j].end.x - lines[j].start.x);
+							//	Convert to unit vector
+							mag = sqrt((dirX * dirX)+(dirY * dirY));
+							dirX /= mag;
+							dirY /= mag;
+							//	calculate target position
+							m_targetScoring.x = ((-508) * dirX) + ((lines[j].start.x + lines[j].end.x) / 2);
+							m_targetScoring.y = ((-508) * dirY) + ((lines[j].start.y + lines[j].end.y) / 2);
+							if (m_targetScoring.x != 0)
+								m_ScoringAngle2 = atan(((double)m_targetScoring.y) / ((double)m_targetScoring.x)) * 180 / M_PI;
+							else
+								m_ScoringAngle2 = M_PI;
+							if (dirX != 0)							
+								m_targetAngle = atan(dirY / dirX) * 180 / M_PI;
+							else
+								m_targetAngle = 90;
+*/								
+							
+							 printf("Right Side Single Line Target (%d,%d) mid of (%d,%d)-(%d,%d)\n",m_ScoringLinePoint.x,m_ScoringLinePoint.y,m_RocketTarget.start.x,m_RocketTarget.start.y,m_RocketTarget.end.x,m_RocketTarget.end.y);
+							return true;
+							}
+						}
+					if (tcnt < 8) // max of 8 elements.
+						{
+						tstx[tcnt] = lines[j].start.x;
+						tsty[tcnt] = lines[j].start.y;
+						tndx[tcnt] = lines[j].end.x;
+						tndy[tcnt] = lines[j].end.y;
+						tidx[tcnt] = j;					
+						tcnt++;
+						}	
+					}
+				j--;
+				}
+			
+			printf("- fin %d lines to check.\n",tcnt);
+			for(j = 0;j<tcnt;j++) // search for valid line pair (450 to 560mm between start and end points)
+				{
+				j2 = tidx[j];
+				for(k = j+1;k<tcnt;k++)
+					{ // Get distance from start of earlier line to end of later line.
+					k2 = tidx[k];
+					tdist = sqrt((tstx[k] - tndx[j])*(tstx[k] - tndx[j])+(tsty[k] - tndy[j])*(tsty[k] - tndy[j]));
+					fdist = 0;
+					if ((tdist >= 450.0)&&(tdist <= 555)) // We have found the line end points that are legit.
+						{ // Have a look to see how well the target lines up with the fin end point.
+						m_ScoringLinePoint.x = (tstx[j] + tndx[k]) / 2;
+						m_ScoringLinePoint.y = (tsty[j] + tndy[k]) / 2;
+						m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+						if (m_ScoringLinePoint.x != 0)
+							m_ScoreLineAngle = atan((double)m_ScoringLinePoint.y / (double)m_ScoringLinePoint.x) * 180 / M_PI; // Angle from Lidar to Target.
+						else
+							m_ScoreLineAngle = 90;						
+						fdist = sqrt((lines[i].start.x - m_ScoringLinePoint.x)*(lines[i].start.x - m_ScoringLinePoint.x) + (lines[i].start.y - m_ScoringLinePoint.y)*(lines[i].start.y - m_ScoringLinePoint.y));
+						if ((fdist > 350)&&(fdist < 450)) // if distance from fin end point to center of scoring point is near 420mm, 
+							{
+							// We have our target, no need to look further.
+							m_RocketTarget.start.x = tstx[k];
+							m_RocketTarget.start.y = tsty[k];
+							m_RocketTarget.end.x = tndx[j];
+							m_RocketTarget.end.y = tndy[j];
+							 printf("Right Side 2 Line Target (%d,%d) mid of (%d,%d)-(%d,%d)\n",m_ScoringLinePoint.x,m_ScoringLinePoint.y,m_RocketTarget.start.x,m_RocketTarget.start.y,m_RocketTarget.end.x,m_RocketTarget.end.y);
+							return true;
+							}
+						}
+					printf("%d,%d -> (%d,%d) tdist=%f fdist=%f\n",j2,k2,m_ScoringLinePoint.x,m_ScoringLinePoint.y,tdist,fdist);
+					}
+				}
+
+			j = i + 1;
+			tcnt = 0;
+			while(j <= linecnt)
+				{
+				if ((lines[j].angle > anglel)&&(lines[j].angle < angleh)&&(lines[j].length > 70)) // Angle is good
+					{
+//					printf("+ fin %d\n",j);
+					tdist = sqrt((lines[j].end.x - lines[j].start.x)*(lines[j].end.x - lines[j].start.x) + (lines[j].end.y - lines[j].start.y)*(lines[j].end.y - lines[j].start.y));
+					if ((tdist >= 500.0)&&(tdist <= 560.0)) // This single line is likely the target we are looking for.
+						{ // Maybe we can verify with a distance check from the end point of the fin line to the midpoint of this one.
+						// The distance shouldn't be all that far.  In fact, it should be quite consistent and should measure about 420mm.
+						m_ScoringLinePoint.x = (lines[j].start.x + lines[j].end.x) / 2;
+						m_ScoringLinePoint.y = (lines[j].start.y + lines[j].end.y) / 2;
+						m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+						if (m_ScoringLinePoint.x != 0)
+							m_ScoreLineAngle = atan((double)m_ScoringLinePoint.y / (double)m_ScoringLinePoint.x) * 180 / M_PI; // Angle from Lidar to Target.
+						else
+							m_ScoreLineAngle = 90;						
+						fdist = sqrt((lines[i].end.x - m_ScoringLinePoint.x)*(lines[i].end.x - m_ScoringLinePoint.x) + (lines[i].end.y - m_ScoringLinePoint.y)*(lines[i].end.y - m_ScoringLinePoint.y));
+						if ((fdist > 350)&&(fdist < 450)) // if distance from fin end point to center of scoring point is near 420mm, 
+							{
+							// We have our target, no need to look further.
+							m_RocketTarget.start.x = lines[j].start.x;
+							m_RocketTarget.start.y = lines[j].start.y;
+							m_RocketTarget.end.x = lines[j].end.x;
+							m_RocketTarget.end.y = lines[j].end.y;
+							printf("Left Side Single Line Target (%d,%d) mid of (%d,%d)-(%d,%d)\n",m_ScoringLinePoint.x,m_ScoringLinePoint.y,m_RocketTarget.start.x,m_RocketTarget.start.y,m_RocketTarget.end.x,m_RocketTarget.end.y);
+							return true;
+							}
+						}
+					if (tcnt < 8) // max of 8 elements.
+						{
+						tstx[tcnt] = lines[j].start.x;
+						tsty[tcnt] = lines[j].start.y;
+						tndx[tcnt] = lines[j].end.x;
+						tndy[tcnt] = lines[j].end.y;
+						tidx[tcnt] = j;					
+						tcnt++;
+						}	
+					}
+				j++;
+				}
+
+			printf("+ fin %d lines to check.\n",tcnt);
+			for(j = 0;j<tcnt;j++) // search for valid line pair (450 to 560mm between start and end points)
+				{
+				j2 = tidx[j];
+				for(k = j+1;k<tcnt;k++)
+					{ // Get distance from start of earlier line to end of later line.  This still works, even on the other side of the rocket.
+					k2 = tidx[k];
+					tdist = sqrt((tndx[k] - tstx[j])*(tndx[k] - tstx[j])+(tndy[k] - tsty[j])*(tndy[k] - tsty[j]));
+					fdist = 0;
+					if ((tdist >= 450.0)&&(tdist <= 555)) // We have found the line end points that are legit.
+						{ // Have a look to see how well the target lines up with the fin start point.
+						m_ScoringLinePoint.x = (tstx[j] + tndx[k]) / 2;
+						m_ScoringLinePoint.y = (tsty[j] + tndy[k]) / 2;
+						fdist = sqrt((lines[i].end.x - m_ScoringLinePoint.x)*(lines[i].end.x - m_ScoringLinePoint.x) + (lines[i].end.y - m_ScoringLinePoint.y)*(lines[i].end.y - m_ScoringLinePoint.y));
+						m_ScoringLineDist = sqrt(((m_ScoringLinePoint.x)*(m_ScoringLinePoint.x))+((m_ScoringLinePoint.y)*(m_ScoringLinePoint.y)));
+						if (m_ScoringLinePoint.x != 0)
+							m_ScoreLineAngle = atan((double)m_ScoringLinePoint.y / (double)m_ScoringLinePoint.x) * 180 / M_PI; // Angle from Lidar to Target.
+						else
+							m_ScoreLineAngle = 90;						
+						if ((fdist > 350)&&(fdist < 450)) // if distance from fin end point to center of scoring point is near 420mm, 
+							{
+							// We have our target, no need to look further.
+							m_RocketTarget.start.x = tstx[j];
+							m_RocketTarget.start.y = tsty[j];
+							m_RocketTarget.end.x = tndx[k];
+							m_RocketTarget.end.y = tndy[k];
+							 printf("Left Side 2 Line Target (%d,%d) mid of (%d,%d)-(%d,%d)\n",m_ScoringLinePoint.x,m_ScoringLinePoint.y,m_RocketTarget.start.x,m_RocketTarget.start.y,m_RocketTarget.end.x,m_RocketTarget.end.y);
+							return true;
+							}
+						}
+					printf("%d,%d -> (%d,%d) tdist=%f fdist=%f\n",j2,k2,m_ScoringLinePoint.x,m_ScoringLinePoint.y,tdist,fdist);
+					}
+				}
+			}
+		}
+
+	return false;
+}
