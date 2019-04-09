@@ -339,7 +339,7 @@ bool AutonomousCommand::scoreFarRocket() {
 			}
 		break;
 		case 3: //auto score (this rocket is it's different than the cargo autoscore)
-			autoScore = Robot::drivetrain->autoScore();
+			autoScore = Robot::drivetrain->autoScore(1);
 			if (autoScore == 1) {
 				farRocketState++;
 			} else if (autoScore == 2 || autoScore == 3) {
