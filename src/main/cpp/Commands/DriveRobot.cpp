@@ -31,9 +31,6 @@ void DriveRobot::Initialize() {}
 
 // Called repeatedly when this Command is scheduled to run
 void DriveRobot::Execute() {
-    if (Robot::oi->getdriver()->GetRawButton(7)) {
-		Robot::manipulatorArm->intakeWheelsSpin(0.5);
-	}
     /*frc::SmartDashboard::PutNumber("motor 0", m_pdp->GetCurrent(0));
     frc::SmartDashboard::PutNumber("motor 1", m_pdp->GetCurrent(1));
     frc::SmartDashboard::PutNumber("motor 2", m_pdp->GetCurrent(2));

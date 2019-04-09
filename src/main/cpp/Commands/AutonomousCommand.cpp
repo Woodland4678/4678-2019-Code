@@ -140,7 +140,7 @@ void AutonomousCommand::Execute() {
 		break;
 	}
 
-	if (Robot::oi->getdriver()->GetPOV() == 90) { //Override to allow drivers to take control
+	if (Robot::oi->getdriver()->GetPOV() == 270) { //Override to allow drivers to take control
 		done = true;
 		End();
 	}
@@ -328,10 +328,8 @@ bool AutonomousCommand::scoreFarRocket() {
 		break;
 		case 2: //small delay after driving back
 			if (cnt > 10) {
-				if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn, 0.012,0,0)) {
+				if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn + initialGyroValue, 0.012,0,0)) {
 					//farRocketState++;
-					done = true;
-					End();
 					autoScore = 0;
 				}
 			} else {

@@ -31,7 +31,7 @@ void LineUpToBay::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToBay::Execute() {
-    if(!Robot::oi->getdriver()->GetRawButton(2))
+    if(!Robot::oi->getdriver()->GetRawButton(1))
         {
         done = true;
         return;

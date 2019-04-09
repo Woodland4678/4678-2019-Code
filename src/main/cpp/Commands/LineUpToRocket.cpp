@@ -33,7 +33,7 @@ void LineUpToRocket::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void LineUpToRocket::Execute() {
-    if(!Robot::oi->getdriver()->GetRawButton(3))
+    if(!Robot::oi->getdriver()->GetRawButton(7)&&!Robot::oi->getdriver()->GetRawButton(2)&&!Robot::oi->getdriver()->GetRawButton(3)&&!Robot::oi->getdriver()->GetRawButton(1)&&!Robot::oi->getdriver()->GetRawButton(4))
         {
         done = true;
         return;
@@ -42,14 +42,14 @@ void LineUpToRocket::Execute() {
     switch(m_state){
         case 0:
             {
-            int pov = Robot::oi->getdriver()->GetPOV();
+            int pov = m_side;
             if(pov == 0)
-                m_target = 1; //Rocket Low level autoscore
-            else if(pov == 90)
-                m_target = 2; //Rocket medium level autoscore
-            else if(pov == 180)
                 m_target = 3; //Rocket high level autoscore
-            else if(pov == 270)
+            else if(pov == 1)
+                m_target = 2; //Rocket medium level autoscore
+            else if(pov == 2)
+                m_target = 1; //Rocket low level autoscore
+            else if(pov == 3)
                 m_target = 4; //Cargo ground pickup
             else 
                 done = true;

@@ -74,6 +74,10 @@ void MoveArm::Execute() {
 				{
 				m_btn = 11;
 				}
+			if (Robot::oi->getdriver()->GetPOV() == 90) 
+				{
+				m_btn = 12;
+				}
 
 			break;
 		case 1: //Carry
@@ -211,6 +215,8 @@ void MoveArm::Execute() {
 				else {
 					if(!done)
 						done = Robot::manipulatorArm->moveToXY(7,19,-248,0,ARMSPEED);
+					if(done)
+						m_btn = 0;
 				}
 			}
 			break;

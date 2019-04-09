@@ -574,6 +574,7 @@ int Drivetrain::autoScore(int autoType) {
 	switch (as_m_case) {
         case  autoScoreInit:
             Robot::manipulatorArm->m_CurrentPosition = 0;
+            Robot::manipulatorArm->setInHatchPosition();
 
             as_search_mode = 0;
             if(autoType == 0)
@@ -860,9 +861,9 @@ int Drivetrain::autoScore(int autoType) {
                         if (autoType == 1)
                             as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 12.0,19.5,-185.0,as_ang,20.0);
                         else if (autoType == 2)
-                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 14.0,48.0,-195.5,as_ang,20.0);
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 14.0,48.0,-181.5,as_ang,25.0);
                         else if (autoType == 3)
-                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 16.0,75.0,-195.5,as_ang,20.0);                    
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 16.0,75.0,-175.5,as_ang,35.0);                    
                         }
                     else  // trying to reach out way to far.  Cancel this one.
                         {
@@ -890,17 +891,23 @@ int Drivetrain::autoScore(int autoType) {
                 if (autoType == 1)
                     as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,19.5,-185.0,as_ang,20.0);
                 else if (autoType == 2)
-                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,48.0,-195.5,as_ang,20.0);
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,48.0,-181.5,as_ang,20.0);
                 else if (autoType == 3)
-                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,75.0,-195.5,as_ang,20.0);                    
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,76.0,-173.5,as_ang,20.0);                    
                 }
             
             if (as_move_result) 
                 {
                 if((as_mode == 1) || (as_mode == 0)) {
                     as_cnt++;
-                    if(as_cnt == 30) // After moving arm forward, wait to ensure hatch is released.
-                        as_m_case = autoScorePickPlaceComplete;
+                    if(autoType == 0){
+                        if(as_cnt == 30) // After moving arm forward, wait to ensure hatch is released.
+                            as_m_case = autoScorePickPlaceComplete;
+                    }
+                    else {
+                        if(as_cnt == 40) // After moving arm forward, wait to ensure hatch is released.
+                            as_m_case = autoScorePickPlaceComplete;
+                    }
                 }
                 else 
                     {
@@ -920,9 +927,9 @@ int Drivetrain::autoScore(int autoType) {
                 if (autoType == 1)
                     as_move_result = Robot::manipulatorArm->moveToXY(15.0,20.0,-187.0,as_ang,20.0);
                 else if (autoType == 2)
-                    as_move_result = Robot::manipulatorArm->moveToXY(15.0,48.0,-187.5,as_ang,20.0);
+                    as_move_result = Robot::manipulatorArm->moveToXY(15.0,45.0,-181.5,as_ang,20.0);
                 else if (autoType == 3)
-                    as_move_result = Robot::manipulatorArm->moveToXY(15.0,75.0,-187.5,as_ang,20.0);                    
+                    as_move_result = Robot::manipulatorArm->moveToXY(6.0,75.0,-177.5,as_ang,20.0);                    
                 }
             
             if (as_move_result){ // *** Practice Bot ***
@@ -933,6 +940,7 @@ int Drivetrain::autoScore(int autoType) {
             }
             break;
         case autoScoreRocketFound: // Rocket has been found.  Calculate target score point.
+            {
             // Target is point 508mm closer to robot than the midpoint of m_RocketTarget
             //calculate target
             //	vector math. Calculate the direction vector of the midpoint perpenticular to
@@ -955,8 +963,15 @@ int Drivetrain::autoScore(int autoType) {
             dirX /= mag;
             dirY /= mag;
             //	calculate target position
-            targX = (508 * dirX) + ((Robot::lidar->m_RocketTarget.end.x + Robot::lidar->m_RocketTarget.start.x) / 2);
-            targY = (508 * dirY) + ((Robot::lidar->m_RocketTarget.end.y + Robot::lidar->m_RocketTarget.start.y) / 2);
+            double distAway = 508;
+            if (autoType == 1)
+               distAway = 508;
+            else if (autoType == 2) 
+                distAway = 500;
+            else if (autoType == 3)
+                distAway = 250;
+            targX = (distAway * dirX) + ((Robot::lidar->m_RocketTarget.end.x + Robot::lidar->m_RocketTarget.start.x) / 2);
+            targY = (distAway * dirY) + ((Robot::lidar->m_RocketTarget.end.y + Robot::lidar->m_RocketTarget.start.y) / 2);
             if (targX != 0)
                 scoringAngle2 = atan(((double)targY) / ((double)targX)) * 180 / M_PI;
             else
@@ -969,6 +984,7 @@ int Drivetrain::autoScore(int autoType) {
             as_search_mode = 1; // Rocket, not cargo.  Return to autoScoreCloseRocket when movment complete.
             as_rocket_score_level = 2; // 0=low, 1=mid, 2=high
             as_m_case = autoScoreFoundLoadStation;
+            }
             break;
         case 99: // Special case used to halt further motion ** Testing Only **
             break;
@@ -996,6 +1012,7 @@ bool Drivetrain::getNearestBall() {
             mgb_cartY = 0;
             mgb_angle = 0.0;
             mgb_scanCnt = 0;
+            mgb_Move2 = false;
             //The idea here is to move the arm into a position where the waist can move freely
             //  and the end effector doesn't interfer with the lidar.
             mgb_Move1 = Robot::manipulatorArm->moveToXY(18.0,27.5,-60.0,0,35.0); // Move to X,Y co-ords
@@ -1056,10 +1073,11 @@ bool Drivetrain::getNearestBall() {
             double ang = asin((mgb_cartX * sin(radians))/(20)) * 180/M_PI;
             printf("Langle=%f | Wangle = %f | Ldist = %f | Wdist = %f | x=%f | y=%f",lidar_angle,mgb_angle,lidar_dist,waist_distance,mgb_cartX,(ang + mgb_angle) / 2);
 
-            if(mgb_cartX > 34){ //Outside 30"
+            if(mgb_cartX > 32){ //Outside 30"
                 return true;
             }
-
+            if((mgb_angle > 50)||(mgb_angle < -50))
+                return true;
             Robot::manipulatorArm->moveWaist(mgb_angle);
 
             mgb_state = 5;
@@ -1091,7 +1109,8 @@ bool Drivetrain::getNearestBall() {
             break;
         case 6:
             //Move the arm and the waist to pickup the ball
-            mgb_Move2 = Robot::manipulatorArm->moveToXY(mgb_cartX,18,mgb_wrist,mgb_angle,35.0); // Move to X,Y co-ords
+            if(!mgb_Move2)
+                mgb_Move2 = Robot::manipulatorArm->moveToXY(mgb_cartX,18,mgb_wrist,mgb_angle,35.0); // Move to X,Y co-ords
             Robot::manipulatorArm->intakeWheelsSpin(-0.7);
             if(mgb_Move2 && Robot::manipulatorArm->ifCargo())
                 mgb_state = 7;

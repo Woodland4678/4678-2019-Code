@@ -53,12 +53,12 @@ OI::OI() {
     operatorBtn5_LB_HPHatchIntake->WhenPressed(new MoveArm(7));
     
     driver.reset(new frc::Joystick(0));
-    //driverBtn7_LT_Spin180.reset(new frc::JoystickButton(driver.get(), 7));
-    //driverBtn7_LT_Spin180->WhenPressed(new Spin180());
+    driverBtn7_LT_Spin180.reset(new frc::JoystickButton(driver.get(), 7));
+    driverBtn7_LT_Spin180->WhenPressed(new LineUpToRocket(3));
     driverBtn8_RT_GoToBall.reset(new frc::JoystickButton(driver.get(), 8));
     driverBtn8_RT_GoToBall->WhileHeld(new GoToBall());
     driverBtn1_X_LineUpToBay.reset(new frc::JoystickButton(driver.get(), 1));
-    driverBtn1_X_LineUpToBay->WhenPressed(new MoveArm(12));
+    driverBtn1_X_LineUpToBay->WhenPressed(new LineUpToBay());
     //driverBtn6_RB_Intake.reset(new frc::JoystickButton(driver.get(), 6));
     //driverBtn6_RB_Intake->WhenPressed(new IntakeControl());
     driverBtn5_LB_Release.reset(new frc::JoystickButton(driver.get(), 5));
@@ -68,11 +68,11 @@ OI::OI() {
     driverBtn9_BACK_ClimbHigh.reset(new frc::JoystickButton(driver.get(), 9));
     driverBtn9_BACK_ClimbHigh->WhenPressed(new Climb(1));
     driverBtn4_Y_LineUpToRocketFar.reset(new frc::JoystickButton(driver.get(), 4));
-    driverBtn4_Y_LineUpToRocketFar->WhenPressed(new LineUpToRocket(2));
+    driverBtn4_Y_LineUpToRocketFar->WhenPressed(new LineUpToRocket(0));
     driverBtn3_B_LineUpToRocketMiddle.reset(new frc::JoystickButton(driver.get(), 3));
-    driverBtn3_B_LineUpToRocketMiddle->WhenPressed(new LineUpToRocket(0));
+    driverBtn3_B_LineUpToRocketMiddle->WhenPressed(new LineUpToRocket(1));
     driverBtn2_A_LineUpToRocketClose.reset(new frc::JoystickButton(driver.get(), 2));
-    driverBtn2_A_LineUpToRocketClose->WhenPressed(new LineUpToBay());
+    driverBtn2_A_LineUpToRocketClose->WhenPressed(new LineUpToRocket(2));
 
     // SmartDashboard Buttons
     //frc::SmartDashboard::PutData("GoToBall", new GoToBall());
