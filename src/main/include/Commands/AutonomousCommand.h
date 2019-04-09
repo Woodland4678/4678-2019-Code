@@ -34,14 +34,18 @@ public:
 	void End() override;
 	void Interrupted() override;
 	bool getSecondHatch();
-	bool driverControl();
+	//bool driverControl();
+	bool scoreFirstHatch();
+	bool scoreFarRocket();
 private:
 	int autoMode = 0;
 	int autoSide = 0;
 	int autoState = 0;
+	int farRocketState = 0;
 	int autoStateSecondHatch = 0;
 	double secondHatchTurnAmount = 0;
 	int cnt = 0;
+	int autonomousSelection = 0;
 	bool armMovement0 = false;
 	bool armMovement1 = false;
 	bool armMovement2 = false;

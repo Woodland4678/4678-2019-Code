@@ -57,8 +57,10 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 	Robot::drivetrain->setToBrake();
 	armMovement1 = false;
 	if (autoSide == 0 && autoMode == 1) { //Left side, level 1 auto to cargo ship
-		leftCmStraightBack = -120;
-		rightCmStraightBack = -120;
+		autonomousSelection = 1;
+
+		leftCmStraightBack = -135;
+		rightCmStraightBack = -135;
 
 		leftArc = -380;
 		rightArc = -315;
@@ -66,8 +68,9 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		straightBackRampUpDistance = 30;
 
 		amountToTurn = -88 + initialGyroValue;
-		secondHatchAmountToTurn = 8 + initialGyroValue;
+		secondHatchAmountToTurn = 10 + initialGyroValue;
 	} else if (autoSide == 0 && autoMode == 2) { //left Side level 2 auto to cargo ship
+		autonomousSelection = 2;
 		leftCmStraightBack = -200;
 		rightCmStraightBack = -200;
 
@@ -75,26 +78,40 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		leftArc = -380;
 		rightArc = -315;
 		amountToTurn = -89 + initialGyroValue;
-		secondHatchAmountToTurn = 8 + initialGyroValue;
+		secondHatchAmountToTurn = 10 + initialGyroValue;
 	}
 
 	else if (autoSide == 2 && autoMode == 1) { //Right Side level 1 auto to cargo ship
-		leftCmStraightBack = -130;
-		rightCmStraightBack = -130;
-		leftArc = -347;
-		rightArc = -392;
-		straightBackRampUpDistance = 70;
+		autonomousSelection = 3;
+		leftCmStraightBack = -135;
+		rightCmStraightBack = -135;
+		leftArc = -285;
+		rightArc = -310;
+		straightBackRampUpDistance = 40;
 		amountToTurn = 88 + initialGyroValue;
-		secondHatchAmountToTurn = -8 + initialGyroValue;
+		secondHatchAmountToTurn = -7 + initialGyroValue;
 	} else if (autoSide == 2 && autoMode == 2) { //right side level 2 auto to cargo ship
-		leftCmStraightBack = -220;
-		rightCmStraightBack = -220;
+		autonomousSelection = 4;
+		leftCmStraightBack = -205;
+		rightCmStraightBack = -205;
 		straightBackRampUpDistance = 125;
 		leftArc = -320;
 		rightArc = -360;
 		amountToTurn = 88 + initialGyroValue;
-		secondHatchAmountToTurn = -8 + initialGyroValue;
-	} else { //any other mode finish auto mode (not sure if this goes to teleop control or not)
+		secondHatchAmountToTurn = -10 + initialGyroValue;
+	} else if (autoSide == 2 && autoMode == 3) { // right side far Rocket hatch low
+		autonomousSelection = 5;
+		rightArc = -495;
+		leftArc = -430;
+		amountToTurn = -38;
+	} else if (autoSide == 0 && autoMode == 3) { //left side far Rocket hatch low
+		autonomousSelection = 5;
+		rightArc = -450;
+		leftArc = -535;
+		amountToTurn = 38;
+	}
+	
+	else { //any other mode finish auto mode goes to full driver control
 		End();
 		done = true;
 	}
@@ -102,8 +119,38 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 
 // Called repeatedly when this Command is scheduled to run
 void AutonomousCommand::Execute() {
+	switch(autonomousSelection) {
+		case 0:
+			scoreFirstHatch();
+		break;
+		case 1:
+			scoreFirstHatch();
+		break;
+		case 2:
+			scoreFirstHatch();
+		break;
+		case 3:
+			scoreFirstHatch();
+		break;
+		case 4:
+			scoreFirstHatch();
+		break;
+		case 5:
+			scoreFarRocket();
+		break;
+	}
+
+	if (Robot::oi->getdriver()->GetPOV() == 90) { //Override to allow drivers to take control
+		done = true;
+		End();
+	}
+}
+
+// Make this return true when this Command no longer needs to run execute()
+bool AutonomousCommand::scoreFirstHatch() {
 	switch(autoState) {
 		case 0: //gets off the HAB
+		Robot::manipulatorArm->grabHatch();
 		if (!armMovement0) {
 			armMovement0 = Robot::manipulatorArm->moveToXY(8,21,-230,0,30);
 		}
@@ -119,7 +166,7 @@ void AutonomousCommand::Execute() {
 			if (!armMovement0) {
 				armMovement0 = Robot::manipulatorArm->moveToXY(8,21,-230,0,30);
 			}
-			if (Robot::drivetrain->goToDistance(rightArc, leftArc,0.75,100,50,0.3,0.4)) {
+			if (Robot::drivetrain->goToDistance(rightArc, leftArc,0.75,75,100,0.3,0.15)) {
 				autoState++;
 				Robot::manipulatorArm->m_CurrentPosition = 0;
 				Robot::drivetrain->resetGoToDistanceState();
@@ -129,7 +176,7 @@ void AutonomousCommand::Execute() {
 		break;
 		case 2: //brief pause after arc
 			cnt++;
-			if (cnt > 10) {
+			if (cnt > 15) {
 				autoState++;
 				cnt = 0;
 			}
@@ -154,6 +201,7 @@ void AutonomousCommand::Execute() {
 			autoScore = Robot::drivetrain->autoScore();
 			if (autoScore == 1) {
 				autoState++;
+				armMovement2 = false;
 			}
 			else if (autoScore == 2 || autoScore == 3) {
 				End();
@@ -161,11 +209,11 @@ void AutonomousCommand::Execute() {
 			}
 		break;
 		case 5:
-			done = true;
-			End();
-			// if (getSecondHatch()) {
-			// 	autoState++;
-			// }
+			//done = true;
+			//End();
+			 if (getSecondHatch()) {
+			 	autoState++;
+			 }
 		break;
 		case 6:
 			done = true;
@@ -183,14 +231,8 @@ void AutonomousCommand::Execute() {
 		case 10:
 		break;
 	}
-
-	if (Robot::oi->getdriver()->GetPOV() == 90) { //Override to allow drivers to take control
-		done = true;
-		End();
-	}
 }
 
-// Make this return true when this Command no longer needs to run execute()
 bool AutonomousCommand::getSecondHatch() {
 	switch(autoStateSecondHatch) {
 		// case 0:
@@ -201,19 +243,16 @@ bool AutonomousCommand::getSecondHatch() {
 		// 		cnt = 0;
 		// 	}
 		// break;
-		// case 1:
-		// 	cnt++;
-		// 	Robot::manipulatorArm->releaseHatch();
-		// 	if (cnt > 50) {
-		// 		if (Robot::drivetrain->goToDistance(-50,-50,0.35,20,30,0.2,0.15)) {
-		// 			autoStateSecondHatch++;
-		// 			cnt = 0;
-		// 		}
-		// 	}
-		// break;
 		case 0:
+
+			if (Robot::drivetrain->goToDistance(-50,-50,0.35,20,30,0.2,0.15)) {
+				autoStateSecondHatch++;
+				cnt = 0;
+			}
+		break;
+		case 1:
 			if (!armMovement2) {
-				armMovement2 = Robot::manipulatorArm->moveToXY(7.0,29,-203.0,0,30);
+				armMovement2 = Robot::manipulatorArm->moveToXY(7.0,29,-203,0,30);
 			} else {
 				autoStateSecondHatch++;
 			}
@@ -223,7 +262,7 @@ bool AutonomousCommand::getSecondHatch() {
 			// 	autoState++;
 			// }
 		break;
-		case 1:
+		case 2:
 			// if (!armMovement2) {
 			// 	armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
 			// }
@@ -233,25 +272,36 @@ bool AutonomousCommand::getSecondHatch() {
 				cnt = 0;
 			}
 		break;
-		case 2:
+		case 3:
 			cnt++;
 			if (cnt > 10) {
 				autoStateSecondHatch++;
+				cnt = 0;
 			}
 
 		break;
-		case 3:
-			if (Robot::drivetrain->goToDistance(440,440,0.8,70,70,0.2,0.2)) {
-				autoStateSecondHatch++;
-				Robot::drivetrain->initAutoScore();
-			}
-		break;
 		case 4:
-			if (Robot::drivetrain->autoScore()) {
+			if (Robot::drivetrain->goToDistance(455,455,0.8,70,90,0.2,0.2)) {
 				autoStateSecondHatch++;
+				autoScore = 0;
 			}
 		break;
 		case 5:
+			cnt++;
+			if (cnt > 10) {
+				autoScore = Robot::drivetrain->autoScore();
+				if (autoScore == 1) {
+					autoStateSecondHatch++;
+					cnt = 0;
+				}
+				else if (autoScore == 2 || autoScore == 3) {
+					cnt = 0;
+					done = true;
+					End();
+				}
+			}
+		break;
+		case 6:
 			return true;
 		break;
 
@@ -259,83 +309,54 @@ bool AutonomousCommand::getSecondHatch() {
 	return false;
 }
 
-bool AutonomousCommand::driverControl() {
-	double JoyX = Robot::oi->getdriver()->GetX();
-    double JoyY = Robot::oi->getdriver()->GetY();
-    //frc::SmartDashboard::PutNumber("Current Angle: ", Robot::ahrs->GetAngle());
-    // Get X and Y values with some deadband.  Subtract/add deadband back in to ensure we
-    // start at 0.0 instead of +/-0.05
-    if ((JoyX > -0.05)&&(JoyX <= 0.05))
-        JoyX = 0.0;
-    else if (JoyX < -0.05)
-        JoyX += 0.05;
-    else
-        JoyX -= 0.05;
+bool AutonomousCommand::scoreFarRocket() {
+	switch(farRocketState) {
+		case 0: //drives back off the level 2 platform
+			Robot::manipulatorArm->grabHatch();
+			if (!armMovement0) {
+				armMovement0 = Robot::manipulatorArm->moveToXY(8,21,-230,0,30);
+			}	
+			if (Robot::drivetrain->goToDistance(-135, -135, 0.35, 50, 20, 0.15, 0.15)) {
+				farRocketState++;
+			}
+		break;
+		case 1: //arcs to the rocketship
+			if (Robot::drivetrain->goToDistance(rightArc, leftArc, 0.7, 0, 120, 0.15,0.15)) {
+				farRocketState++;
+				cnt = 0;
+			}
+		break;
+		case 2: //small delay after driving back
+			if (cnt > 10) {
+				if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn, 0.012,0,0)) {
+					//farRocketState++;
+					done = true;
+					End();
+					autoScore = 0;
+				}
+			} else {
+				cnt++;
+			}
+		break;
+		case 3: //auto score (this rocket is it's different than the cargo autoscore)
+			autoScore = Robot::drivetrain->autoScore();
+			if (autoScore == 1) {
+				farRocketState++;
+			} else if (autoScore == 2 || autoScore == 3) {
+				done = true;
+				End();
+			}
+		break;
+		case 4: //will drive backwards a bit after scoring the hatch
+			if (Robot::drivetrain->goToDistance(-50, -50, 0.35, 15, 15, 0.15, 0.15)) {
+				farRocketState++;
+			}
+		break;
+		case 5:
+			done = true;
+			End();
+		break;
 
-    if ((JoyY > -0.05)&&(JoyY <= 0.05)) {
-        JoyY = 0.0;
-        if(Robot::manipulatorArm->m_FineLimitHit)
-            JoyY = -0.2;
-    }
-    else if (JoyY < -0.05)
-        JoyY += 0.05;
-    else
-        JoyY -= 0.05;
-
-    // Use X^2
-    double JoyX2 = JoyX * JoyX;
-    double JoyY2 = JoyY * JoyY;
-
-    // Correct the sign since x^2 is always positive.
-    if (JoyX < 0)
-        JoyX2 =-JoyX2;
-    if (JoyY < 0)
-        JoyY2 = -JoyY2;
-
-    // Calculate Power Value.
-    // Multiplier last year was 0.75, but too sensitive this year. 
-    // March 9 11:00 am Start for drivers at 0.35 and adjust
-
-    // This may make turning kinda slow.  We should really read
-    // current speed and adjust the amount of JoyX2 based on 
-    // the speed reading.
-    double leftPower = -(JoyY2 - 0.35 * JoyX2);   
-    double rightPower = -(JoyY2 + 0.35 * JoyX2);
-
-    //frc::SmartDashboard::PutNumber("left Power: ", leftPower);
-   // frc::SmartDashboard::PutNumber("right Power: ", rightPower);
-
-   
-
-    if(!Robot::climber->m_Climbing) {
-        if (Robot::oi->getdriver()->GetRawButton(6)) {
-            leftPower *= 0.30;
-            rightPower *= 0.30;
-        }
-        Robot::drivetrain->setLeftMotor(leftPower);
-        Robot::drivetrain->setRightMotor(rightPower);
-    }
-    // Steve test ****
-
-    // Deadzone.
-    if (fabs(JoyX) < 0.05 && fabs(JoyY) < 0.05)
-        JoyX = 0.0;
-    else if (JoyX > 0)
-        JoyX -= 0.05;
-    else
-        JoyX += 0.05;
-
-    if (fabs(JoyY) < 0.05)
-        JoyY = 0.0;
-    else if (JoyY > 0)
-        JoyY -= 0.05;
-    else
-        JoyY += 0.05;
-
-	if (Robot::oi->getoperator1()->GetRawButton(12)) { //move on to next part when operator presses right joystick
-		return true;
-	} else {
-		return false;
 	}
 }
 

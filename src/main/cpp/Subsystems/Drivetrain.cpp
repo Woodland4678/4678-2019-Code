@@ -461,7 +461,7 @@ bool Drivetrain::GyroTurn(double current, double turnAmount, double p, double i,
 		totalValue = 0.8;
 	if(totalValue < -0.8)
 		totalValue = -0.8;
-	totalValue *= 0.75;
+	totalValue *= 0.30;
 	setRightMotor(-totalValue);
 	setLeftMotor(totalValue);
 
