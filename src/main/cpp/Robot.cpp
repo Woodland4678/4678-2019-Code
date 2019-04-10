@@ -111,8 +111,16 @@ void Robot::TeleopPeriodic() {
 			Robot::manipulatorArm->setIntakeMode(0); // Mode 0, we just spit out the cargo.
 	}
 	//frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistPot());
-	if((Robot::manipulatorArm->m_CurrentPosition == 0)&&(!climber->m_Climbing)&&(!climber->m_autoScore))
+	if((prevPos == 5) && (Robot::manipulatorArm->m_CurrentPosition != 5))
+		spinCount = 20;
+	if((Robot::manipulatorArm->m_CurrentPosition == 0)&&(!climber->m_Climbing)&&(!climber->m_autoScore)&&(spinCount == 0))
 		Robot::manipulatorArm->intakeWheelsSpin(-JoyY);
+
+	spinCount--;
+	if(spinCount < 0)
+		spinCount = 0;
+
+	prevPos = Robot::manipulatorArm->m_CurrentPosition;
 	// Code added to allow use of POV to move shoulder and elbow for
 	// establishing target positions with the robot driving them.
 

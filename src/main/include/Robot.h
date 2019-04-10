@@ -51,5 +51,7 @@ public:
 	void TeleopPeriodic() override;
 
 	static AHRS *ahrs;
+	int prevPos = 0;
+	int spinCount = 0;
 };
 #endif

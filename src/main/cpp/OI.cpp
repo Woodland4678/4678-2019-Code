@@ -76,14 +76,14 @@ OI::OI() {
 
     // SmartDashboard Buttons
     //frc::SmartDashboard::PutData("GoToBall", new GoToBall());
-    frc::SmartDashboard::PutData("Move Wrist", new MoveArm(0));
+    /*frc::SmartDashboard::PutData("Move Wrist", new MoveArm(0));
     frc::SmartDashboard::PutData("Move Elbow", new MoveArm(1));
     frc::SmartDashboard::PutData("Move Shoulder", new MoveArm(2));
     frc::SmartDashboard::PutData("Set PID", new MoveArm(3));
     frc::SmartDashboard::PutData("Position 1", new MoveArm(4));
     frc::SmartDashboard::PutData("Position 2", new MoveArm(5));
     frc::SmartDashboard::PutData("SwapGripper", new SwapGripper());
-    frc::SmartDashboard::PutData("ClimbHere", new Climb(1));
+    frc::SmartDashboard::PutData("ClimbHere", new Climb(1));*/
     //frc::SmartDashboard::PutData("LineUpToBay", new LineUpToBay());
     //frc::SmartDashboard::PutData("Autonomous Command", new AutonomousCommand());
 
