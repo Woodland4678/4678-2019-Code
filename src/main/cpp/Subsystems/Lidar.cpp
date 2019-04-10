@@ -1768,7 +1768,7 @@ bool Lidar::findRocket_Lines() {
 		idxsttp = -1;
 		idxndtp = -1;
 		score = 0;
-		if ((lines[i].length >= 200)&&((lines[i].angle > 22.5)&&(lines[i].angle <= 90.0))||((lines[i].angle > -90.0)&&(lines[i].angle <= -22.5)))
+		if ((lines[i].length >= 200)&&((lines[i].angle > 22.5)&&(lines[i].angle <= 110.0))||((lines[i].angle > -110.0)&&(lines[i].angle <= -22.5)))
 			{ // This line looks like the fin on the rocket.
 			if (lines[i].angle > 0) // on the left, angle of fin come in as +
 				{

@@ -101,14 +101,26 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		secondHatchAmountToTurn = -10 + initialGyroValue;
 	} else if (autoSide == 2 && autoMode == 3) { // right side far Rocket hatch low
 		autonomousSelection = 5;
-		rightArc = -495;
-		leftArc = -430;
+		rightArc = -505;
+		leftArc = -425;
+		rightArcAfterRocketOne = 500;
+		leftArcAfterRocketOne = 470;
+
+		rightArcAfterRocketTwo = 170;
+		leftArcAfterRocketTwo = 200;
 		amountToTurn = -38;
+		amountToTurnAfterRocket = 10;
 	} else if (autoSide == 0 && autoMode == 3) { //left side far Rocket hatch low
 		autonomousSelection = 5;
 		rightArc = -450;
-		leftArc = -535;
+		leftArc = -520;
 		amountToTurn = 38;
+		rightArcAfterRocketOne = 470;
+		leftArcAfterRocketOne = 500;
+
+		rightArcAfterRocketTwo = 200;
+		leftArcAfterRocketTwo = 170;
+		amountToTurnAfterRocket = -8;
 	}
 	
 	else { //any other mode finish auto mode goes to full driver control
@@ -316,12 +328,12 @@ bool AutonomousCommand::scoreFarRocket() {
 			if (!armMovement0) {
 				armMovement0 = Robot::manipulatorArm->moveToXY(8,21,-230,0,30);
 			}	
-			if (Robot::drivetrain->goToDistance(-135, -135, 0.35, 50, 20, 0.15, 0.15)) {
+			if (Robot::drivetrain->goToDistance(-205, -205, 0.35, 50, 90, 0.15, 0.15)) {
 				farRocketState++;
 			}
 		break;
 		case 1: //arcs to the rocketship
-			if (Robot::drivetrain->goToDistance(rightArc, leftArc, 0.7, 0, 120, 0.15,0.15)) {
+			if (Robot::drivetrain->goToDistance(rightArc, leftArc, 0.7, 30, 120, 0.15,0.15)) {
 				farRocketState++;
 				cnt = 0;
 			}
@@ -329,7 +341,7 @@ bool AutonomousCommand::scoreFarRocket() {
 		case 2: //small delay after driving back
 			if (cnt > 10) {
 				if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn + initialGyroValue, 0.012,0,0)) {
-					//farRocketState++;
+					farRocketState++;
 					autoScore = 0;
 				}
 			} else {
@@ -346,15 +358,49 @@ bool AutonomousCommand::scoreFarRocket() {
 			}
 		break;
 		case 4: //will drive backwards a bit after scoring the hatch
-			if (Robot::drivetrain->goToDistance(-50, -50, 0.35, 15, 15, 0.15, 0.15)) {
+			if (Robot::drivetrain->goToDistance(-40, -40, 0.5, 15, 15, 0.25, 0.15)) {
 				farRocketState++;
+				cnt = 0;
+				armMovement1 = false;
 			}
 		break;
 		case 5:
+			//if (cnt > 10) {
+				if (armMovement1) {
+					farRocketState++;
+				} else {
+					armMovement1 = Robot::manipulatorArm->moveToXY(7.0,29,-203.0,0,35);
+				}
+
+			//}
+			//cnt++;
+		break;
+		case 6:
+			if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurnAfterRocket + initialGyroValue, 0.017, 0, 0)) {
+				farRocketState++;
+				cnt = 0;
+			}
+		break;
+		case 7:
+			if (cnt > 5) {
+				farRocketState++;
+			}
+			cnt++;
+		break;
+		case 8:
+			if (Robot::drivetrain->goToDistance(rightArcAfterRocketOne, leftArcAfterRocketOne,0.85,50,80,0.15,0.15)) {
+				farRocketState++;
+			}
+		break;
+		case 9:
+			if (Robot::drivetrain->goToDistance(rightArcAfterRocketTwo,rightArcAfterRocketTwo,0.6,0,75,0.15,0.15)) {
+				farRocketState++;
+			}
+		break;
+		case 10:
 			done = true;
 			End();
 		break;
-
 	}
 }
 
