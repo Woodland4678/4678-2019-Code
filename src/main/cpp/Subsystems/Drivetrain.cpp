@@ -878,9 +878,6 @@ int Drivetrain::autoScore(int autoType) {
             {   
     //            if (Robot::manipulatorArm->moveToXY(25.5,20.0,-182.0,as_ang,20.0)){ //25.5,25.0,-182.0,as_angle,20.0
                 if (as_search_mode == 0) // cargo ship and loading station
-<<<<<<< HEAD
-                    as_move_result = Robot::manipulatorArm->moveToXY(A_SC_PICKUP_X,A_SC_PICKUP_Y,A_SC_PICKUP_W_H,as_ang,ARMSPEED_MEDIUM);
-=======
                     {
                     if ((distFromWaist / 25.4 < 46.0)&&(distFromWaist / 25.4 > 17))
                         as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 14.0,19.5,-195.5,as_ang,20.0);
@@ -890,7 +887,6 @@ int Drivetrain::autoScore(int autoType) {
                         return true; // Bail out by returning true
                         }                    
                     }
->>>>>>> 58464846133297b80a8d8c8f76c1c25a9f7b09ea
                 else // Scoring on rocket.  Can be low, med, high based on as_rocket_score_level
                     { // distFromWaist is typically 823mm = 32.4".  So start 10" back and move to 6" back.
                     if ((distFromWaist / 25.4 < 46.0)&&(distFromWaist / 25.4 > 17))
@@ -921,13 +917,9 @@ int Drivetrain::autoScore(int autoType) {
             break;
         case autoScoreReadyForPickPlace: // Move forward to pick or place the piece.
             if (as_search_mode == 0)
-<<<<<<< HEAD
-                as_move_result = Robot::manipulatorArm->moveToXY(27.17,19.5,-195.5,as_ang,ARMSPEED_MEDIUM);
-=======
                 {
                 as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,19.5,-195.5,as_ang,20.0);
                 }
->>>>>>> 58464846133297b80a8d8c8f76c1c25a9f7b09ea
             else
                 {
                 if (autoType == 1)
