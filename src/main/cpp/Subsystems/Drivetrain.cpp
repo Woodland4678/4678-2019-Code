@@ -462,7 +462,7 @@ bool Drivetrain::GyroTurn(double current, double turnAmount, double p, double i,
 		totalValue = 0.8;
 	if(totalValue < -0.8)
 		totalValue = -0.8;
-	totalValue *= 0.30;
+	totalValue *= 0.45;
 	setRightMotor(-totalValue);
 	setLeftMotor(totalValue);
 
@@ -635,12 +635,36 @@ int Drivetrain::autoScore(int autoType) {
                 as_distance = sqrt(tarX*tarX + tarY*tarY);
                 }
 
+            // Should check here to see if we're pretty close to the target or
+            // too close to the target.  Scoring is likely still possible depending on how
+            // close we really are.  Using actual waist distance works well for scoring on 
+            // the rocket and we should do similar things for hatch pick up and score on the 
+            // cargo ship.
+            // as_distance will be the distance we want to go.  A small tarX (or negative)
+            // would mean we're too close.  We need some idea as to how close is too
+            // close and in such a case, we need to skip directly to the pick/place
+            // and skip the move forward.  For relatively small values of tarX,
+            // We're better off driving straight instead of some kind of wild, short curve.
+            // 
+
             printf("\nTarX = %f | TarY = %f | ang=%f",tarX,tarY,as_ang);
 
             //Calculate radius
             double r = 0;
             double arc_angle, dist;
-            if(tarX != 0) {
+            if (tarX < 25) // If less than 25mm (including negative)
+                { // go directly to the score attempt.
+                as_m_case = autoScorePathComplete;
+                as_cnt = 12; // Allow a 1/4 second wait
+                }
+            else if (tarX < 500) // Anything under 500mm will be a drive straight.
+                { // And we'll hope the waist can make up the difference.
+                // We're also only going to go for the tarX distance.
+                dist = tarX;
+                kr = 1;
+                kl = 1;
+                }
+            else if(tarY != 0) {
                 r = fabs((tarX*tarX) / (2 * tarY) + (tarY / 2));
                 if ((r - fabs(tarY)*1.25 < 0)||(r == fabs(tarY))) // This is an error condition.  fabs(tarY) is expected to be 
                     { // quite a bit less than r.  If equal bail as well.  Leads to div 0 errors below.
@@ -853,10 +877,18 @@ int Drivetrain::autoScore(int autoType) {
             {   
     //            if (Robot::manipulatorArm->moveToXY(25.5,20.0,-182.0,as_ang,20.0)){ //25.5,25.0,-182.0,as_angle,20.0
                 if (as_search_mode == 0) // cargo ship and loading station
-                    as_move_result = Robot::manipulatorArm->moveToXY(23.17,19.5,-195.5,as_ang,20.0);
+                    {
+                    if ((distFromWaist / 25.4 < 46.0)&&(distFromWaist / 25.4 > 17))
+                        as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 14.0,19.5,-195.5,as_ang,20.0);
+                    else
+                        {
+                        as_m_case = autoScoreInit; // Ready for next time.
+                        return true; // Bail out by returning true
+                        }                    
+                    }
                 else // Scoring on rocket.  Can be low, med, high based on as_rocket_score_level
                     { // distFromWaist is typically 823mm = 32.4".  So start 10" back and move to 6" back.
-                    if (distFromWaist / 25.4 < 46.0)
+                    if ((distFromWaist / 25.4 < 46.0)&&(distFromWaist / 25.4 > 17))
                         {
                         if (autoType == 1)
                             as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 12.0,19.5,-185.0,as_ang,20.0);
@@ -867,11 +899,10 @@ int Drivetrain::autoScore(int autoType) {
                         }
                     else  // trying to reach out way to far.  Cancel this one.
                         {
-                        as_m_case = autoScoreReadLidar1; // This lidar readings is trying to make arm
-                        break; // move out way too far.  Cancel.
+                        as_m_case = autoScoreInit; // Ready for next time.
+                        return true; // Bail out by returning true
                         }
                     }
-                
 
                 if (as_move_result){ // ** Practice Bot **
                     as_m_case = autoScoreReadyForPickPlace;
@@ -885,7 +916,9 @@ int Drivetrain::autoScore(int autoType) {
             break;
         case autoScoreReadyForPickPlace: // Move forward to pick or place the piece.
             if (as_search_mode == 0)
-                as_move_result = Robot::manipulatorArm->moveToXY(27.17,19.5,-195.5,as_ang,20.0);
+                {
+                as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,19.5,-195.5,as_ang,20.0);
+                }
             else
                 {
                 if (autoType == 1)
