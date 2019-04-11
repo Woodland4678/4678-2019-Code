@@ -53,25 +53,27 @@ void Drivetrain::Periodic() {
 
 }
 
-void Drivetrain::configMotors() {
+void Drivetrain::configMotors(bool pid, int Maxamps) {
     leftSlaveOne->Follow(*leftMaster);
-    leftSlaveOne->SetSmartCurrentLimit(40,40,40);
+    leftSlaveOne->SetSmartCurrentLimit(Maxamps,Maxamps,Maxamps);
     leftSlaveTwo->Follow(*leftMaster);
-    leftSlaveTwo->SetSmartCurrentLimit(40,40,40);
+    leftSlaveTwo->SetSmartCurrentLimit(Maxamps,Maxamps,Maxamps);
     rightSlaveOne->Follow(*rightMaster);
-    rightSlaveOne->SetSmartCurrentLimit(40,40,40);
+    rightSlaveOne->SetSmartCurrentLimit(Maxamps,Maxamps,Maxamps);
     rightSlaveTwo->Follow(*rightMaster);
-    rightSlaveTwo->SetSmartCurrentLimit(40,40,40);
-    rightMaster->SetSmartCurrentLimit(40,40,40);
-    leftMaster->SetSmartCurrentLimit(40,40,40);
+    rightSlaveTwo->SetSmartCurrentLimit(Maxamps,Maxamps,Maxamps);
+    rightMaster->SetSmartCurrentLimit(Maxamps,Maxamps,Maxamps);
+    leftMaster->SetSmartCurrentLimit(Maxamps,Maxamps,Maxamps);
 
-    rightMaster->GetPIDController().SetP(0.05,0);
-    rightMaster->GetPIDController().SetI(0,0);
-    rightMaster->GetPIDController().SetD(0,0);
+    if(pid){
+        rightMaster->GetPIDController().SetP(0.05,0);
+        rightMaster->GetPIDController().SetI(0,0);
+        rightMaster->GetPIDController().SetD(0,0);
 
-    leftMaster->GetPIDController().SetP(0.05,0);
-    leftMaster->GetPIDController().SetI(0,0);
-    leftMaster->GetPIDController().SetD(0,0);
+        leftMaster->GetPIDController().SetP(0.05,0);
+        leftMaster->GetPIDController().SetI(0,0);
+        leftMaster->GetPIDController().SetD(0,0);
+    }
 }
 
 void Drivetrain::setToCoast() { //set at the end of auto as this is the setup for driving
@@ -880,7 +882,7 @@ int Drivetrain::autoScore(int autoType) {
                 if (as_search_mode == 0) // cargo ship and loading station
                     {
                     if ((distFromWaist / 25.4 < 46.0)&&(distFromWaist / 25.4 > 17))
-                        as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 14.0,19.5,-195.5,as_ang,20.0);
+                        as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_0_READY_DIST,A_SC_0_READY_Y,A_SC_0_READY_W,as_ang,20.0);
                     else
                         {
                         as_m_case = autoScoreInit; // Ready for next time.
@@ -892,11 +894,11 @@ int Drivetrain::autoScore(int autoType) {
                     if ((distFromWaist / 25.4 < 46.0)&&(distFromWaist / 25.4 > 17))
                         {
                         if (autoType == 1)
-                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 12.0,A_SC_ROCKL1_HEIGHT,-185.0,as_ang,ARMSPEED_MEDIUM);
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_1_READY_DIST,A_SC_ROCKL1_HEIGHT,A_SC_1_READY_W,as_ang,ARMSPEED_MEDIUM);
                         else if (autoType == 2)
-                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 14.0,A_ROCKL2_HATCH_Y,-181.5,as_ang,25.0);
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_2_READY_DIST,A_ROCKL2_HATCH_Y,A_SC_2_READY_W,as_ang,25.0);
                         else if (autoType == 3)
-                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 16.0,A_ROCKL3_HATCH_Y,-175.5,as_ang,ARMSPEED_HIGH);                    
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_3_READY_DIST,A_ROCKL3_HATCH_Y,A_SC_3_READY_W,as_ang,ARMSPEED_HIGH);                    
                         }
                     else  // trying to reach out way to far.  Cancel this one.
                         {
@@ -918,16 +920,16 @@ int Drivetrain::autoScore(int autoType) {
         case autoScoreReadyForPickPlace: // Move forward to pick or place the piece.
             if (as_search_mode == 0)
                 {
-                as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,19.5,-195.5,as_ang,20.0);
+                as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_SC_0_READY_Y,A_SC_0_READY_W,as_ang,ARMSPEED_MEDIUM);
                 }
             else
                 {
                 if (autoType == 1)
-                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,A_SC_ROCKL1_HEIGHT,-185.0,as_ang,ARMSPEED_MEDIUM);
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_SC_ROCKL1_HEIGHT,A_SC_1_READY_W,as_ang,ARMSPEED_MEDIUM);
                 else if (autoType == 2)
-                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,A_ROCKL2_HATCH_Y,-181.5,as_ang,ARMSPEED_MEDIUM);
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_ROCKL2_HATCH_Y,A_SC_2_READY_W,as_ang,ARMSPEED_MEDIUM);
                 else if (autoType == 3)
-                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - 7.5,A_ROCKL3_HATCH_Y,-173.5,as_ang,ARMSPEED_MEDIUM);                    
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_ROCKL3_HATCH_Y,A_SC_3_GET_W,as_ang,ARMSPEED_MEDIUM);                    
                 }
             
             if (as_move_result) 
@@ -955,15 +957,15 @@ int Drivetrain::autoScore(int autoType) {
         case autoScorePickPlaceComplete:
 //            if (Robot::manipulatorArm->moveToXY(20.0,20.0,-182.0,as_ang,20.0)){
             if (as_search_mode == 0)
-                as_move_result = Robot::manipulatorArm->moveToXY(20.0,20.0,-187.0,as_ang,ARMSPEED_MEDIUM);
+                as_move_result = Robot::manipulatorArm->moveToXY(A_SC_0_RETURN_X,A_SC_0_RETURN_Y,A_SC_0_RETURN_W,as_ang,ARMSPEED_MEDIUM);
             else
                 {
                 if (autoType == 1)
-                    as_move_result = Robot::manipulatorArm->moveToXY(15.0,A_SC_ROCKL1_HEIGHT + 1,-187.0,as_ang,ARMSPEED_MEDIUM);
+                    as_move_result = Robot::manipulatorArm->moveToXY(A_SC_1_RETURN_X,A_SC_ROCKL1_HEIGHT + 1,A_SC_1_RETURN_W,as_ang,ARMSPEED_MEDIUM);
                 else if (autoType == 2)
-                    as_move_result = Robot::manipulatorArm->moveToXY(15.0,A_ROCKL2_HATCH_Y - 3,-181.5,as_ang,ARMSPEED_MEDIUM);
+                    as_move_result = Robot::manipulatorArm->moveToXY(A_SC_2_RETURN_X,A_ROCKL2_HATCH_Y - 3,A_SC_2_RETURN_W,as_ang,ARMSPEED_MEDIUM);
                 else if (autoType == 3)
-                    as_move_result = Robot::manipulatorArm->moveToXY(6.0,A_ROCKL3_HATCH_Y,-177.5,as_ang,ARMSPEED_MEDIUM);                    
+                    as_move_result = Robot::manipulatorArm->moveToXY(A_SC_3_RETURN_X,A_ROCKL3_HATCH_Y,A_SC_3_RETURN_W,as_ang,ARMSPEED_MEDIUM);                    
                 }
             
             if (as_move_result){ // *** Practice Bot ***
@@ -1049,7 +1051,7 @@ bool Drivetrain::getNearestBall() {
             mgb_Move2 = false;
             //The idea here is to move the arm into a position where the waist can move freely
             //  and the end effector doesn't interfer with the lidar.
-            mgb_Move1 = Robot::manipulatorArm->moveToXY(18.0,27.5,-60.0,0,35.0); // Move to X,Y co-ords
+            mgb_Move1 = Robot::manipulatorArm->moveToXY(A_BP_START_X,A_BP_START_Y,A_BP_START_W,A_BP_START_WAIST,ARMSPEED_HIGH); // Move to X,Y co-ords
             if(mgb_Move1)
                 mgb_state = 1;
             break;
@@ -1136,7 +1138,7 @@ bool Drivetrain::getNearestBall() {
                 gb_cnt++;
             }
             else if(mgb_delayState == 1){
-                mgb_Move1 = Robot::manipulatorArm->moveToXY(mgb_cartX,27.5,-80,mgb_angle,35.0);
+                mgb_Move1 = Robot::manipulatorArm->moveToXY(mgb_cartX,A_BP_START_Y,A_BP_DELAY_W,mgb_angle,ARMSPEED_HIGH);
                 if(mgb_Move1)
                     mgb_state = 6;
             }
@@ -1144,7 +1146,7 @@ bool Drivetrain::getNearestBall() {
         case 6:
             //Move the arm and the waist to pickup the ball
             if(!mgb_Move2)
-                mgb_Move2 = Robot::manipulatorArm->moveToXY(mgb_cartX,18,mgb_wrist,mgb_angle,35.0); // Move to X,Y co-ords
+                mgb_Move2 = Robot::manipulatorArm->moveToXY(mgb_cartX,A_BP_GRAB,mgb_wrist,mgb_angle,ARMSPEED_HIGH); // Move to X,Y co-ords
             Robot::manipulatorArm->intakeWheelsSpin(-0.7);
             if(mgb_Move2 && Robot::manipulatorArm->ifCargo())
                 mgb_state = 7;
@@ -1153,7 +1155,7 @@ bool Drivetrain::getNearestBall() {
         case 7:
             Robot::manipulatorArm->intakeWheelsSpin(0.0);
             Robot::manipulatorArm->m_CurrentPosition = 0;
-            mgb_Move3 = Robot::manipulatorArm->moveToXY(7.0,26.0,-10.0,0,35.0);
+            mgb_Move3 = Robot::manipulatorArm->moveToXY(A_CARRY_X,A_CARRY_Y,A_CARRY_W_C,A_CARRY_WAIST,ARMSPEED_HIGH);
             if(mgb_Move3){
                 mgb_state = 0;
                 return true;

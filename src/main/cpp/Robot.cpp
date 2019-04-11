@@ -37,7 +37,7 @@ void Robot::RobotInit() {
 	// yet. Thus, their requires() statements may grab null pointers. Bad
 	// news. Don't move it.
 	oi.reset(new OI());
-	drivetrain->configMotors();
+	drivetrain->configMotors(true, 40);
 	manipulatorArm->Init();
 
 	// Add commands to Autonomous Sendable Chooser
@@ -112,7 +112,7 @@ void Robot::TeleopPeriodic() {
 	}
 	//frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistPot());
 	if((prevPos == 5) && (Robot::manipulatorArm->m_CurrentPosition != 5))
-		spinCount = 20;
+		spinCount = 50;
 	if((Robot::manipulatorArm->m_CurrentPosition == 0)&&(!climber->m_Climbing)&&(!climber->m_autoScore)&&(spinCount == 0))
 		Robot::manipulatorArm->intakeWheelsSpin(-JoyY);
 

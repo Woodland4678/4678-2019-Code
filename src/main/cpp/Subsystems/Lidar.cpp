@@ -1028,7 +1028,7 @@ void Lidar::groupPoints() {
 			lidGroups[groupCount].scoreStartIndex = p;						// reset the entry point index for scoreGroup()
 		}
 
-		// if the current reaiding is the same distance as the previous one
+		// if the current reading is the same distance as the previous one
 		else if ( lidFiltered[p].dist == lidGroups[groupCount].basePointDistance) {
 
 			lidGroups[groupCount].basePointAngle += lidFiltered[p].angle;	// add to the basePointAngle, this gets averaged out when the group is finalized

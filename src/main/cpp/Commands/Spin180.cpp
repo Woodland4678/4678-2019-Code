@@ -24,31 +24,26 @@ Spin180::Spin180(): frc::Command() {
 
 // Called just before this Command runs the first time
 void Spin180::Initialize() {
-
+    done = false;
+    set1 = false;
+	set2 = false;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void Spin180::Execute() {
-    Robot::drivetrain->setLeftMotor(-0.2);
-    Robot::drivetrain->setRightMotor(0.2);
-    m_spinTime++;
-    frc::SmartDashboard::PutNumber("spinTime ", m_spinTime);
+    if(Robot::oi->getdriver()->GetRawButton(6) && !set1) {
+        set1 = true;
+        Robot::drivetrain->configMotors(false, 80);
+    }
+    if(!Robot::oi->getdriver()->GetRawButton(6)){
+        Robot::drivetrain->configMotors(false, 40);
+        done = true;
+    }
 }
 
 // Make this return true when this Command no longer needs to run execute()
 bool Spin180::IsFinished() {
-    if(m_spinTime > 80){
-        Robot::drivetrain->setLeftMotor(0);
-        Robot::drivetrain->setRightMotor(0);
-        m_spinTime = 0;
-        frc::SmartDashboard::PutString("spinState: ", "Done spinning");
-        
-        return true;    
-    }
-    else{     
-        frc::SmartDashboard::PutString("spinState: ", "Spinning!");
-        return false;
-    }
+    return done;
 }
 
 // Called once after isFinished returns true

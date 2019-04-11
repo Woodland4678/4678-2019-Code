@@ -38,7 +38,7 @@ public:
 	Drivetrain();
 	void InitDefaultCommand() override;
 	void Periodic() override;
-	void configMotors();
+	void configMotors(bool pid, int Maxamps);
 	void setLeftMotor(double power);
 	void setRightMotor(double power);
 	double getLeftEncoder();

@@ -59,8 +59,8 @@ OI::OI() {
     driverBtn8_RT_GoToBall->WhileHeld(new GoToBall());
     driverBtn1_X_LineUpToBay.reset(new frc::JoystickButton(driver.get(), 1));
     driverBtn1_X_LineUpToBay->WhenPressed(new LineUpToBay());
-    //driverBtn6_RB_Intake.reset(new frc::JoystickButton(driver.get(), 6));
-    //driverBtn6_RB_Intake->WhenPressed(new IntakeControl());
+    driverBtn6_RB_Intake.reset(new frc::JoystickButton(driver.get(), 6));
+    driverBtn6_RB_Intake->WhenPressed(new Spin180());
     driverBtn5_LB_Release.reset(new frc::JoystickButton(driver.get(), 5));
     driverBtn5_LB_Release->WhileHeld(new HatchClampControl());
     driverBtn10_START_ClimbMedium.reset(new frc::JoystickButton(driver.get(), 10));
