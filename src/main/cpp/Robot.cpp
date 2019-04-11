@@ -109,6 +109,7 @@ void Robot::TeleopPeriodic() {
 			Robot::manipulatorArm->setIntakeMode(2); // Mode 2, we have cargo.
 		if (JoyY <-0.01) // Cargo ejected
 			Robot::manipulatorArm->setIntakeMode(0); // Mode 0, we just spit out the cargo.
+		spinCount = 0;
 	}
 	//frc::SmartDashboard::PutNumber("Waist Encoder", manipulatorArm->getWaistPot());
 	if((prevPos == 5) && (Robot::manipulatorArm->m_CurrentPosition != 5))
