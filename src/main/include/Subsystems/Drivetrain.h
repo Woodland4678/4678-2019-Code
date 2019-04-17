@@ -127,6 +127,8 @@ public:
     int targX,targY;
 	int as_rocket_score_level = 0; // 0=low, 1=mid, 2=high
     double waistAngle,distFromWaist;
+	int as_Servo_cnt = 0;
+	int as_cnt_waist = 0;
 
 	bool getNearestBall();
 	polarPoint mgb_polarBallPt;
@@ -141,6 +143,16 @@ public:
 	int mgb_delayState = 0;
 	double mgb_wrist = 0;
 	int gb_cnt = 0;
+
+	bool turnAmount(double degrees, int direction, double vel, double acc);
+	double mt_acc;
+	double mt_vel;
+	double mt_tarDeg;
+	double mt_tarDir;
+	double mt_OEncLeft;
+	double mt_OEncRight;
+	int mt_state = 0;
+	int mt_Cycles = 0;
 };
 
 #endif

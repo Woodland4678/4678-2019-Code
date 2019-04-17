@@ -507,6 +507,7 @@ enum { // Cases for autoScore
     autoScoreScanForWaist,
     autoScoreLidarForWaist,
     autoScoreWaistHasMoved,
+    autoScoreReadyDelay,
     autoScoreReadyForPickPlace,
     autoScorePickPlaceComplete,
     autoScoreRocketFound,
@@ -573,6 +574,9 @@ int Drivetrain::autoScore(int autoType) {
     double dirX,dirY,mag,scoringAngle2,targetAngle;
     bool srch_result,as_move_result;
     double tarX,tarY,tarAngle,tarDist;
+
+    as_Servo_cnt++;
+    printf("\nAuto Case = %i: %i | %i",as_Servo_cnt,as_m_case, as_cnt);
 
 	switch (as_m_case) {
         case  autoScoreInit:
@@ -847,15 +851,17 @@ int Drivetrain::autoScore(int autoType) {
                 if (distFromWaist != 0)
                     {
                     waistAngle = -asin((tarDist*sin((180-tarAngle) * M_PI/180))/(distFromWaist)) * 180 / M_PI;
+                    waistAngle += 2.0;
+                    as_ang = waistAngle;
                     if ((waistAngle > -65.0)&&(waistAngle <= 65.0)) // Only proceed with valid angles.
                         {
                         printf("\nWaist: tarAng=%f | x=%f | y=%f | TarDist=%f || wDist=%f | wAngle=%f",tarAngle,tarX,tarY,tarDist,distFromWaist,waistAngle);
-                        as_ang = waistAngle;// + 2.0;
+                        
                         Robot::manipulatorArm->moveWaist(waistAngle);
                         if (fabs(waistAngle) > 15.0) // Build in a delay if we need to turn the waist rather far (more than 15 deg)
-                            as_cnt = (fabs(waistAngle) - 15); // Give us 50 counts for every 50 degrees -> 50 degrees per second.
+                            as_cnt_waist = (fabs(waistAngle) - 15); // Give us 50 counts for every 50 degrees -> 50 degrees per second.
                         else
-                            as_cnt = 0; // No need to wait for angles less than 15.                
+                            as_cnt_waist = 0; // No need to wait for angles less than 15.                
                         as_m_case = autoScoreWaistHasMoved; // Carry on to next state.
                         //as_m_case = 99; // Stop at special case 99.
                         }
@@ -874,8 +880,8 @@ int Drivetrain::autoScore(int autoType) {
             }
             break;
         case autoScoreWaistHasMoved:
-            if (as_cnt > 0)
-                as_cnt--;
+            if (as_cnt_waist > 0)
+                as_cnt_waist--;
             else // as_cnt is at 0, no need to wait any longer.
             {   
     //            if (Robot::manipulatorArm->moveToXY(25.5,20.0,-182.0,as_ang,20.0)){ //25.5,25.0,-182.0,as_angle,20.0
@@ -891,12 +897,13 @@ int Drivetrain::autoScore(int autoType) {
                     }
                 else // Scoring on rocket.  Can be low, med, high based on as_rocket_score_level
                     { // distFromWaist is typically 823mm = 32.4".  So start 10" back and move to 6" back.
+                    printf("\nHere Placing");
                     if ((distFromWaist / 25.4 < 46.0)&&(distFromWaist / 25.4 > 17))
                         {
                         if (autoType == 1)
                             as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_1_READY_DIST,A_SC_ROCKL1_HEIGHT,A_SC_1_READY_W,as_ang,ARMSPEED_MEDIUM);
                         else if (autoType == 2)
-                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_2_READY_DIST,A_ROCKL2_HATCH_Y,A_SC_2_READY_W,as_ang,25.0);
+                            as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_2_READY_DIST,A_ROCKL2_HATCH_Y + 3,A_SC_2_READY_W,as_ang,25.0);
                         else if (autoType == 3)
                             as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_3_READY_DIST,A_ROCKL3_HATCH_Y,A_SC_3_READY_W,as_ang,ARMSPEED_HIGH);                    
                         }
@@ -908,26 +915,47 @@ int Drivetrain::autoScore(int autoType) {
                     }
 
                 if (as_move_result){ // ** Practice Bot **
+                    printf("\nIm done");
                     as_m_case = autoScoreReadyForPickPlace;
                     as_cnt = 0;
-                    if(as_mode == 0)
-                        Robot::manipulatorArm->releaseHatch();
-                    else if(as_mode == 1)
-                        Robot::manipulatorArm->intakeWheelsSpin(1);
+                    if (autoType == 3)
+                        as_m_case = autoScoreReadyDelay;
+                    else {
+                        if(as_mode == 0){
+                            printf("\nReleasing Hatch");
+                            Robot::manipulatorArm->releaseHatch();
+                            as_Servo_cnt = 0;
+                        }
+                        else if(as_mode == 1)
+                            Robot::manipulatorArm->intakeWheelsSpin(1);
+                    }
                 }
+            }
+            break;
+        case autoScoreReadyDelay:
+            as_cnt++;
+            if(as_cnt > 16){
+                as_cnt = 0;
+                as_m_case = autoScoreReadyForPickPlace;
+                if(as_mode == 0){
+                    Robot::manipulatorArm->releaseHatch();
+                    as_Servo_cnt = 0;
+                }
+                else if(as_mode == 1)
+                    Robot::manipulatorArm->intakeWheelsSpin(1);
             }
             break;
         case autoScoreReadyForPickPlace: // Move forward to pick or place the piece.
             if (as_search_mode == 0)
                 {
-                as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_SC_0_READY_Y,A_SC_0_READY_W,as_ang,ARMSPEED_MEDIUM);
+                as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST + 4,A_SC_0_READY_Y,A_SC_0_READY_W,as_ang,ARMSPEED_MEDIUM);
                 }
             else
                 {
                 if (autoType == 1)
                     as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_SC_ROCKL1_HEIGHT,A_SC_1_READY_W,as_ang,ARMSPEED_MEDIUM);
                 else if (autoType == 2)
-                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_ROCKL2_HATCH_Y,A_SC_2_READY_W,as_ang,ARMSPEED_MEDIUM);
+                    as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_ROCKL2_HATCH_Y + 3,A_SC_2_READY_W,as_ang,ARMSPEED_MEDIUM);
                 else if (autoType == 3)
                     as_move_result = Robot::manipulatorArm->moveToXY(distFromWaist/25.4 - A_SC_GET_DIST,A_ROCKL3_HATCH_Y,A_SC_3_GET_W,as_ang,ARMSPEED_MEDIUM);                    
                 }
@@ -935,15 +963,18 @@ int Drivetrain::autoScore(int autoType) {
             if (as_move_result) 
                 {
                 if((as_mode == 1) || (as_mode == 0)) {
-                    as_cnt++;
+                    if(as_Servo_cnt >= 50)
+                        as_m_case = autoScorePickPlaceComplete;
+
+                    /*as_cnt++;
                     if(autoType == 0){
-                        if(as_cnt == 30) // After moving arm forward, wait to ensure hatch is released.
-                            as_m_case = autoScorePickPlaceComplete;
-                    }
-                    else {
                         if(as_cnt == 40) // After moving arm forward, wait to ensure hatch is released.
                             as_m_case = autoScorePickPlaceComplete;
                     }
+                    else {
+                        if(as_cnt == 50) // After moving arm forward, wait to ensure hatch is released.
+                            as_m_case = autoScorePickPlaceComplete;
+                    }*/
                 }
                 else 
                     {
@@ -963,7 +994,7 @@ int Drivetrain::autoScore(int autoType) {
                 if (autoType == 1)
                     as_move_result = Robot::manipulatorArm->moveToXY(A_SC_1_RETURN_X,A_SC_ROCKL1_HEIGHT + 1,A_SC_1_RETURN_W,as_ang,ARMSPEED_MEDIUM);
                 else if (autoType == 2)
-                    as_move_result = Robot::manipulatorArm->moveToXY(A_SC_2_RETURN_X,A_ROCKL2_HATCH_Y - 3,A_SC_2_RETURN_W,as_ang,ARMSPEED_MEDIUM);
+                    as_move_result = Robot::manipulatorArm->moveToXY(A_SC_2_RETURN_X,A_ROCKL2_HATCH_Y+3,A_SC_2_RETURN_W,as_ang,ARMSPEED_MEDIUM);
                 else if (autoType == 3)
                     as_move_result = Robot::manipulatorArm->moveToXY(A_SC_3_RETURN_X,A_ROCKL3_HATCH_Y,A_SC_3_RETURN_W,as_ang,ARMSPEED_MEDIUM);                    
                 }
@@ -1105,7 +1136,7 @@ bool Drivetrain::getNearestBall() {
             mgb_cartX = std::round(waist_distance * std::cos(radians));
             mgb_cartY = -(std::round(waist_distance * std::sin(radians)));
             mgb_angle = waist_angle;
-            mgb_cartX = mgb_cartX * 0.0393701;//in mm convert to inchs
+            mgb_cartX = (mgb_cartX * 0.0393701) + 3;//in mm convert to inchs
             double ang = asin((mgb_cartX * sin(radians))/(20)) * 180/M_PI;
             printf("Langle=%f | Wangle = %f | Ldist = %f | Wdist = %f | x=%f | y=%f",lidar_angle,mgb_angle,lidar_dist,waist_distance,mgb_cartX,(ang + mgb_angle) / 2);
 
@@ -1159,6 +1190,92 @@ bool Drivetrain::getNearestBall() {
             if(mgb_Move3){
                 mgb_state = 0;
                 return true;
+            }
+            break;
+    }
+    return false;
+}
+
+bool Drivetrain::turnAmount(double degrees, int direction, double vel, double acc){
+    if((mt_tarDeg != degrees) || (mt_tarDir != direction) || (mt_vel != vel))
+        mt_state = 0;
+    switch(mt_state) {
+        case 0:
+            {
+            mt_acc=acc;
+            mt_vel=vel;
+            mt_tarDeg=degrees;
+            mt_tarDir=direction;
+
+            double cycleTime = 1.0/50.0;
+            double dist;
+            
+			//Calculate distance based on angle to move
+			//wheel base = 0.545m
+			//	PI * 0.545 = 360 degrees
+			//	distance to move each wheel = pi * 0.545 * degrees / 360
+			
+			dist = (M_PI * 0.545 * degrees / 360) * 1.18;
+			
+            
+            //Trapizodal Calculations
+            double t1 = mt_vel / mt_vel, t2, t3;
+            double d1 = 0.5 * mt_vel * (t1*t1), d2, d3 = d1;
+            if(2*d1 > dist) { //No cruise
+                d1 = dist / 2;
+                d2 = 0;
+                d3 = d1;
+                t1 = sqrt(2 * d1 / mt_vel);
+                t2 = t1;
+                t3 = t2 + t1;
+            }
+            else {
+                d2 = dist - 2 * d1;
+                t2 = t1 + d2 / mt_vel;
+                t3 = t2 + t1;
+            }
+
+            //Path generation of one wheel
+            d[0] = 0;
+            int i=0;
+            
+            for(double tcnt = 0;tcnt<t3;tcnt += cycleTime,i++) {
+                if(tcnt < t1)
+                    d[i] = 0.5 * mt_vel * (tcnt*tcnt);
+                else if(tcnt < t2)
+                    d[i] = d1 + (mt_vel * (tcnt-t1));
+                else if(tcnt < t3)
+                    d[i] = d1+d2+d3 - (0.5 * mt_vel * ((t3-tcnt)*(t3-tcnt)));
+            }
+            d[i++] = d1+d2+d3;
+            mt_Cycles = i;
+            printf("\nTURN: Run: cycles=%i",i);
+
+            traverseCnt = 0;
+            mt_state = 1;
+            mt_OEncLeft = getLeftEncoder();
+            mt_OEncRight = getRightEncoder();
+            }
+            break;
+        case 1:
+            if(traverseCnt >= mt_Cycles) {
+                mt_state = 0;
+                return true;
+            }
+            else {
+                //Main path velocity
+                double distance = d[traverseCnt];
+                if(direction)
+                    distance *= -1;
+                double enDist = (distance * 20.81); //velocity is per second not per cycle
+                //left wheel
+                encLeft = enDist + mt_OEncLeft;
+                encRight = enDist + mt_OEncRight;
+                
+                printf("\nTURN: Cnt = %i | dist = %f | EncLeft = %f EncRight = %f",traverseCnt, distance, encLeft,encRight);
+                setLeftPosition(encLeft);
+                setRightPosition(encRight);
+                traverseCnt++;
             }
             break;
     }

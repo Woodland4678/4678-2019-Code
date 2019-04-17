@@ -38,8 +38,8 @@
 //#define WRIST_ANGLE_1     0 // Cargo Straight Out
 #define WRIST_ANGLE_1     -90 // Hatch Clamp at 90 deg, roller part of claw inwards.
 #define WRIST_ANGLE_2     -180 // Hatch Clamp Straight Out.
-#define WRIST_ENCODER_1   833
-#define WRIST_ENCODER_2   3678 // 1857 - 833 = 1024 (0.25 x 4096 = 1/4 rotation = 90 deg)
+#define WRIST_ENCODER_1   1151//833 diff 2845, 3035
+#define WRIST_ENCODER_2   4186//3678 // 1857 - 833 = 1024 (0.25 x 4096 = 1/4 rotation = 90 deg)
 
 #define WAIST_ANGLE_1     -68 // Fully CCW
 #define WAIST_ANGLE_2     68 // Fully CW.  0 is straight ahead.
@@ -47,15 +47,15 @@
 #define WAIST_ENCODER_2   0.0
 
 #ifdef FLIGHTBOT
-#define SHOULDER_POT_1    2706//2943 //2884
-#define SHOULDER_POT_2    143//227 //286
+#define SHOULDER_POT_1    3916//2706//2943 //2884 - diff after 3916-1423 = 2493 is 
+#define SHOULDER_POT_2    1423//143//227 //286 - diff before = 2706-143 = 2563
 
 #define ELBOW_POT_1    4//11
 #define ELBOW_POT_2    2481//2743 //2467
 
 //#define WRIST_POT_1    4 // Cargo Intake Straight Out - in dead zone.
-#define WRIST_POT_1    905//876 // Hatch Clamp at 90 deg, roller part of claw inwards.
-#define WRIST_POT_2    2500//2395 // Hatch Clamp Straight Out.
+#define WRIST_POT_1    1957//905//876 // Hatch Clamp at 90 deg, roller part of claw inwards.
+#define WRIST_POT_2    3496//2500//2395 // Hatch Clamp Straight Out.
 // 3770 At 90 deg, roller part of cargo claw outwards.
 // 905 At 90 deg the other way.  2500 - 905 = 1595
 // 3770 - 2500 = 1270. 
@@ -267,7 +267,7 @@ void ManipulatorArm::Periodic() {
 	frc::SmartDashboard::PutNumber("Waist Angle", m_Segs[3]->getRelAngle());
 
 	frc::SmartDashboard::PutNumber("Shoulder ABS Angle", m_Segs[0]->getAbsAngle());
-	frc::SmartDashboard::PutNumber("Wrist ABS Angle", m_Segs[2]->getAbsAngle());
+	frc::SmartDashboard::PutNumber("Wrist ABS Angle", m_Segs[2]->getAbsEncoderReading());
 	frc::SmartDashboard::PutNumber("Elbow ABS Angle", m_Segs[1]->getAbsAngle());
 	
 	frc::SmartDashboard::PutNumber("El Start X", m_Segs[0]->getEndX());
@@ -974,6 +974,14 @@ bool ManipulatorArm::Calibrate() {
 	if(doneS && doneE && doneW && doneA) {
 		m_StartX = m_Segs[1]->getEndX();
 		m_StartY = m_Segs[1]->getEndY();
+
+		double wabs = m_Segs[2]->getAbsEncoderReading();
+		if(wabs > 2048)
+			wabs -= 4096;
+		double wquad = m_Segs[2]->getSelectedSensorValue();
+		m_Segs[2]->m_Offset = wabs - wquad - 680;
+		printf("\nNew Offset = %f | %f | %f", m_Segs[2]->m_Offset,wabs, wquad);
+
 		m_StartW = m_Segs[2]->getRelAngle();
 		return true;
 	}

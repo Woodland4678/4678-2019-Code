@@ -967,6 +967,10 @@ polarPoint Lidar::findCargo() {
 //			// calculate the angle from the waist to the ball (using sine law)
 //			cargoCentrePoint.angle = asin(lidarDist * sin(lidAngle * M_PI / 180.0) / cargoCentrePoint.dist) / M_PI * 180.0 - 180;
 
+			// readjust angle to account for lidar error
+			//if (cargoCentrePoint.angle > 180)
+			//	cargoCentrePoint.angle -= (cargoCentrePoint.angle - 180) * 0.5;
+
 			// set the timestamp of the cargo centre to the current time stamp
 			cargoCentrePoint.tstamp = (int)(frc::Timer::GetFPGATimestamp() * 1000000.0);
 
@@ -1805,7 +1809,7 @@ bool Lidar::findRocket_Lines() {
 						else
 							m_ScoreLineAngle = 90;						
 						fdist = sqrt((lines[i].end.x - m_ScoringLinePoint.x)*(lines[i].end.x - m_ScoringLinePoint.x) + (lines[i].end.y - m_ScoringLinePoint.y)*(lines[i].end.y - m_ScoringLinePoint.y));
-						if ((fdist > 350)&&(fdist < 450)) // if distance from fin end point to center of scoring point is near 420mm, 
+						if ((fdist > 275)&&(fdist < 500)) // if distance from fin end point to center of scoring point is near 420mm, 
 							{
 							// We have our target, no need to look further.
 							// Since this routine is used to locate the target when far and when close
@@ -1873,7 +1877,7 @@ bool Lidar::findRocket_Lines() {
 						else
 							m_ScoreLineAngle = 90;						
 						fdist = sqrt((lines[i].start.x - m_ScoringLinePoint.x)*(lines[i].start.x - m_ScoringLinePoint.x) + (lines[i].start.y - m_ScoringLinePoint.y)*(lines[i].start.y - m_ScoringLinePoint.y));
-						if ((fdist > 350)&&(fdist < 450)) // if distance from fin end point to center of scoring point is near 420mm, 
+						if ((fdist > 275)&&(fdist < 500)) // if distance from fin end point to center of scoring point is near 420mm, 
 							{
 							// We have our target, no need to look further.
 							m_RocketTarget.start.x = tstx[k];
@@ -1907,7 +1911,7 @@ bool Lidar::findRocket_Lines() {
 						else
 							m_ScoreLineAngle = 90;						
 						fdist = sqrt((lines[i].end.x - m_ScoringLinePoint.x)*(lines[i].end.x - m_ScoringLinePoint.x) + (lines[i].end.y - m_ScoringLinePoint.y)*(lines[i].end.y - m_ScoringLinePoint.y));
-						if ((fdist > 350)&&(fdist < 450)) // if distance from fin end point to center of scoring point is near 420mm, 
+						if ((fdist > 275)&&(fdist < 500)) // if distance from fin end point to center of scoring point is near 420mm, 
 							{
 							// We have our target, no need to look further.
 							m_RocketTarget.start.x = lines[j].start.x;
@@ -1950,7 +1954,7 @@ bool Lidar::findRocket_Lines() {
 							m_ScoreLineAngle = atan((double)m_ScoringLinePoint.y / (double)m_ScoringLinePoint.x) * 180 / M_PI; // Angle from Lidar to Target.
 						else
 							m_ScoreLineAngle = 90;						
-						if ((fdist > 350)&&(fdist < 450)) // if distance from fin end point to center of scoring point is near 420mm, 
+						if ((fdist > 275)&&(fdist < 500)) // if distance from fin end point to center of scoring point is near 420mm, 
 							{
 							// We have our target, no need to look further.
 							m_RocketTarget.start.x = tstx[j];
