@@ -2,7 +2,7 @@
 #define BASICSTUFF_H
 
 //Arm
-#define FLIGHTBOT	1 //Uncomment = Flight 
+//#define FLIGHTBOT	1 //Uncomment = Flight 
 
 #define ARMSPEED_HIGH       35.0
 #define ARMSPEED_MEDIUM     20.0

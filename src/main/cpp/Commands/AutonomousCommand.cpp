@@ -28,7 +28,9 @@ AutonomousCommand::AutonomousCommand(): frc::Command() {
 
 // Called just before this Command runs the first time
 void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
-    initialGyroValue = Robot::ahrs->GetAngle();
+  //  initialGyroValue = Robot::ahrs->GetAngle();
+  initialGyroValue = 0;
+  Robot::drivetrain->resetGyroValue();
 	//autoSide 1 = left, 2 = center, 3 = right
 	if (Robot::oi->getAutoSwitch()->GetRawButton(14)) {
 		autoSide += 1;
@@ -68,7 +70,7 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 
 		straightBackRampUpDistance = 30;
 
-		amountToTurn = 45; //-88
+		amountToTurn = -88; //-88
 		turnDirection = T_CW;
 		secondHatchAmountToTurn = 10 + initialGyroValue;
 	} else if (autoSide == 0 && autoMode == 2) { //left Side level 2 auto to cargo ship
@@ -76,10 +78,10 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		leftCmStraightBack = -230;
 		rightCmStraightBack = -230;
 
-		straightBackRampUpDistance = 80;
-		leftArc = -370;
-		rightArc = -320;
-		amountToTurn = 45; //-88
+		straightBackRampUpDistance = 70;
+		leftArc = -385;
+		rightArc = -330;
+		amountToTurn = -88; //-88
 		turnDirection = T_CCW;
 		secondHatchAmountToTurn = 10 + initialGyroValue;
 	}
@@ -91,17 +93,17 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		leftArc = -285;
 		rightArc = -310;
 		straightBackRampUpDistance = 40;
-		amountToTurn = 45; //88
+		amountToTurn = 88; //88
 		secondHatchAmountToTurn = -7 + initialGyroValue;
 		turnDirection = T_CW;
 	} else if (autoSide == 2 && autoMode == 2) { //right side level 2 auto to cargo ship
 		autonomousSelection = 4;
 		leftCmStraightBack = -205;
 		rightCmStraightBack = -205;
-		straightBackRampUpDistance = 125;
+		straightBackRampUpDistance = 70;
 		leftArc = -320;
 		rightArc = -360;
-		amountToTurn = 45;
+		amountToTurn = 88;
 		secondHatchAmountToTurn = -10 + initialGyroValue;
 		turnDirection = T_CW;
 	} else if (autoSide == 2 && autoMode == 3) { // right side far Rocket hatch low
@@ -129,6 +131,8 @@ void AutonomousCommand::Initialize() { //back up and turn to 10.4 degrees
 		amountToTurnAfterRocket = -8;
 		amountToTurn = 90;
 		turnDirection = T_CW;
+	} else if (autoSide == 0 && autoMode == 4) {
+		autonomousSelection = 6;
 	}
 	
 	else { //any other mode finish auto mode goes to full driver control
@@ -158,6 +162,10 @@ void AutonomousCommand::Execute() {
 		case 5:
 			scoreFarRocket();
 		break;
+		case 6:
+			done = Robot::drivetrain->goToDistance(-400, -400, 0.9, 0, 100, 0.7, 0.1);
+			//done = Robot::drivetrain->testPath();
+		break;
 	}
 
 	if (Robot::oi->getdriver()->GetPOV() == 270) { //Override to allow drivers to take control
@@ -174,7 +182,9 @@ bool AutonomousCommand::scoreFirstHatch() {
 		if (!armMovement0) {
 			armMovement0 = Robot::manipulatorArm->moveToXY(8,21,-230,0,30);
 		}
-			if (Robot::drivetrain->goToDistance(rightCmStraightBack, leftCmStraightBack,0.35,straightBackRampUpDistance,30,0.15,0.3)) { //-69, //-315, -315 //-435,-435
+		//if (Robot::drivetrain->GyroTurn(Robot::drivetrain->getGyroAngle(),90,0.015,0,0)) {
+		if (Robot::drivetrain->goToDistance(rightCmStraightBack, leftCmStraightBack,0.6,straightBackRampUpDistance,30,0.3,0.3)) { //-69, //-315, -315 //-435,-435
+			//if (Robot::drivetrain->goToDistance(-400,-400,0.7,50,100,0.4,0.15)) {
 				autoState++;
 				Robot::manipulatorArm->m_CurrentPosition = 0;
 				Robot::drivetrain->resetGoToDistanceState();
@@ -196,19 +206,19 @@ bool AutonomousCommand::scoreFirstHatch() {
 		break;
 		case 2: //brief pause after arc
 			cnt++;
-			if (cnt > 15) {
+			if (cnt > 5) {
 				autoState++;
 				cnt = 0;
 			}
 		break;
 		case 3: //gyro turn toward the cargo ship
-			//if ((Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), amountToTurn, 0.015,0,0))) {
-			if (Robot::drivetrain->turnAmount(amountToTurn,turnDirection,1,1)) {
-				// autoState++;
-				// cnt = 0;
-				// Robot::drivetrain->initAutoScore();
-				done = true;
-				End();
+			if ((Robot::drivetrain->GyroTurn(Robot::drivetrain->getGyroAngle(), amountToTurn, 0.015,0,0))) {
+			//if (Robot::drivetrain->turnAmount(amountToTurn,turnDirection,1,1)) {
+				autoState++;
+				cnt = 0;
+				Robot::drivetrain->initAutoScore();
+				//done = true;
+				//End();
 			} 
 		break;
 		case 4: //Auto score the hatch panel
@@ -265,7 +275,7 @@ bool AutonomousCommand::getSecondHatch() {
 		// break;
 		case 0:
 
-			if (Robot::drivetrain->goToDistance(-50,-50,0.35,20,30,0.2,0.15)) {
+			if (Robot::drivetrain->goToDistance(-50,-50,0.45,20,30,0.2,0.15)) {
 				autoStateSecondHatch++;
 				cnt = 0;
 			}
@@ -287,21 +297,21 @@ bool AutonomousCommand::getSecondHatch() {
 			// 	armMovement2 = Robot::manipulatorArm->moveToXY(7.0,26.0,-190,0,20.0);
 			// }
 			Robot::manipulatorArm->grabHatch();
-			if (Robot::drivetrain->GyroTurn(Robot::ahrs->GetAngle(), secondHatchAmountToTurn, 0.012, 0,0)) {
+			if (Robot::drivetrain->GyroTurn(Robot::drivetrain->getGyroAngle(), secondHatchAmountToTurn, 0.012, 0,0)) {
 				autoStateSecondHatch++;
 				cnt = 0;
 			}
 		break;
 		case 3:
 			cnt++;
-			if (cnt > 10) {
+			if (cnt > 5) {
 				autoStateSecondHatch++;
 				cnt = 0;
 			}
 
 		break;
 		case 4:
-			if (Robot::drivetrain->goToDistance(455,455,0.8,70,90,0.2,0.2)) {
+			if (Robot::drivetrain->goToDistance(455,455,0.85,60,90,0.2,0.2)) {
 				autoStateSecondHatch++;
 				autoScore = 0;
 			}

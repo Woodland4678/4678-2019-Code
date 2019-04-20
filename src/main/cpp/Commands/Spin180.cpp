@@ -27,18 +27,20 @@ void Spin180::Initialize() {
     done = false;
     set1 = false;
 	set2 = false;
+    Robot::drivetrain->initPath();
 }
 
 // Called repeatedly when this Command is scheduled to run
 void Spin180::Execute() {
-    if(Robot::oi->getdriver()->GetRawButton(6) && !set1) {
+    /*if(Robot::oi->getdriver()->GetRawButton(6) && !set1) {
         set1 = true;
         Robot::drivetrain->configMotors(false, 80);
     }
     if(!Robot::oi->getdriver()->GetRawButton(6)){
         Robot::drivetrain->configMotors(false, 40);
         done = true;
-    }
+    }*/
+    done = Robot::drivetrain->testPath();
 }
 
 // Make this return true when this Command no longer needs to run execute()

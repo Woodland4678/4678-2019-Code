@@ -38,8 +38,6 @@
 //#define WRIST_ANGLE_1     0 // Cargo Straight Out
 #define WRIST_ANGLE_1     -90 // Hatch Clamp at 90 deg, roller part of claw inwards.
 #define WRIST_ANGLE_2     -180 // Hatch Clamp Straight Out.
-#define WRIST_ENCODER_1   1151//833 diff 2845, 3035
-#define WRIST_ENCODER_2   4186//3678 // 1857 - 833 = 1024 (0.25 x 4096 = 1/4 rotation = 90 deg)
 
 #define WAIST_ANGLE_1     -68 // Fully CCW
 #define WAIST_ANGLE_2     68 // Fully CW.  0 is straight ahead.
@@ -63,6 +61,9 @@
 #define WAIST_POT_1    3508 //
 #define WAIST_POT_2    300//179 
 
+#define WRIST_ENCODER_1   1151//833 diff 2845, 3035
+#define WRIST_ENCODER_2   4186//3678 // 1857 - 833 = 1024 (0.25 x 4096 = 1/4 rotation = 90 deg)
+
 #else
 
 #define SHOULDER_POT_1    2927 //2943 //2884
@@ -81,6 +82,8 @@
 #define WAIST_POT_1    3508 //
 #define WAIST_POT_2    300 
 
+#define WRIST_ENCODER_1   833//833 diff 2845, 3035
+#define WRIST_ENCODER_2   3678//3678 // 1857 - 833 = 1024 (0.25 x 4096 = 1/4 rotation = 90 deg)
 
 #endif
 ManipulatorArm::ManipulatorArm() : frc::Subsystem("ManipulatorArm") {
@@ -979,7 +982,7 @@ bool ManipulatorArm::Calibrate() {
 		if(wabs > 2048)
 			wabs -= 4096;
 		double wquad = m_Segs[2]->getSelectedSensorValue();
-		m_Segs[2]->m_Offset = wabs - wquad - 680;
+		//m_Segs[2]->m_Offset = wabs - wquad - 680;
 		printf("\nNew Offset = %f | %f | %f", m_Segs[2]->m_Offset,wabs, wquad);
 
 		m_StartW = m_Segs[2]->getRelAngle();

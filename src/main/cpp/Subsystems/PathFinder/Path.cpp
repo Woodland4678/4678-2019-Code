@@ -90,17 +90,21 @@ bool PathFinder::traverse(int cnt, double encPrev_Right, double encPrev_Left, do
         *(m_L_Traj.segments[m_traverseCount].x - m_L_Traj.segments[last].x)) 
         + ((m_L_Traj.segments[m_traverseCount].y - m_L_Traj.segments[last].y)
         *(m_L_Traj.segments[m_traverseCount].y - m_L_Traj.segments[last].y)));
+    if(m_L_Traj.segments[m_traverseCount].x < 0)
+        dist *= -1;
     *leftOut = encPrev_Left + (20.81 * dist);
 
-    //printf("\nLd = %f | %f | %f",dist,encPrev_Left,*leftOut);
+    printf("\nLd = %f | %f | %f",dist,encPrev_Left,*leftOut);
 
     dist = sqrt(((m_R_Traj.segments[m_traverseCount].x - m_R_Traj.segments[last].x)
         *(m_R_Traj.segments[m_traverseCount].x - m_R_Traj.segments[last].x)) 
         + ((m_R_Traj.segments[m_traverseCount].y - m_R_Traj.segments[last].y)
         *(m_R_Traj.segments[m_traverseCount].y - m_R_Traj.segments[last].y)));
+    if(m_R_Traj.segments[m_traverseCount].x < 0)
+        dist *= -1;
     *rightOut = encPrev_Right - (20.81 * dist);
 
-    //printf("\nRd = %f | %f | %f",dist,encPrev_Right,*rightOut);
+    printf("\nRd = %f | %f | %f",dist,encPrev_Right,*rightOut);
 
     
 

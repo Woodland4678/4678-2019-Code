@@ -153,6 +153,19 @@ public:
 	double mt_OEncRight;
 	int mt_state = 0;
 	int mt_Cycles = 0;
+
+	bool testPath();
+	void initPath();
+	int pathState = 0;
+	double rEnc = 0;
+	double lEnc = 0;
+	double rPEnc = 0;
+	double lPEnc = 0;
+	int tCnt = 0;
+	frc::ADXRS450_Gyro *gyro;
+	double getGyroAngle();
+	void resetGyroValue();
+	bool m_driveForward = false;
 };
 
 #endif

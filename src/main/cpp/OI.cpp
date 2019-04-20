@@ -75,7 +75,7 @@ OI::OI() {
     driverBtn2_A_LineUpToRocketClose->WhenPressed(new LineUpToRocket(2));
 
     // SmartDashboard Buttons
-    //frc::SmartDashboard::PutData("GoToBall", new GoToBall());
+    frc::SmartDashboard::PutData("Path Test", new Spin180());
     /*frc::SmartDashboard::PutData("Move Wrist", new MoveArm(0));
     frc::SmartDashboard::PutData("Move Elbow", new MoveArm(1));
     frc::SmartDashboard::PutData("Move Shoulder", new MoveArm(2));
