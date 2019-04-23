@@ -125,7 +125,7 @@ void MoveArm::Execute() {
 						{
 						Robot::manipulatorArm->setInCargoPosition();
 						Robot::manipulatorArm->intakeWheelsSpin(-0.85); // Wheels running.
-						printf("Wheels set to run 2\n\r");
+						//printf("Wheels set to run 2\n\r");
 						}
 					}
 				else
@@ -135,7 +135,7 @@ void MoveArm::Execute() {
 						{
 						Robot::manipulatorArm->setInCargoPosition();
 						Robot::manipulatorArm->intakeWheelsSpin(-0.85); // Wheels running.
-						printf("Wheels set to run 1\n\r");
+						//printf("Wheels set to run 1\n\r");
 						}
 					}
 				Robot::manipulatorArm->m_CurrentPosition = 5;
@@ -201,7 +201,7 @@ void MoveArm::Execute() {
 					done = Robot::manipulatorArm->Calibrate();
 					if(done){
 						printf("Offsets 1: %f,%f,%f,%f\n\r",Robot::manipulatorArm->getOffset(0),Robot::manipulatorArm->getOffset(1),Robot::manipulatorArm->getOffset(2),Robot::manipulatorArm->getOffset(3));
-						printf("\nhere");
+						//printf("\nhere");
 						m_btn = 0;
 						}
 					}

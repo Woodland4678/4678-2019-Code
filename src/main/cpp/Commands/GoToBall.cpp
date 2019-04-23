@@ -42,7 +42,7 @@ void GoToBall::Initialize() {
 void GoToBall::Execute() {
 
     
-    printf("\n");
+    //printf("\n");
 }
 
 // Make ifthis return true when this Command no longer needs to run execute()

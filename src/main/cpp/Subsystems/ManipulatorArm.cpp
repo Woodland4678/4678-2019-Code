@@ -1189,7 +1189,7 @@ void ManipulatorArm::setIntakeMode(int mode) {
 			m_Segs[2]->setAbsAngleTarget(-190.0);
 		else if (mode == 2)
 			m_Segs[2]->setAbsAngleTarget(-20.0);
-		printf("Changed Intake Mode to %d, Wrist Angle = %f\n\r",mode,m_Segs[2]->getAbsAngleTarget());
+		//printf("Changed Intake Mode to %d, Wrist Angle = %f\n\r",mode,m_Segs[2]->getAbsAngleTarget());
 		}
 }
 int ManipulatorArm::getIntakeMode() {
@@ -1206,7 +1206,7 @@ void ManipulatorArm::fineMotion() {
 	double JoyZ = Robot::oi->getoperator1()->GetRawAxis(3);
 	double JoyW = -Robot::oi->getoperator1()->GetZ();
 
-	printf("x=%f y=%f W=%f Z=%f\n\r",JoyX,JoyY,JoyW,JoyZ);
+	//printf("x=%f y=%f W=%f Z=%f\n\r",JoyX,JoyY,JoyW,JoyZ);
 	
 	//JoyX = 0; // Disable everything by setting these to 0.
 	//JoyY = 0;

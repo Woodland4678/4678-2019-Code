@@ -26,7 +26,7 @@ HatchClampControl::HatchClampControl(): frc::Command() {
 // Called just before this Command runs the first time
 void HatchClampControl::Initialize() {
     Robot::manipulatorArm->releaseHatch(); // At start of this, release Hatch Clamp.
-    printf("Release Hatch\n\r");
+    //printf("Release Hatch\n\r");
     m_finished = false;
 }
 
@@ -44,13 +44,13 @@ bool HatchClampControl::IsFinished() {
 // Called once after isFinished returns true
 void HatchClampControl::End() {
     Robot::manipulatorArm->grabHatch(); // When done, allow grab of hatch clamp again.
-    printf("Grab Hatch\n\r");
+    //printf("Grab Hatch\n\r");
 }
 
 // Called when another command which requires one or more of the same
 // subsystems is scheduled to run
 void HatchClampControl::Interrupted() {
-        printf("Hatch Interrupted\n\r");
+        //printf("Hatch Interrupted\n\r");
         Robot::manipulatorArm->grabHatch(); // When done, allow grab of hatch clamp again.
 
 }

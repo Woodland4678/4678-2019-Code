@@ -790,7 +790,7 @@ int Drivetrain::autoScore(int autoType) {
                 encLeft = enDist * kl + encPrevLeft;
                 encRight = -(enDist * kr) + encPrevRight;
                 
-                printf("\nCnt = %i | dist = %f | EncLeft = %f EncRight = %f | waist = %f",traverseCnt, distance, encLeft,encRight,as_prevWaist + as_waist_incr);
+                //printf("\nCnt = %i | dist = %f | EncLeft = %f EncRight = %f | waist = %f",traverseCnt, distance, encLeft,encRight,as_prevWaist + as_waist_incr);
                 setLeftPosition(encLeft);
                 setRightPosition(encRight);
 
@@ -1292,7 +1292,7 @@ bool Drivetrain::turnAmount(double degrees, int direction, double vel, double ac
                 encLeft = enDist + mt_OEncLeft;
                 encRight = enDist + mt_OEncRight;
                 
-                printf("\nTURN: Cnt = %i | dist = %f | EncLeft = %f EncRight = %f",traverseCnt, distance, encLeft,encRight);
+                //printf("\nTURN: Cnt = %i | dist = %f | EncLeft = %f EncRight = %f",traverseCnt, distance, encLeft,encRight);
                 setLeftPosition(encLeft);
                 setRightPosition(encRight);
                 traverseCnt++;
@@ -1309,7 +1309,7 @@ void Drivetrain::initPath() {
 bool Drivetrain::testPath() {
     switch(pathState) {
         case 0:
-            printf("\nStarting Path Weaving");
+            //printf("\nStarting Path Weaving");
             m_Path->createNewPath();
             m_Path->addWayPoint(0.0,0.0,0.0);
             m_Path->addWayPoint(4.9,-2.45,-8.0);
@@ -1323,13 +1323,13 @@ bool Drivetrain::testPath() {
             }
             else{
                 pathState = 0;
-                printf("\nPath Failed!");
+                //printf("\nPath Failed!");
                 return true;
             }
             break;
         case 1:
             m_Path->debug();
-            printf("\n%i", tCnt);
+            //printf("\n%i", tCnt);
             tCnt++;
             if(tCnt > 250){
                 pathState = 2;
@@ -1338,7 +1338,7 @@ bool Drivetrain::testPath() {
             break;
         case 2:
             {
-            printf("\n%i", tCnt);
+            //printf("\n%i", tCnt);
             bool tdone = m_Path->traverse(tCnt,rPEnc,lPEnc,&rEnc,&lEnc);
             lPEnc = lEnc;
             rPEnc = rEnc;

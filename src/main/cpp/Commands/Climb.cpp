@@ -45,7 +45,7 @@ void Climb::Execute() {
         done = true;
         return;
     }
-    printf("\nClimbCase = %i | %i",m_ClimbCase,m_climbLevel);
+    //printf("\nClimbCase = %i | %i",m_ClimbCase,m_climbLevel);
     //Determine height
     if(m_climbLevel < 2){
         m_ClimbCase = 0;
@@ -121,7 +121,7 @@ void Climb::Execute() {
                 break;
             case 5:
                 dist = Robot::lidar->climbDistance();
-                printf("Dist = %i | Timer = %i\n",dist,m_timer);
+                //printf("Dist = %i | Timer = %i\n",dist,m_timer);
                 m_ClimbCase = 3;
                 if(m_climbLevel == 4){
                     //if(dist < 1500){ //Time to spin up wheel
@@ -181,7 +181,7 @@ void Climb::Execute() {
                 break;
             case 10:
                 dist = Robot::lidar->climbDistance();
-                printf("\nDist = %i",dist);
+                //printf("\nDist = %i",dist);
                 if(dist < 500){
                     Robot::drivetrain->setRightMotor(0);
                     Robot::drivetrain->setLeftMotor(0);
@@ -196,7 +196,7 @@ void Climb::Execute() {
         }
     }
 
-    printf("\n");
+    //printf("\n");
 	
     
 }

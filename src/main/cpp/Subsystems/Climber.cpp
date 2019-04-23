@@ -99,7 +99,7 @@ bool Climber::moveTo(int step, int total) {
     if(pos > total) //Never go beyond this
         stilts->Set(ControlMode::Position, pos);
     
-    printf("\nStilts = %i",pos);
+    //printf("\nStilts = %i",pos);
     if(pos <= total) //-29700
         return true;
     return false;
@@ -121,7 +121,7 @@ bool Climber::moveInches(int inches, double inchesPerSecond) {
             m_climbCase = 1;
             break;
         case 1: //Movement
-            printf("\n%f | %f | %f | %f",inchesPerSecond, m_inchPerCycle, m_EncoderStep, m_cycles);
+            //printf("\n%f | %f | %f | %f",inchesPerSecond, m_inchPerCycle, m_EncoderStep, m_cycles);
             m_currentEncoder += m_EncoderStep;
             stilts->Set(ControlMode::Position, m_currentEncoder);
 
