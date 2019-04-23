@@ -153,7 +153,10 @@ int ArmSegment::getQuadEncoderReading() {
 	return m_Controller->GetSensorCollection().GetQuadraturePosition();
 }
 int ArmSegment::getAbsEncoderReading() {
-	return m_Controller->GetSensorCollection().GetPulseWidthPosition();
+	if(m_Talon)
+		return m_Controller->GetSensorCollection().GetPulseWidthPosition();
+	else
+		return 0;
 }
 double ArmSegment::getSelectedSensorValue() {
 	if(m_Talon)
@@ -324,7 +327,7 @@ bool ArmSegment::calibrate() {
 			double enc = convertAngleToEncoder(ang);
 
 			m_Offset = (getSelectedSensorValue()+m_Offset) - enc;
-			printf("\nOffset = %f | ang = %f | pot = %f", m_Offset, ang, avPot);
+			printf("\nOffset = %f | ang = %f | pot = %f | abs = %i | quad = %f", m_Offset, ang, avPot, getAbsEncoderReading(), getSelectedSensorValue());
 			m_calCase = 0;
 			return true;
 			}

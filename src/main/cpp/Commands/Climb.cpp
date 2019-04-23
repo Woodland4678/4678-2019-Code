@@ -31,23 +31,21 @@ Climb::Climb(int climbLevel): frc::Command() {
 // Called just before this Command runs the first time
 void Climb::Initialize() {
     m_ClimbCase = 0;
+    done = false;
     Robot::climber->m_Climbing = true;
 }
 
 // Called repeatedly when this Command is scheduled to run
 void Climb::Execute() {
     //Make sure the intakes are empty
-    if(Robot::manipulatorArm->ifCargo()||Robot::manipulatorArm->ifHatch()){
-        done = true;
-        return;
-    }
+    
     //Make sure the climbing button is always held down
     if((!Robot::oi->getdriver()->GetRawButton(9))&&(!Robot::oi->getdriver()->GetRawButton(10))){
         //William: Small problem what to do if the arm and stilts are partly down
         done = true;
         return;
     }
-
+    printf("\nClimbCase = %i | %i",m_ClimbCase,m_climbLevel);
     //Determine height
     if(m_climbLevel < 2){
         m_ClimbCase = 0;

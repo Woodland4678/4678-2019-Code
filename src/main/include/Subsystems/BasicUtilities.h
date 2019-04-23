@@ -6,7 +6,10 @@
 
 #define ARMSPEED_HIGH       35.0
 #define ARMSPEED_MEDIUM     20.0
-#define ARMSPEED_LOW        10.0
+#define ARMSPEED_LOW        5.0
+
+#define T_CCW   1
+#define T_CW    0
 
 #define T_CCW   1
 #define T_CW    0
@@ -15,13 +18,13 @@
 
 //*******************************************Flight bot********************************************
 #define A_CARRY_X       7.0
-#define A_CARRY_Y       32.0
+#define A_CARRY_Y       26.0
 #define A_CARRY_W_H     -203.0
-#define A_CARRY_W_C     -10.0
+#define A_CARRY_W_C     10.0
 #define A_CARRY_WAIST   0.0
 
 #define A_ROCKL1_HATCH_X       25.5
-#define A_ROCKL1_HATCH_Y       21.0 //21
+#define A_ROCKL1_HATCH_Y       20.0 //21
 #define A_ROCKL1_HATCH_W     -168.0
 #define A_ROCKL1_HATCH_WAIST   0.0
 
@@ -51,7 +54,7 @@
 #define A_ROCKL3_CARGO_WAIST   0.0
 
 #define A_CARGO_PICKUP_SUB_X       23.0
-#define A_CARGO_PICKUP_SUB_Y       27.0 //25
+#define A_CARGO_PICKUP_SUB_Y       30.0 //25
 #define A_CARGO_PICKUP_SUB_W     -34.0
 #define A_CARGO_PICKUP_SUB_WAIST   0.0
 
@@ -61,13 +64,13 @@
 #define A_CARGO_PICKUP_WAIST   0.0
 
 #define A_HATCH_PICKUP_SUB_X       22.0
-#define A_HATCH_PICKUP_SUB_Y       29.0 //27
+#define A_HATCH_PICKUP_SUB_Y       31.0 //27
 #define A_HATCH_PICKUP_SUB_W     -190.0
 #define A_HATCH_PICKUP_SUB_WAIST   0.0
 
 #define A_HATCH_PICKUP_X        25.5
-#define A_HATCH_PICKUP_Y        21.0 //21
-#define A_HATCH_PICKUP_W_H    -168.0
+#define A_HATCH_PICKUP_Y        18.0 //21
+#define A_HATCH_PICKUP_W_H    -178.0 //-168
 #define A_HATCH_PICKUP_WAIST    0.0
 
 #define A_CARGO_HUMAN_X       9.0
@@ -80,7 +83,7 @@
 #define A_CSHIP_HATCH_W_H     -168.0
 #define A_CSHIP_HATCH_WAIST     0.0
 
-#define A_CSHIP_CARGO_X       18.0
+#define A_CSHIP_CARGO_X       12.0
 #define A_CSHIP_CARGO_Y       48.0
 #define A_CSHIP_CARGO_W_H     -33.0
 #define A_CSHIP_CARGO_WAIST   0.0
@@ -102,7 +105,7 @@
 
 //Auto Scoring Positions
 #define A_SC_START_POS_X       17.0
-#define A_SC_START_POS_Y       22.0
+#define A_SC_START_POS_Y       23.0 //22.0
 #define A_SC_START_POS_W_H     -174.0 //-182
 #define A_SC_START_POS_WAIST   0.0
 
@@ -123,23 +126,23 @@
 //Y value is constant A_SC_ROCKL1_HEIGHT
 #define A_SC_1_READY_W      -178.0 //-185
 
-#define A_SC_2_READY_DIST   14.0
+#define A_SC_2_READY_DIST   17.0
 //Y value is constant A_ROCKL2_HATCH_Y
 #define A_SC_2_READY_W      -174.0 //-181.5
 
-#define A_SC_3_READY_DIST   16.0
+#define A_SC_3_READY_DIST   20.0
 //Y value is constant A_ROCKL3_HATCH_Y
 #define A_SC_3_READY_W      -175.5
 
 //Placing / Picking up
 //7.5,19.5,-195.5
-#define A_SC_GET_DIST     7.5
+#define A_SC_GET_DIST     6.0 //7.5
 //Y values same as above
 //Wrist value same as above with the exception of high level
 #define A_SC_3_GET_W       -173.5
 
 //Return Values
-#define A_SC_0_RETURN_X     20.0
+#define A_SC_0_RETURN_X     15.0
 #define A_SC_0_RETURN_Y     20.0
 #define A_SC_0_RETURN_W     -179.0 //-187
 

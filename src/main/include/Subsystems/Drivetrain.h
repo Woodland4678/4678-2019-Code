@@ -127,6 +127,8 @@ public:
     int targX,targY;
 	int as_rocket_score_level = 0; // 0=low, 1=mid, 2=high
     double waistAngle,distFromWaist;
+	int as_Servo_cnt = 0;
+	int as_cnt_waist = 0;
 
 	bool getNearestBall();
 	polarPoint mgb_polarBallPt;
