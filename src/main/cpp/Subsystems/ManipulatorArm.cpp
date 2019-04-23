@@ -47,15 +47,15 @@
 #define WAIST_ENCODER_2   0.0
 
 #ifdef FLIGHTBOT
-#define SHOULDER_POT_1    2706//2943 //2884
-#define SHOULDER_POT_2    143//227 //286
+#define SHOULDER_POT_1    3916//2943 //2884
+#define SHOULDER_POT_2    1423//227 //286
 
 #define ELBOW_POT_1    4//11
 #define ELBOW_POT_2    2481//2743 //2467
 
 //#define WRIST_POT_1    4 // Cargo Intake Straight Out - in dead zone.
-#define WRIST_POT_1    905//876 // Hatch Clamp at 90 deg, roller part of claw inwards.
-#define WRIST_POT_2    2500//2395 // Hatch Clamp Straight Out.
+#define WRIST_POT_1    1957//876 // Hatch Clamp at 90 deg, roller part of claw inwards.
+#define WRIST_POT_2    3496//2395 // Hatch Clamp Straight Out.
 // 3770 At 90 deg, roller part of cargo claw outwards.
 // 905 At 90 deg the other way.  2500 - 905 = 1595
 // 3770 - 2500 = 1270. 

@@ -82,10 +82,11 @@ void MoveArm::Execute() {
 
 			break;
 		case 1: //Carry
-			wristAbsAngle = A_CARRY_W_C; // This is for cargo.
 			if(Robot::manipulatorArm->isHatchMode())
-				wristAbsAngle = A_CARRY_W_H;
-			done = Robot::manipulatorArm->moveToXY(A_CARRY_X,A_CARRY_Y,wristAbsAngle,A_CARRY_WAIST,ARMSPEED); // Move to X,Y co-ords
+				done = Robot::manipulatorArm->moveToXY(A_CARRY_X,A_CARRY_Y,A_CARRY_W_H,A_CARRY_WAIST,ARMSPEED); // Hatch
+			else
+				done = Robot::manipulatorArm->moveToXY(A_CARRY_X,A_CARRY_Y,A_CARRY_W_C,A_CARRY_WAIST,ARMSPEED); // Cargo
+			
 			Robot::manipulatorArm->m_CurrentPosition = 0;
 			break;
 		case 2: //Rocket Low, Cargo ship place hatch.

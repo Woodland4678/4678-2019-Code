@@ -49,8 +49,13 @@ void Drivetrain::Periodic() {
     frc::SmartDashboard::PutNumber("Left Distance ", (Robot::drivetrain->getLeftEncoder() / 0.2183));
     frc::SmartDashboard::PutNumber("Left Speed ", (Robot::drivetrain->getLeftSpeed()));
 
-    
+    frc::SmartDashboard::PutNumber("Right Master Amps", rightMaster->GetOutputCurrent());
+    frc::SmartDashboard::PutNumber("Right 1 Amps", rightSlaveOne->GetOutputCurrent());
+    frc::SmartDashboard::PutNumber("Right 2 Amps", rightSlaveTwo->GetOutputCurrent());
 
+    frc::SmartDashboard::PutNumber("Left Master Amps", leftMaster->GetOutputCurrent());
+    frc::SmartDashboard::PutNumber("Left 1 Amps", leftSlaveOne->GetOutputCurrent());
+    frc::SmartDashboard::PutNumber("Left 2 Amps", leftSlaveTwo->GetOutputCurrent());
 }
 
 void Drivetrain::configMotors(bool pid, int Maxamps) {
@@ -1159,6 +1164,92 @@ bool Drivetrain::getNearestBall() {
             if(mgb_Move3){
                 mgb_state = 0;
                 return true;
+            }
+            break;
+    }
+    return false;
+}
+
+bool Drivetrain::turnAmount(double degrees, int direction, double vel, double acc){
+    if((mt_tarDeg != degrees) || (mt_tarDir != direction) || (mt_vel != vel))
+        mt_state = 0;
+    switch(mt_state) {
+        case 0:
+            {
+            mt_acc=acc;
+            mt_vel=vel;
+            mt_tarDeg=degrees;
+            mt_tarDir=direction;
+
+            double cycleTime = 1.0/50.0;
+            double dist;
+            
+			//Calculate distance based on angle to move
+			//wheel base = 0.545m
+			//	PI * 0.545 = 360 degrees
+			//	distance to move each wheel = pi * 0.545 * degrees / 360
+			
+			dist = (M_PI * 0.545 * degrees / 360) * 1.18;
+			
+            
+            //Trapizodal Calculations
+            double t1 = mt_vel / mt_vel, t2, t3;
+            double d1 = 0.5 * mt_vel * (t1*t1), d2, d3 = d1;
+            if(2*d1 > dist) { //No cruise
+                d1 = dist / 2;
+                d2 = 0;
+                d3 = d1;
+                t1 = sqrt(2 * d1 / mt_vel);
+                t2 = t1;
+                t3 = t2 + t1;
+            }
+            else {
+                d2 = dist - 2 * d1;
+                t2 = t1 + d2 / mt_vel;
+                t3 = t2 + t1;
+            }
+
+            //Path generation of one wheel
+            d[0] = 0;
+            int i=0;
+            
+            for(double tcnt = 0;tcnt<t3;tcnt += cycleTime,i++) {
+                if(tcnt < t1)
+                    d[i] = 0.5 * mt_vel * (tcnt*tcnt);
+                else if(tcnt < t2)
+                    d[i] = d1 + (mt_vel * (tcnt-t1));
+                else if(tcnt < t3)
+                    d[i] = d1+d2+d3 - (0.5 * mt_vel * ((t3-tcnt)*(t3-tcnt)));
+            }
+            d[i++] = d1+d2+d3;
+            mt_Cycles = i;
+            printf("\nTURN: Run: cycles=%i",i);
+
+            traverseCnt = 0;
+            mt_state = 1;
+            mt_OEncLeft = getLeftEncoder();
+            mt_OEncRight = getRightEncoder();
+            }
+            break;
+        case 1:
+            if(traverseCnt >= mt_Cycles) {
+                mt_state = 0;
+                return true;
+            }
+            else {
+                //Main path velocity
+                double distance = d[traverseCnt];
+                if(direction)
+                    distance *= -1;
+                double enDist = (distance * 20.81); //velocity is per second not per cycle
+                //left wheel
+                encLeft = enDist + mt_OEncLeft;
+                encRight = enDist + mt_OEncRight;
+                
+                printf("\nTURN: Cnt = %i | dist = %f | EncLeft = %f EncRight = %f",traverseCnt, distance, encLeft,encRight);
+                setLeftPosition(encLeft);
+                setRightPosition(encRight);
+                traverseCnt++;
             }
             break;
     }
