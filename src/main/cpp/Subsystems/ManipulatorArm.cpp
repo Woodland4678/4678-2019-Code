@@ -207,7 +207,7 @@ void ManipulatorArm::InitDefaultCommand() {
 
 void ManipulatorArm::Periodic() {
 
-	frc::SmartDashboard::PutBoolean("Cargo", ifCargo());
+	//frc::SmartDashboard::PutBoolean("Cargo", ifCargo());
 
     // Put code here to be run every loop
 
@@ -273,12 +273,12 @@ void ManipulatorArm::Periodic() {
 	frc::SmartDashboard::PutNumber("Wrist ABS Angle", m_Segs[2]->getAbsEncoderReading());
 	frc::SmartDashboard::PutNumber("Elbow ABS Angle", m_Segs[1]->getAbsAngle());
 	
-	frc::SmartDashboard::PutNumber("El Start X", m_Segs[0]->getEndX());
-	frc::SmartDashboard::PutNumber("El Start Y", m_Segs[0]->getEndY());
-	frc::SmartDashboard::PutNumber("Wr Start X", m_Segs[1]->getEndX());
-	frc::SmartDashboard::PutNumber("Wr Start Y", m_Segs[1]->getEndY());
-	frc::SmartDashboard::PutNumber("End X", m_Segs[2]->getEndX());
-	frc::SmartDashboard::PutNumber("End Y", m_Segs[2]->getEndY());
+	//frc::SmartDashboard::PutNumber("El Start X", m_Segs[0]->getEndX());
+	//frc::SmartDashboard::PutNumber("El Start Y", m_Segs[0]->getEndY());
+	//frc::SmartDashboard::PutNumber("Wr Start X", m_Segs[1]->getEndX());
+	//frc::SmartDashboard::PutNumber("Wr Start Y", m_Segs[1]->getEndY());
+	//frc::SmartDashboard::PutNumber("End X", m_Segs[2]->getEndX());
+	//frc::SmartDashboard::PutNumber("End Y", m_Segs[2]->getEndY());
 
 	
 	frc::SmartDashboard::PutNumber("Shoulder Encoder", m_Segs[0]->getSelectedSensorValue());
@@ -291,11 +291,11 @@ void ManipulatorArm::Periodic() {
 	frc::SmartDashboard::PutNumber("Elbow Pot", m_Segs[1]->getPotentiometerReading());
 	frc::SmartDashboard::PutNumber("Waist Pot", m_Segs[3]->getPotentiometerReading());
     
-	frc::SmartDashboard::PutNumber("Shoulder Amps", m_Segs[0]->getCurrent());
-	frc::SmartDashboard::PutNumber("Wrist Amps", m_Segs[2]->getCurrent());
-	frc::SmartDashboard::PutNumber("Elbow Amps", m_Segs[1]->getCurrent());
-	frc::SmartDashboard::PutNumber("Waist Amps", m_Segs[3]->getCurrent());
-    
+	//frc::SmartDashboard::PutNumber("Shoulder Amps", m_Segs[0]->getCurrent());
+	//frc::SmartDashboard::PutNumber("Wrist Amps", m_Segs[2]->getCurrent());
+	//frc::SmartDashboard::PutNumber("Elbow Amps", m_Segs[1]->getCurrent());
+	//frc::SmartDashboard::PutNumber("Waist Amps", m_Segs[3]->getCurrent());
+    /*
 	if(m_Segs[1]->getRelAngle() > -141)
 		frc::SmartDashboard::PutBoolean("Swap Enabled", true);
 	else
@@ -310,7 +310,7 @@ void ManipulatorArm::Periodic() {
 		frc::SmartDashboard::PutBoolean("Hatch", true);
 	else
 		frc::SmartDashboard::PutBoolean("Hatch", false);
-    
+    */
 	for(int x=0;x<4;x++) {
 		if (!m_SkipFinal[x])
 			continue;
@@ -341,14 +341,14 @@ void ManipulatorArm::Periodic() {
 	frc::SmartDashboard::PutBoolean("Elbow Skip", m_SkipFinal[1]);
 	frc::SmartDashboard::PutBoolean("Wrist Skip", m_SkipFinal[2]);
 
-	calculateWristVectors();
+	//calculateWristVectors();
 
-	frc::SmartDashboard::PutNumber("Wrist Wheels X", m_VectorWheelsX);
-	frc::SmartDashboard::PutNumber("Wrist Wheels Y", m_VectorWheelsY);
-	frc::SmartDashboard::PutNumber("Wrist Bottom X", m_VectorBottomX);
-	frc::SmartDashboard::PutNumber("Wrist Bottom Y", m_VectorBottomY);
-	frc::SmartDashboard::PutNumber("Wrist Hatch X", m_VectorHatchX);
-	frc::SmartDashboard::PutNumber("Wrist Hatch Y", m_VectorHatchY);
+	//frc::SmartDashboard::PutNumber("Wrist Wheels X", m_VectorWheelsX);
+	//frc::SmartDashboard::PutNumber("Wrist Wheels Y", m_VectorWheelsY);
+	//frc::SmartDashboard::PutNumber("Wrist Bottom X", m_VectorBottomX);
+	//frc::SmartDashboard::PutNumber("Wrist Bottom Y", m_VectorBottomY);
+	//frc::SmartDashboard::PutNumber("Wrist Hatch X", m_VectorHatchX);
+	//frc::SmartDashboard::PutNumber("Wrist Hatch Y", m_VectorHatchY);
 
 	if ((m_inCalibration)&&(DriverStation::GetInstance().IsDisabled())) // Only do when disabled
 		{ // In calibration mode, expect a special power-up sequence to ensure accurate axes positioning.
