@@ -11,6 +11,9 @@
 #define T_CCW   1
 #define T_CW    0
 
+#define T_CCW   1
+#define T_CW    0
+
 #ifdef FLIGHTBOT
 
 //*******************************************Flight bot********************************************
