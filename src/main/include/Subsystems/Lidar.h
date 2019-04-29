@@ -65,6 +65,7 @@ typedef struct Line_T {
 	int lidarDistst; // Lidar distance to start point
 	int lidarDistnd; // Lidar distance to end point.	
 	double fieldangle; // Angle on the field map
+	int leftRight; //Left is 0, right is 1
 	} tpLine;
 
 typedef struct Cube_T {

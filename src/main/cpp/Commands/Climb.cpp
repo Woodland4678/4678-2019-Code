@@ -112,15 +112,15 @@ void Climb::Execute() {
                 break;
             case 3://Move forward using intakes
                 //Use lidar to detect how far away we are
-                Robot::lidar->readLidar();
+                //Robot::lidar->readLidar();
                 m_ClimbCase = 4;
                 break;
             case 4:
-                if(Robot::lidar->readComplete())
+                //if(Robot::lidar->readComplete())
                     m_ClimbCase = 5;
                 break;
             case 5:
-                dist = Robot::lidar->climbDistance();
+                //dist = Robot::lidar->climbDistance();
                 //printf("Dist = %i | Timer = %i\n",dist,m_timer);
                 m_ClimbCase = 3;
                 if(m_climbLevel == 4){

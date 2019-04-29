@@ -53,5 +53,6 @@ public:
 	static AHRS *ahrs;
 	int prevPos = 0;
 	int spinCount = 0;
+	int lidarCase = 0;
 };
 #endif

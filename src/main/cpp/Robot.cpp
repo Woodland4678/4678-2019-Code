@@ -87,6 +87,7 @@ void Robot::TeleopInit() {
 
 	atshoulder = 119.0;
 	atelbow = -145.0;
+	lidarCase = 0;
 	climber->lock();
 	if (autonomousCommand != nullptr)
 		autonomousCommand->Cancel();
@@ -115,7 +116,7 @@ void Robot::TeleopPeriodic() {
 	if((prevPos == 5) && (Robot::manipulatorArm->m_CurrentPosition != 5))
 		spinCount = 50;
 	if((Robot::manipulatorArm->m_CurrentPosition == 0)&&(!climber->m_Climbing)&&(!climber->m_autoScore)&&(spinCount == 0))
-		Robot::manipulatorArm->intakeWheelsSpin(-JoyY);
+		Robot::manipulatorArm->intakeWheelsSpin((-JoyY) * 0.75);
 
 	spinCount--;
 	if(spinCount < 0)
@@ -124,59 +125,18 @@ void Robot::TeleopPeriodic() {
 	prevPos = Robot::manipulatorArm->m_CurrentPosition;
 	// Code added to allow use of POV to move shoulder and elbow for
 	// establishing target positions with the robot driving them.
-
-	// printf("Operator POV=%d\n\r",Robot::oi->getoperator1()->GetPOV());
-	/*switch(Robot::oi->getoperator1()->GetPOV())
-	{
-		case 0: // Up
-			atshoulder += 0.5;
-			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
-			sprintf(buf,"%f,%f\n\r",atshoulder,atelbow);
-			frc::SmartDashboard::PutString("Shoulder+Elbow",buf);
-		break;
-		case 90: // Right
-			atelbow += 0.5;
-			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
-			//printf("Right Sh=%f, El=%f\n\r",atshoulder,atelbow);
-			sprintf(buf,"%f,%f\n\r",atshoulder,atelbow);
-			frc::SmartDashboard::PutString("Shoulder+Elbow",buf);
-		break;
-		case 180: // Down
-			atshoulder -= 0.5;
-			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
-			//printf("Down Sh=%f, El=%f\n\r",atshoulder,atelbow);
-			sprintf(buf,"%f,%f\n\r",atshoulder,atelbow);
-			frc::SmartDashboard::PutString("Shoulder+Elbow",buf);
-		break;
-		case 270: // Left
-			atelbow -= 0.5;
-			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
-			//printf("Left Sh=%f, El=%f\n\r",atshoulder,atelbow);
-			sprintf(buf,"%f,%f\n\r",atshoulder,atelbow);
-			frc::SmartDashboard::PutString("Shoulder+Elbow",buf);
-		break;
+	if(oi->getoperator1()->GetRawButton(12)) {
+		switch(lidarCase) {
+			case 0:
+				lidar->readLidar();
+				lidarCase = 1;
+				break;
+			case 1:
+				if(lidar->readComplete())
+					lidarCase = 0;
+				break;
+		}
 	}
-	switch(Robot::oi->getdriver()->GetPOV())
-	{
-		case 0: // Up
-			Robot::manipulatorArm->incAbsAngleTarget(); // m_Segs[2]->setAbsAngleTarget(Robot::manipulatorArm->m_Segs[2]->getAbsAngleTarget() + 0.25);
-			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
-		break;
-		case 90: // Right
-			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
-			//printf("Right Sh=%f, El=%f\n\r",atshoulder,atelbow);
-		break;
-		case 180: // Down
-			Robot::manipulatorArm->decAbsAngleTarget(); // m_Segs[2]->setAbsAngleTarget(Robot::manipulatorArm->m_Segs[2]->getAbsAngleTarget() - 0.25);
-			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
-			//printf("Down Sh=%f, El=%f\n\r",atshoulder,atelbow);
-		break;
-		case 270: // Left
-			Robot::manipulatorArm->setShoulderandElbow(atshoulder,atelbow);
-			//printf("Left Sh=%f, El=%f\n\r",atshoulder,atelbow);
-		break;
-	} */
-	//Robot::climber->testMovement();
 
 	frc::Scheduler::GetInstance()->Run();
 }

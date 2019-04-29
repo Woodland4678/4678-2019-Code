@@ -1778,11 +1778,13 @@ bool Lidar::findRocket_Lines() {
 				{
 				anglel = lines[i].angle - 70;
 				angleh = lines[i].angle - 50;
+				m_RocketTarget.leftRight = 0;
 				}
 			else // on the right, angle of fin is -
 				{
 				anglel = lines[i].angle + 50;
 				angleh = lines[i].angle + 70;
+				m_RocketTarget.leftRight = 1;
 				}
 			
 			printf("Fin Found %i\n",i);

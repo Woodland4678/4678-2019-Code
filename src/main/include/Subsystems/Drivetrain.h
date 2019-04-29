@@ -166,6 +166,8 @@ public:
 	double getGyroAngle();
 	void resetGyroValue();
 	bool m_driveForward = false;
+	double m_gbHeight = 0;
+	char buf[256];
 };
 
 #endif

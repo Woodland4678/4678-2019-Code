@@ -2,7 +2,7 @@
 #define BASICSTUFF_H
 
 //Arm
-//#define FLIGHTBOT	1 //Uncomment = Flight 
+#define FLIGHTBOT	1 //Uncomment = Flight 
 
 #define ARMSPEED_HIGH       35.0
 #define ARMSPEED_MEDIUM     20.0
@@ -59,7 +59,7 @@
 #define A_CARGO_PICKUP_SUB_WAIST   0.0
 
 #define A_CARGO_PICKUP_X       25.0
-#define A_CARGO_PICKUP_Y       20.0
+#define A_CARGO_PICKUP_Y       18.0
 #define A_CARGO_PICKUP_W_H     -53.41
 #define A_CARGO_PICKUP_WAIST   0.0
 
@@ -119,7 +119,7 @@
 
 //Ready to place or pickup
 #define A_SC_0_READY_DIST   14.0
-#define A_SC_0_READY_Y      19.5
+#define A_SC_0_READY_Y      18.5
 #define A_SC_0_READY_W      -178.0 //-195
 
 #define A_SC_1_READY_DIST   12.0
@@ -136,7 +136,7 @@
 
 //Placing / Picking up
 //7.5,19.5,-195.5
-#define A_SC_GET_DIST     6.0 //7.5
+#define A_SC_GET_DIST     3.0 //7.5
 //Y values same as above
 //Wrist value same as above with the exception of high level
 #define A_SC_3_GET_W       -173.5
@@ -159,7 +159,7 @@
 
 //Auto Ball Pickup
 #define A_BP_START_X       18.0
-#define A_BP_START_Y       29.5
+#define A_BP_START_Y       33.5
 #define A_BP_START_W     -60.0
 #define A_BP_START_WAIST   0.0
 //Delay height
@@ -184,7 +184,7 @@
 
 //Push down towards this position
 #define A_C_X   33.0
-#define A_C_Y      10.0
+#define A_C_Y      7.0
 
 //Out of the way positions
 #define A_CH_UP_X   33.0
@@ -194,7 +194,7 @@
 #else 
 //******************************************Practice bot*******************************************
 #define A_CARRY_X       7.0
-#define A_CARRY_Y       29.0
+#define A_CARRY_Y       29.5
 #define A_CARRY_W_H     -203.0
 #define A_CARRY_W_C     -10.0
 #define A_CARRY_WAIST   0.0
@@ -215,7 +215,7 @@
 #define A_ROCKL2_HATCH_WAIST   0.0
 
 #define A_ROCKL2_CARGO_X       6.0
-#define A_ROCKL2_CARGO_Y       55.5
+#define A_ROCKL2_CARGO_Y       56.0
 #define A_ROCKL2_CARGO_W      -1.0
 #define A_ROCKL2_CARGO_WAIST   0.0
 
@@ -235,7 +235,7 @@
 #define A_CARGO_PICKUP_SUB_WAIST   0.0
 
 #define A_CARGO_PICKUP_X       25.0
-#define A_CARGO_PICKUP_Y       16.5
+#define A_CARGO_PICKUP_Y       16.0
 #define A_CARGO_PICKUP_W_H     -53.41
 #define A_CARGO_PICKUP_WAIST   0.0
 
